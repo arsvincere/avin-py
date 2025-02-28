@@ -35,20 +35,6 @@ class Id:
     # }}}
     @classmethod  # newId# {{{
     def newId(cls) -> Id:
-        """Generate new global identifier
-
-        Parameters
-        ----------
-        obj:
-            Any core object like trade, order, operation, position.
-
-        Returns
-        -------
-        Id:
-            New global identifier
-
-        """
-
         val = str(timer.time())
         ID = Id(val)
         return ID

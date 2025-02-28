@@ -11,6 +11,8 @@ from __future__ import annotations
 import enum
 from typing import Any, Optional, TypeVar
 
+import pandas as pd
+
 from avin.config import Usr
 from avin.const import ONE_DAY
 from avin.core.asset import Asset, AssetList
@@ -103,13 +105,9 @@ class Trade:  # {{{
         trade_list_name: Optional[str] = "",
         orders: Optional[list] = None,
         operations: Optional[list] = None,
+        info: Optional[dict] = None,
     ):
         logger.debug(f"{self.__class__.__name__}.__init__()")
-
-        if orders is None:
-            orders = list()
-        if operations is None:
-            operations = list()
 
         self.dt = dt
         self.strategy = strategy
@@ -121,13 +119,17 @@ class Trade:  # {{{
         self.trade_list_name = trade_list_name
         self.orders = orders if orders else list()
         self.operations = operations if operations else list()
-        self.info: dict[str, Any] = dict()
-        self.__blocked = False
+        self.info = info if info else dict()
 
         # signals
         self.opened = AsyncSignal(object)
         self.closed = AsyncSignal(object)
         self.statusChanged = AsyncSignal(object)
+
+        # connect order signals
+        if self.orders:
+            for order in self.orders:
+                self.__connectOrderSignals(order)
 
     # }}}
     def __str__(self):  # {{{
@@ -146,16 +148,6 @@ class Trade:  # {{{
     def pretty(self) -> str:  # {{{
         logger.debug(f"{self.__class__.__name__}.pretty()")
 
-        orders_text = ""
-        for order in self.orders:
-            text = order.pretty()
-            orders_text += text
-
-        operations_text = ""
-        for operation in self.operations:
-            text = operation.pretty()
-            operations_text += text
-
         trade_text = f"""
 id:         {self.trade_id}
 dt:         {Usr.localTime(self.dt)}
@@ -165,7 +157,6 @@ type:       {self.type.name}
 instrument: {self.instrument}
 status:     {self.status.name}
 trade_list: {self.trade_list_name}
-blocked:    {self.__blocked}
 """
         if self.status == Trade.Status.CLOSED:
             trade_text += f"""
@@ -185,6 +176,17 @@ percent:    {self.percent()}
 ppd:        {self.percentPerDay()}
 info:       {Cmd.toJson(self.info, indent=4)}
 """
+
+        orders_text = ""
+        for order in self.orders:
+            text = order.pretty()
+            orders_text += text
+
+        operations_text = ""
+        for operation in self.operations:
+            text = operation.pretty()
+            operations_text += text
+
         trade_text += f"""
 == Orders ====================================================================
 {orders_text}
@@ -296,18 +298,6 @@ info:       {Cmd.toJson(self.info, indent=4)}
 
         assert self.status == Trade.Status.CLOSED
         return self.result() <= 0
-
-    # }}}
-    def isBlocked(self):  # {{{
-        logger.debug(f"{self.__class__.__name__}.isBlocked()")
-
-        return self.__blocked
-
-    # }}}
-    def setBlocked(self, val: bool):  # {{{
-        logger.debug(f"{self.__class__.__name__}.setBlocked()")
-
-        self.__blocked = val
 
     # }}}
     def lots(self):  # {{{
@@ -648,7 +638,7 @@ info:       {Cmd.toJson(self.info, indent=4)}
 
         # connect signals of attached orders
         for order in trade.orders:
-            await trade.__connectOrderSignals(order)
+            trade.__connectOrderSignals(order)
 
         return trade
 
@@ -1092,15 +1082,30 @@ class TradeList:  # {{{
     # }}}
 
     @classmethod  # fromRecord  # {{{
-    async def fromRecord(cls, name, records: asyncpg.Record):
+    def fromRecord(cls, name, records: asyncpg.Record):
         logger.debug(f"{cls.__name__}.fromRecord()")
 
-        tlist = TradeList(name)
-        for i in records:
-            trade = await Trade.fromRecord(i)
-            tlist.add(trade)
+        df = pd.DataFrame([dict(r) for r in records])
 
-        return tlist
+        order_df = df.loc[~df["order_id"].duplicated()]
+        op_df = df.loc[~df["operation_id"].duplicated()]
+        trades_df = df.loc[~df["trade_id"].duplicated()]
+
+        trades = list()
+        for index, row in trades_df.iterrows():
+            ID = row["trade_id"]
+
+            order_rows = order_df[order_df["order_trade_id"] == ID]
+            orders = cls.__ordersFromDataFrame(order_rows)
+
+            op_rows = op_df[op_df["operation_trade_id"] == ID]
+            operations = cls.__operationsFromDataFrame(op_rows)
+
+            trade = cls.__tradeFromDataFrame(row, orders, operations)
+            trades.append(trade)
+
+        trade_list = TradeList(name, trades)
+        return trade_list
 
     # }}}
     @classmethod  # save  # {{{
@@ -1137,6 +1142,77 @@ class TradeList:  # {{{
     async def __deepFilterList(trade_list, filter_list):  # {{{
         for child_filter_list in filter_list:
             await self.__deepFilterList(child_filter_list)
+
+    # }}}
+    @classmethod  # __ordersFromDataFrame  # {{{
+    def __ordersFromDataFrame(cls, df: pd.DataFrame):
+        logger.debug(f"{cls.__name__}.__ordersFromDataFrame()")
+
+        orders = list()
+        for index, row in df.iterrows():
+            order = Order.fromRecord(row)
+            orders.append(order)
+
+        return orders
+
+    # }}}
+    @classmethod  # __operationsFromDataFrame  # {{{
+    def __operationsFromDataFrame(cls, df: pd.DataFrame):
+        logger.debug(f"{cls.__name__}.__operationsFromDataFrame()")
+
+        # TODO: надо короче не только в БД убрать дублирующиеся поля
+        # между ордер операция трейд, но и в коде. Иначе получается
+        # для каждой операции и для каждого ордера - создается
+        # отдельный объект инструмент. Так не надо. Надо чтобы
+        # ордера и операции - хранили ссылку на свой трейд и от туда
+        # получали эту информацию.
+        # Получается тогда ордера и операции вообще перестают быть
+        # самостоятельными сущностями как у брокера. Они теперь всегда
+        # будут наглухо привязаны к трейду, и загрузка их возможна
+        # только вместе с трейдом кучей. И это нормально, мне же не
+        # интересны эти операции по отдельности.
+
+        operations = list()
+        for index, row in df.iterrows():
+            op = Operation(
+                account_name=row["operation_account"],
+                dt=row["operation_dt"],
+                direction=Direction.fromStr(row["operation_direction"]),
+                instrument=Instrument.fromRecord(row),
+                lots=row["operation_lots"],
+                quantity=row["operation_quantity"],
+                price=row["operation_price"],
+                amount=row["operation_amount"],
+                commission=row["operation_commission"],
+                operation_id=Id.fromStr(row["operation_id"]),
+                order_id=Id.fromStr(row["operation_order_id"]),
+                trade_id=Id.fromStr(row["operation_trade_id"]),
+                meta=row["operation_meta"],
+            )
+            operations.append(op)
+
+        return operations
+
+    # }}}
+    @classmethod  # __tradeFromDataFrame  # {{{
+    def __tradeFromDataFrame(cls, row, orders, operations):
+        instr = Instrument.fromRecord(row)
+
+        trade = Trade(
+            dt=row["trade_dt"],
+            strategy=row["trade_strategy"],
+            version=row["trade_version"],
+            trade_type=Trade.Type.fromStr(row["trade_type"]),
+            instrument=instr,
+            status=Trade.Status.fromStr(row["trade_status"]),
+            trade_id=Id.fromStr(row["trade_id"]),
+            trade_list_name=row["trade_trade_list"],
+            orders=orders,
+            operations=operations,
+            info=Cmd.fromJson(row["trade_info"], Trade.decoderJson),
+        )
+
+        return trade
 
     # }}}
 

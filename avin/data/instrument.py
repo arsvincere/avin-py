@@ -142,8 +142,8 @@ class Instrument:
     async def fromStr(cls, string: str) -> Instrument:
         logger.debug(f"{cls.__name__}.fromStr()")
 
-        # string is like "MOEX-SHARE-SBER"
-        exchange, itype, ticker = string.split("-")
+        # string is like "MOEX SHARE SBER"
+        exchange, itype, ticker = string.split(" ")
 
         # convert types
         exchange = Exchange.fromStr(exchange)

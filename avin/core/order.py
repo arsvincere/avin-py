@@ -260,8 +260,8 @@ class Order(metaclass=abc.ABCMeta):  # {{{
 
     # }}}
 
-    @classmethod  # fromRecord{{{
-    async def fromRecord(cls, record):
+    @classmethod  # fromRecord  # {{{
+    def fromRecord(cls, record):
         logger.debug(f"Order.fromRecord({record})")
 
         methods = {
@@ -272,7 +272,7 @@ class Order(metaclass=abc.ABCMeta):  # {{{
             "TAKE_PROFIT": Order.__takeProfitFromRecord,
         }
         method = methods[record["order_type"]]
-        order = await method(record)
+        order = method(record)
         return order
 
     # }}}
@@ -306,118 +306,113 @@ class Order(metaclass=abc.ABCMeta):  # {{{
     # }}}
 
     @classmethod  # __marketOrderFromRecord{{{
-    async def __marketOrderFromRecord(cls, record):
+    def __marketOrderFromRecord(cls, record):
         logger.debug(f"Order.__marketOrderFromRecord({record})")
 
-        instrument = await Instrument.fromFigi(figi=record["figi"])
         order = MarketOrder(
-            account_name=record["account"],
-            direction=Direction.fromStr(record["direction"]),
-            instrument=instrument,
-            lots=record["lots"],
-            quantity=record["quantity"],
-            status=Order.Status.fromStr(record["status"]),
+            account_name=record["order_account"],
+            direction=Direction.fromStr(record["order_direction"]),
+            instrument=Instrument.fromRecord(record),
+            lots=record["order_lots"],
+            quantity=record["order_quantity"],
+            status=Order.Status.fromStr(record["order_status"]),
             order_id=record["order_id"],
-            trade_id=record["trade_id"],
-            exec_lots=record["exec_lots"],
-            exec_quantity=record["exec_quantity"],
-            meta=record["meta"],
-            broker_id=record["broker_id"],
+            trade_id=record["order_trade_id"],
+            exec_lots=record["order_exec_lots"],
+            exec_quantity=record["order_exec_quantity"],
+            meta=record["order_meta"],
+            broker_id=record["order_broker_id"],
         )
         return order
 
     # }}}
     @classmethod  # __limitOrderFromRecord{{{
-    async def __limitOrderFromRecord(cls, record):
+    def __limitOrderFromRecord(cls, record):
         logger.debug(f"Order.__limitOrderFromRecord({record})")
 
-        instrument = await Instrument.fromFigi(figi=record["figi"])
         order = LimitOrder(
-            account_name=record["account"],
-            direction=Direction.fromStr(record["direction"]),
-            instrument=instrument,
-            lots=record["lots"],
-            quantity=record["quantity"],
-            price=record["price"],
-            status=Order.Status.fromStr(record["status"]),
+            account_name=record["order_account"],
+            direction=Direction.fromStr(record["order_direction"]),
+            instrument=Instrument.fromRecord(record),
+            lots=record["order_lots"],
+            quantity=record["order_quantity"],
+            price=record["order_price"],
+            status=Order.Status.fromStr(record["order_status"]),
             order_id=Id.fromStr(record["order_id"]),
-            trade_id=Id.fromStr(record["trade_id"]),
-            exec_lots=record["exec_lots"],
-            exec_quantity=record["exec_quantity"],
-            meta=record["meta"],
-            broker_id=record["broker_id"],
+            trade_id=Id.fromStr(record["order_trade_id"]),
+            exec_lots=record["order_exec_lots"],
+            exec_quantity=record["order_exec_quantity"],
+            meta=record["order_meta"],
+            broker_id=record["order_broker_id"],
         )
         return order
 
     # }}}
     @classmethod  # __stopOrderFromRecord{{{
-    async def __stopOrderFromRecord(cls, record):
+    def __stopOrderFromRecord(cls, record):
         logger.debug(f"Order.__stopOrderFromRecord({record})")
 
-        instrument = await Instrument.fromFigi(figi=record["figi"])
         order = StopOrder(
-            account_name=record["account"],
-            direction=Direction.fromStr(record["direction"]),
-            instrument=instrument,
-            lots=record["lots"],
-            quantity=record["quantity"],
-            stop_price=record["stop_price"],
-            exec_price=record["exec_price"],
-            status=Order.Status.fromStr(record["status"]),
+            account_name=record["order_account"],
+            direction=Direction.fromStr(record["order_direction"]),
+            instrument=Instrument.fromRecord(record),
+            lots=record["order_lots"],
+            quantity=record["order_quantity"],
+            stop_price=record["order_stop_price"],
+            exec_price=record["order_exec_price"],
+            status=Order.Status.fromStr(record["order_status"]),
             order_id=record["order_id"],
-            trade_id=record["trade_id"],
-            exec_lots=record["exec_lots"],
-            exec_quantity=record["exec_quantity"],
-            meta=record["meta"],
-            broker_id=record["broker_id"],
+            trade_id=record["order_trade_id"],
+            exec_lots=record["order_exec_lots"],
+            exec_quantity=record["order_exec_quantity"],
+            meta=record["order_meta"],
+            broker_id=record["order_broker_id"],
         )
         return order
 
     # }}}
     @classmethod  # __stopLossFromRecord{{{
-    async def __stopLossFromRecord(cls, record):
+    def __stopLossFromRecord(cls, record):
         logger.debug(f"Order.__stopLossFromRecord({record})")
 
-        instrument = await Instrument.fromFigi(figi=record["figi"])
         order = StopLoss(
-            account_name=record["account"],
-            direction=Direction.fromStr(record["direction"]),
-            instrument=instrument,
-            lots=record["lots"],
-            quantity=record["quantity"],
-            stop_price=record["stop_price"],
-            exec_price=record["exec_price"],
-            status=Order.Status.fromStr(record["status"]),
+            account_name=record["order_account"],
+            direction=Direction.fromStr(record["order_direction"]),
+            instrument=Instrument.fromRecord(record),
+            lots=record["order_lots"],
+            quantity=record["order_quantity"],
+            stop_price=record["order_stop_price"],
+            exec_price=record["order_exec_price"],
+            status=Order.Status.fromStr(record["order_status"]),
             order_id=record["order_id"],
-            trade_id=record["trade_id"],
-            exec_lots=record["exec_lots"],
-            exec_quantity=record["exec_quantity"],
-            meta=record["meta"],
-            broker_id=record["broker_id"],
+            trade_id=record["order_trade_id"],
+            exec_lots=record["order_exec_lots"],
+            exec_quantity=record["order_exec_quantity"],
+            meta=record["order_meta"],
+            broker_id=record["order_broker_id"],
         )
         return order
 
     # }}}
     @classmethod  # __takeProfitFromRecord{{{
-    async def __takeProfitFromRecord(cls, record):
+    def __takeProfitFromRecord(cls, record):
         logger.debug(f"Order.__takeProfitFromRecord({record})")
 
-        instrument = await Instrument.fromFigi(figi=record["figi"])
         order = TakeProfit(
-            account_name=record["account"],
-            direction=Direction.fromStr(record["direction"]),
-            instrument=instrument,
-            lots=record["lots"],
-            quantity=record["quantity"],
-            stop_price=record["stop_price"],
-            exec_price=record["exec_price"],
-            status=Order.Status.fromStr(record["status"]),
+            account_name=record["order_account"],
+            direction=Direction.fromStr(record["order_direction"]),
+            instrument=Instrument.fromRecord(record),
+            lots=record["order_lots"],
+            quantity=record["order_quantity"],
+            stop_price=record["order_stop_price"],
+            exec_price=record["order_exec_price"],
+            status=Order.Status.fromStr(record["order_status"]),
             order_id=record["order_id"],
-            trade_id=record["trade_id"],
-            exec_lots=record["exec_lots"],
-            exec_quantity=record["exec_quantity"],
-            meta=record["meta"],
-            broker_id=record["broker_id"],
+            trade_id=record["order_trade_id"],
+            exec_lots=record["order_exec_lots"],
+            exec_quantity=record["order_exec_quantity"],
+            meta=record["order_meta"],
+            broker_id=record["order_broker_id"],
         )
         return order
 

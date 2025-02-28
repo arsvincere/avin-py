@@ -92,7 +92,7 @@ async def test_Instrument():
     assert by_ticker.ticker == "AFKS"
 
     # string
-    assert str(sber) == "MOEX-SHARE-SBER"
+    assert str(sber) == "MOEX SHARE SBER"
 
     # operator ==
     assert by_figi == sber
@@ -120,8 +120,8 @@ async def test_DataInfo():
 # }}}
 @pytest.mark.asyncio  # test_ConvertTaskList  # {{{
 async def test_ConvertTaskList():
-    afks = await Instrument.fromStr("MOEX-SHARE-AFKS")
-    sber = await Instrument.fromStr("MOEX-SHARE-SBER")
+    afks = await Instrument.fromStr("MOEX SHARE AFKS")
+    sber = await Instrument.fromStr("MOEX SHARE SBER")
     in_type = DataType.BAR_1M
     out_type = DataType.BAR_5M
 
@@ -190,7 +190,7 @@ async def test_Data_find(event_loop):
 @pytest.mark.asyncio  # test_Data_info  # {{{
 async def test_Data_info(event_loop):
     # request info about instrument-data_type
-    sber = await Instrument.fromStr("MOEX-SHARE-SBER")
+    sber = await Instrument.fromStr("MOEX SHARE SBER")
     data_type = DataType.BAR_D
     data_info = await Data.info(sber, data_type)
     if data_info is not None:
@@ -220,7 +220,7 @@ async def test_Data_info(event_loop):
 # }}}
 @pytest.mark.asyncio  # test_Data_firstDateTime  # {{{
 async def test_Data_firstDateTime(event_loop):
-    sber = await Instrument.fromStr("MOEX-SHARE-SBER")
+    sber = await Instrument.fromStr("MOEX SHARE SBER")
 
     dt_d_moex = await Data.firstDateTime(
         DataSource.MOEX, sber, DataType.BAR_D

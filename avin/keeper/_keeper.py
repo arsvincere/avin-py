@@ -49,15 +49,11 @@ class Keeper:
         enums = Cmd.path(Dir.LIB, "keeper", "enums.sql")
         data_scheme = Cmd.path(Dir.LIB, "keeper", "data_scheme.sql")
         public_scheme = Cmd.path(Dir.LIB, "keeper", "public_scheme.sql")
-        tester_scheme = Cmd.path(Dir.LIB, "keeper", "tester_scheme.sql")
-        trader_scheme = Cmd.path(Dir.LIB, "keeper", "trader_scheme.sql")
 
         os.system(f"createdb {cls.DATABASE}")
         os.system(f"psql -d {cls.DATABASE} < {enums}")
         os.system(f"psql -d {cls.DATABASE} < {data_scheme}")
         os.system(f"psql -d {cls.DATABASE} < {public_scheme}")
-        os.system(f"psql -d {cls.DATABASE} < {tester_scheme}")
-        os.system(f"psql -d {cls.DATABASE} < {trader_scheme}")
 
         logger.info("Database has been created")
 
@@ -1344,17 +1340,49 @@ class Keeper:
         if not records:
             return None
 
-        # select record of trades, join asset
+        # select record of trades, join order/operation/instrument
         request = f"""
             SELECT
-                "Trade".trade_id,
-                "Trade".trade_list,
-                "Trade".strategy,
-                "Trade".version,
-                "Trade".dt,
-                "Trade".status,
-                "Trade".trade_type,
-                "Trade".trade_info,
+                "Trade".trade_id            AS trade_id,
+                "Trade".trade_list          AS trade_trade_list,
+                "Trade".strategy            AS trade_strategy,
+                "Trade".version             AS trade_version,
+                "Trade".dt                  AS trade_dt,
+                "Trade".status              AS trade_status,
+                "Trade".trade_type          AS trade_type,
+                "Trade".trade_info          AS trade_info,
+
+                "Order".order_id            AS order_id,
+                "Order".trade_id            AS order_trade_id,
+                "Order".account             AS order_account,
+                "Order".figi                AS order_figi,
+                "Order".order_type          AS order_type,
+                "Order".status              AS order_status,
+                "Order".direction           AS order_direction,
+                "Order".lots                AS order_lots,
+                "Order".quantity            AS order_quantity,
+                "Order".price               AS order_price,
+                "Order".stop_price          AS order_stop_price,
+                "Order".exec_price          AS order_exec_price,
+                "Order".exec_lots           AS order_exec_lots,
+                "Order".exec_quantity       AS order_exec_quantity,
+                "Order".broker_id           AS order_broker_id,
+                "Order".meta                AS order_meta,
+
+                "Operation".operation_id    AS operation_id,
+                "Operation".order_id        AS operation_order_id,
+                "Operation".trade_id        AS operation_trade_id,
+                "Operation".account         AS operation_account,
+                "Operation".figi            AS operation_figi,
+                "Operation".dt              AS operation_dt,
+                "Operation".direction       AS operation_direction,
+                "Operation".lots            AS operation_lots,
+                "Operation".quantity        AS operation_quantity,
+                "Operation".price           AS operation_price,
+                "Operation".amount          AS operation_amount,
+                "Operation".commission      AS operation_commission,
+                "Operation".meta            AS operation_meta,
+
                 data."Instrument".figi,
                 data."Instrument".exchange,
                 data."Instrument".type,
@@ -1363,14 +1391,19 @@ class Keeper:
                 data."Instrument".lot,
                 data."Instrument".min_price_step
             FROM "Trade"
+            LEFT JOIN "Order"
+                ON "Trade".trade_id = "Order".trade_id
+            LEFT JOIN "Operation"
+                ON "Trade".trade_id = "Operation".trade_id
             JOIN data."Instrument"
                 ON "Trade".figi = data."Instrument".figi
-            WHERE trade_list = '{name}';
+            WHERE trade_list = '{name}'
+            ORDER BY trade_id, order_id, operation_id
             """
         records = await cls.transaction(request)
 
         # create TradeList from trade records
-        trade_list = await TradeList.fromRecord(name, records)
+        trade_list = TradeList.fromRecord(name, records)
         return trade_list
 
     # }}}

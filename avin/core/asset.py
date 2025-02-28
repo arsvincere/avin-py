@@ -300,7 +300,7 @@ class Asset(Instrument, ABC):  # {{{
 class Index(Asset):  # {{{
     def __init__(self, info: dict):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
-        assert info["type"] == Asset.Type.INDEX
+        assert info["type"] == Asset.Type.INDEX.name
 
         super().__init__(info)
 

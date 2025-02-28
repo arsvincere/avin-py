@@ -134,6 +134,7 @@ class _TAddMarker(QtCore.QThread):  # {{{
         chart.setHeadIndex(0)
         while chart.nextHead():
             result = await f.acheck(chart)
+
             if result:
                 dt = chart.now.dt
                 gbar = gchart.barFromDatetime(dt)

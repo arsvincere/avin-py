@@ -8,6 +8,7 @@
 
 import pytest
 from avin import *
+from usr.lib import *
 
 
 def test_Id():  # {{{
@@ -825,7 +826,7 @@ async def test_TradeList():
     assert len(tlist.childs) == 0
 
     # select filter list
-    filter_list = FilterList.load("size")
+    filter_list = FilterList.load("time")
     await tlist.selectFilterList(filter_list)
 
     # save
@@ -978,7 +979,7 @@ async def conditionTrade(trade: Trade) -> bool:
 """  # }}}
     f = Filter("_bull_3", code)
 
-    asset = await Asset.fromStr("MOEX-SHARE-AFKS")
+    asset = await Asset.fromStr("MOEX SHARE AFKS")
     timeframe = TimeFrame("D")
     begin = DateTime(2023, 1, 1, tzinfo=UTC)
     end = DateTime(2024, 1, 1, tzinfo=UTC)
@@ -1019,42 +1020,34 @@ async def test_FilterList():
     assert filter_list.name == "_unittest"
 
     # load filters from files
-    f1 = Filter.loadFromFile(
-        "/home/alex/AVIN/usr/filter/size/b1/body/1_big.py"
-    )
-    f2 = Filter.loadFromFile(
-        "/home/alex/AVIN/usr/filter/size/b1/body/2_bigger.py"
-    )
-    f3 = Filter.loadFromFile(
-        "/home/alex/AVIN/usr/filter/size/b1/body/3_biggest.py"
-    )
+    f1 = Filter.loadFromFile("/home/alex/AVIN/usr/filter/time/07.py")
+    f2 = Filter.loadFromFile("/home/alex/AVIN/usr/filter/time/08.py")
+    f3 = Filter.loadFromFile("/home/alex/AVIN/usr/filter/time/09.py")
 
     # without filter list path = "Usr.FILTER/filter_name.py"
-    assert f1.path == "/home/alex/AVIN/usr/filter/1_big.py"
-    assert f2.path == "/home/alex/AVIN/usr/filter/2_bigger.py"
-    assert f3.path == "/home/alex/AVIN/usr/filter/3_biggest.py"
+    assert f1.path == "/home/alex/AVIN/usr/filter/07.py"
+    assert f2.path == "/home/alex/AVIN/usr/filter/08.py"
+    assert f3.path == "/home/alex/AVIN/usr/filter/09.py"
 
     # add filter
     filter_list.add(f1)
     filter_list.add(f2)
-    assert f1.path == "/home/alex/AVIN/usr/filter/_unittest/1_big.py"
-    assert f2.path == "/home/alex/AVIN/usr/filter/_unittest/2_bigger.py"
+    assert f1.path == "/home/alex/AVIN/usr/filter/_unittest/07.py"
+    assert f2.path == "/home/alex/AVIN/usr/filter/_unittest/08.py"
     assert len(filter_list) == 2
 
     # create new filter list
     child_list = FilterList("child")
-    assert f3.path == "/home/alex/AVIN/usr/filter/3_biggest.py"
+    assert f3.path == "/home/alex/AVIN/usr/filter/09.py"
     child_list.add(f3)
-    assert f3.path == "/home/alex/AVIN/usr/filter/child/3_biggest.py"
+    assert f3.path == "/home/alex/AVIN/usr/filter/child/09.py"
 
     # add child filter list
     filter_list.addChild(child_list)
     filter_list.addChild(child_list)
     assert len(filter_list.childs) == 2
     assert child_list.parent_list == filter_list
-    assert (
-        f3.path == "/home/alex/AVIN/usr/filter/_unittest/child/3_biggest.py"
-    )
+    assert f3.path == "/home/alex/AVIN/usr/filter/_unittest/child/09.py"
 
     # iteration
     for child in filter_list.childs:

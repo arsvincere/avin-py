@@ -92,7 +92,7 @@ class Operation:
         await Operation.update(self)
 
     # }}}
-    @classmethod  # fromRecord{{{
+    @classmethod  # fromRecord  # {{{
     async def fromRecord(cls, record: asyncpg.Record) -> Operation:
         logger.debug(f"Operation.fromRecord({record})")
 
@@ -116,26 +116,26 @@ class Operation:
         return op
 
     # }}}
-    @classmethod  # save{{{
+    @classmethod  # save  # {{{
     async def save(cls, operation: Operation) -> None:
         logger.debug(f"Operation.save({operation})")
         await Keeper.add(operation)
 
     # }}}
-    @classmethod  # load{{{
+    @classmethod  # load  # {{{
     async def load(cls, operation_id: Id) -> Operation:
         logger.debug(f"Operation.load({operation_id})")
         op = await Keeper.get(cls, operation_id=operation_id)
         return op
 
     # }}}
-    @classmethod  # delete{{{
+    @classmethod  # delete  # {{{
     async def delete(cls, operation: Operation) -> None:
         logger.debug(f"Operation.delete({operation})")
         await Keeper.delete(operation)
 
     # }}}
-    @classmethod  # update{{{
+    @classmethod  # update  # {{{
     async def update(cls, operation: Operation) -> None:
         logger.debug(f"Operation.update({operation})")
         await Keeper.update(operation)
