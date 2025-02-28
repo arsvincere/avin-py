@@ -1,0 +1,77 @@
+
+== Изменение таблицы
+ALTER TABLE "Asset" ADD COLUMN lot integer;
+ALTER TABLE "Asset" ADD COLUMN min_price_step float;
+
+ALTER TABLE products DROP COLUMN description;
+
+
+== Изменение Enum
+ALTER TYPE "Order.Status" RENAME TO "Order.Status.Old";
+CREATE TYPE "Order.Status" AS ENUM (
+    'NEW', 'PENDING', 'TIMEOUT', 'TRIGGERED',
+    'SUBMIT', 'POSTED', 'PARTIAL', 'OFF', 'EXECUTED',
+    'CANCELED', 'BLOCKED', 'REJECTED', 'EXPIRED',
+    'ARCHIVE'
+    );
+ALTER TABLE "Order" ALTER COLUMN status TYPE "Order.Status" USING status::text::"Order.Status";
+DROP TYPE "Order.Status.Old";
+
+ALTER TYPE "Trade.Status" RENAME TO "Trade.Status.Old";
+CREATE TYPE "Trade.Status" AS ENUM (
+    'INITIAL', 'PENDING', 'TRIGGERED',
+    'MAKE_ORDER', 'POST_ORDER', 'POSTED', 'OPENED',
+    'MAKE_STOP', 'MAKE_TAKE', 'POST_STOP', 'POST_TAKE',
+    'ACTIVE',
+    'OFF',
+    'FINISH', 'CLOSING', 'REMOVING',
+    'CLOSED',
+    'CANCELED', 'BLOCKED',
+    'ARCHIVE'
+    );
+ALTER TABLE "Trade" ALTER COLUMN status TYPE "Trade.Status" USING status::text::"Trade.Status";
+DROP TYPE "Trade.Status.Old";
+
+==== добавление новых элементов в enum
+ALTER TYPE enum_type ADD VALUE 'new_value'; -- appends to list
+ALTER TYPE enum_type ADD VALUE 'new_value' BEFORE 'old_value';
+ALTER TYPE enum_type ADD VALUE 'new_value' AFTER 'old_value';
+
+==== если надо что то удалить, то только через создание нового
+-- 1. rename the enum type you want to change
+alter type some_enum_type rename to _some_enum_type;
+-- 2. create new type
+create type some_enum_type as enum ('old', 'values', 'and', 'new', 'ones');
+-- 3. rename column(s) which uses our enum type
+alter table some_table rename column some_column to _some_column;
+-- 4. add new column of new type
+alter table some_table add some_column some_enum_type not null default 'new';
+-- 5. copy values to the new column
+update some_table set some_column = _some_column::text::some_enum_type;
+-- 6. remove old column and type
+alter table some_table drop column _some_column;
+drop type _some_enum_type;
+
+== Обновление версий сортировки
+ПРЕДУПРЕЖДЕНИЕ:  несовпадение версии для правила сортировки в базе данных "postgres"
+DETAIL:  База данных была создана с версией правила сортировки 2.39, но операционная система предоставляет версию 2.40.
+HINT:  Перестройте все объекты в этой базе, задействующие основное правило сортировки, и выполните ALTER DATABASE postgres REFRESH COLLATION VERSION, либо соберите PostgreSQL с правильной версией библиотеки.
+
+1. подключаемся к базе из консоли:
+$ psql -U postgres
+
+2. Создаем правило для новой версии:
+postgres=# CREATE COLLATION russian (provider = libc, locale = 'ru_RU.utf8');
+//Локаль та, что в системе : locale -a
+
+3. Обновляем всю базу:
+postgres=# ALTER DATABASE postgres REFRESH COLLATION VERSION;
+postgres=# ALTER DATABASE template1 REFRESH COLLATION VERSION;
+postgres=# ALTER DATABASE appdb REFRESH COLLATION VERSION;
+
+4. Выходим:
+postgres=#\q
+
+5. Делаем рестарт postgresql
+$ sudo systemctl restart postgresql
+

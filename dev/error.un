@@ -1,0 +1,5 @@
+1   Invalid timeframe
+2   Keeper.transaction - bad postgres request
+3   trade_id does not exist
+4   StrategySet - need create common asset list before create StrategyList
+5   Can't download data

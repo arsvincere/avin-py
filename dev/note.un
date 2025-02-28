@@ -1,0 +1,20 @@
+pytest test/test_core.py --disable-warnings -s
+
+data format: csv / bin
+    Period:  2020-2024
+    TimeFrame: 1M
+
+    csv
+    0:00:08.422005 время экспорта из исходников MOEX в cvs
+    0:00:03.420709 время загрузки данных csv
+    files size 47.2 mb
+
+    bin
+    0:00:07.114523 время экспорта из исходников MOEX в bin
+    0:00:01.442553 время загрузки данных bin
+    files size 64.9 mb
+
+    bin compressed
+    0:00:15.756282 время экспорта из исходников MOEX в gzip bin
+    0:00:02.313968 время загрузки данных bin
+    files size 11.6 mb

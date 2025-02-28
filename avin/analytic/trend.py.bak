@@ -1,0 +1,794 @@
+#!/usr/bin/env  python3
+# ============================================================================
+# URL:          http://arsvincere.com
+# AUTHOR:       Alex Avin
+# E-MAIL:       mr.alexavin@gmail.com
+# LICENSE:      GNU GPLv3
+# ============================================================================
+
+from __future__ import annotations
+
+import asyncio
+import collections
+import enum
+
+import pandas as pd
+
+from avin import *
+from usr.analytic.extremum import *
+
+__all__ = ("TrendAnalytic",)
+
+
+class TrendAnalytic(Analytic):
+    class Analyse(enum.Enum):  # {{{
+        TYPE = 0
+        PERIOD = 1
+        DELTA = 2
+        SPEED = 3
+        VOLUME = 4
+
+    # }}}
+
+    name = "trend"
+    cache = Tree()
+
+    @classmethod  # getSizes  # {{{
+    async def getSizes(
+        cls,
+        asset: Asset,
+        tf: TimeFrame,
+        term: Term,
+        typ: Trend.Type,
+        analyse: TrendAnalytic.Analyse,
+    ) -> dict:
+        # cls.cache = {
+        #     asset: {
+        #         tf: {
+        #             term: {
+        #                 analyse: {
+        #                     Size: Range(min, max),
+        #                     ...
+        #                 }
+        #             }
+        #         }
+        #     }
+        # }
+
+        assert analyse != cls.Analyse.TYPE
+
+        # try find in cache
+        sizes_dict = cls.cache[asset][tf][term][analyse][typ]
+        if sizes_dict:
+            return sizes_dict
+
+        # else - load
+        analyse_name = f"{tf}-{term.name}-{analyse.name}-{typ.name}"
+        data = await AnalyticData.load(cls.name, analyse_name, asset)
+        if data is None:
+            return None
+
+        # decode and save in cache
+        sizes_dict = cls.decoderJson(data.json_str)
+        cls.cache[asset][tf][term][analyse][typ] = sizes_dict
+
+        return sizes_dict
+
+    # }}}
+    @classmethod  # speedSize  # {{{
+    async def speedSize(cls, trend: Trend) -> Size:
+        # for example:
+        # sizes_dict = {
+        #     ...,
+        #     Size.SMALL: Range(min, max),
+        #     Size.NORMAL: Range(min, max),
+        #     Size.BIG: Range(min, max),
+        #     ...,
+        #     }
+
+        # NOTE:
+        # в базе данных размеры диапазонов хранятся по модулю (положительные)
+        # из за траблов с классификацией размеров, функция
+        # __classifySizes лажает на отрицательных значения, переделывать
+        # влом, а так эта функция для положительных значений нормально
+        # работает
+        # trent.speedPercent()
+        # trent.speedPrice()
+        # возвращают отрицательные значения если тренд медвежий.
+        # поэтому берем модуль скорости а потом ищем ее размер
+        sizes_dict = await cls.__getSizes(trend, TrendAnalytic.Analyse.SPEED)
+        if sizes_dict is None:
+            return None
+
+        speed = abs(trend.speedPercent())
+        size = cls.__identifySize(speed, sizes_dict)
+
+        return size
+
+    # }}}
+    @classmethod  # deltaSize  # {{{
+    async def deltaSize(cls, trend: Trend):
+        # for example:
+        # sizes_dict = {
+        #     ...,
+        #     Size.SMALL: Range(min, max),
+        #     Size.NORMAL: Range(min, max),
+        #     Size.BIG: Range(min, max),
+        #     ...,
+        #     }
+
+        sizes_dict = await cls.__getSizes(trend, TrendAnalytic.Analyse.DELTA)
+        if sizes_dict is None:
+            return None
+
+        delta = abs(trend.deltaPercent())
+        size = cls.__identifySize(delta, sizes_dict)
+
+        return size
+
+    # }}}
+    @classmethod  # periodSize  # {{{
+    async def periodSize(cls, trend: Trend):
+        sizes_dict = await cls.__getSizes(trend, TrendAnalytic.Analyse.PERIOD)
+        if sizes_dict is None:
+            return None
+
+        period = trend.period()
+        size = cls.__identifySize(period, sizes_dict)
+
+        return size
+
+    # }}}
+    @classmethod  # volumeSize  # {{{
+    async def volumeSize(cls, trend: Trend):
+        sizes_dict = await cls.__getSizes(trend, TrendAnalytic.Analyse.VOLUME)
+        if sizes_dict is None:
+            return None
+
+        volume = trend.volume()
+        size = cls.__identifySize(volume, sizes_dict)
+
+        return size
+
+    # }}}
+
+    @classmethod  # filtering  # {{{
+    async def filtering(
+        cls,
+        test: Test,
+        tf: TimeFrame,
+        term: Term,
+        n: int,
+        analyse: TrendAnalytic.Analyse,
+    ):
+        trade_list = test.trade_list
+        assert trade_list is not None
+
+        match analyse:
+            case TrendAnalytic.Analyse.TYPE:
+                await cls.__filteringType(trade_list, tf, term, n)
+            case TrendAnalytic.Analyse.DELTA:
+                await cls.__filteringDelta(trade_list, tf, term, n)
+            case TrendAnalytic.Analyse.PERIOD:
+                await cls.__filteringPeriod(trade_list, tf, term, n)
+            case TrendAnalytic.Analyse.SPEED:
+                await cls.__filteringSpeed(trade_list, tf, term, n)
+            case TrendAnalytic.Analyse.VOLUME:
+                await cls.__filteringVolume(trade_list, tf, term, n)
+            case _:
+                assert False, "WTF???"
+
+    # }}}
+    @classmethod  # acheckType  # {{{
+    async def acheckType(
+        cls,
+        trade: Trade,
+        tf: TimeFrame,
+        term: Term,
+        n: int,
+        value: Trend.Type,
+    ):
+        assert isinstance(value, Trend.Type)
+
+        trend = await cls.__getTrend(trade, tf, term, n)
+        if trend is None:
+            return False
+
+        typ = trend.type
+        return typ == value
+
+    # }}}
+    @classmethod  # acheckDelta  # {{{
+    async def acheckDelta(
+        cls,
+        trade: Trade,
+        tf: TimeFrame,
+        term: Term,
+        n: int,
+        value: Size,
+    ):
+        assert isinstance(value, (Size, SimpleSize))
+
+        trend = await cls.__getTrend(trade, tf, term, n)
+        if trend is None:
+            return False
+
+        size = await cls.deltaSize(trend)
+        return size == value
+
+    # }}}
+    @classmethod  # acheckPeriod  # {{{
+    async def acheckPeriod(
+        cls,
+        trade: Trade,
+        tf: TimeFrame,
+        term: Term,
+        n: int,
+        value: Size,
+    ):
+        assert isinstance(value, (Size, SimpleSize))
+
+        trend = await cls.__getTrend(trade, tf, term, n)
+        if trend is None:
+            return False
+
+        size = await cls.periodSize(trend)
+        return size == value
+
+    # }}}
+    @classmethod  # acheckSpeed  # {{{
+    async def acheckSpeed(
+        cls,
+        trade: Trade,
+        tf: TimeFrame,
+        term: Term,
+        n: int,
+        value: Size,
+    ):
+        assert isinstance(value, (Size, SimpleSize))
+
+        trend = await cls.__getTrend(trade, tf, term, n)
+        if trend is None:
+            return False
+
+        size = await cls.speedSize(trend)
+        return size == value
+
+    # }}}
+    @classmethod  # acheckVolume  # {{{
+    async def acheckVolume(
+        cls,
+        trade: Trade,
+        tf: TimeFrame,
+        term: Term,
+        n: int,
+        value: Size,
+    ):
+        assert isinstance(value, (Size, SimpleSize))
+
+        trend = await cls.__getTrend(trade, tf, term, n)
+        if trend is None:
+            return False
+
+        size = await cls.volumeSize(trend)
+        return size == value
+
+    # }}}
+
+    @classmethod  # update  # {{{
+    async def update(cls):
+        logger.info(f":: Analytic={cls.name}: start update")
+
+        await Analytic.save(cls)
+
+        assets = await Asset.requestAll()
+        # asset = await Asset.fromStr("MOEX-SHARE-HYDR")
+        # assets = [asset]
+        for asset in assets:
+            await cls.__analyseTrend(asset)
+
+        logger.info(f"Analytic={cls.name}: update complete!")
+
+    # }}}
+
+    @classmethod  # __analyseTrend  # {{{
+    async def __analyseTrend(cls, asset):
+        timeframes = TimeFrameList(
+            [
+                TimeFrame("D"),
+                TimeFrame("1H"),
+                TimeFrame("5M"),
+                # TimeFrame("1M"),
+            ]
+        )
+
+        for tf in timeframes:
+            logger.info(f"   Analyse trend {asset}-{tf}")
+
+            if tf == TimeFrame("1M"):
+                first_dt = DateTime(2024, 1, 1, tzinfo=UTC)
+            elif tf == TimeFrame("5M"):
+                first_dt = DateTime(2023, 1, 1, tzinfo=UTC)
+            else:
+                info = await Data.info(asset, tf.toDataType())
+                first_dt = info.first_dt
+
+            # info = await Data.info(asset, tf.toDataType())
+            # first_dt = info.first_dt
+            chart = await asset.loadChart(tf, first_dt, now())
+            elist = ExtremumList(chart)
+
+            strends = elist.getAllTrends(Term.STERM)
+            mtrends = elist.getAllTrends(Term.MTERM)
+            ltrends = elist.getAllTrends(Term.LTERM)
+            await cls.__analyseTrendsSizes(strends)
+            await cls.__analyseTrendsSizes(mtrends)
+            await cls.__analyseTrendsSizes(ltrends)
+
+    # }}}
+    @classmethod  # __analyseTrendsSizes  # {{{
+    async def __analyseTrendsSizes(cls, trends: list[Trend]):
+        await cls.__analyseTrendsSizesPeriod(trends)
+        await cls.__analyseTrendsSizesDelta(trends)
+        await cls.__analyseTrendsSizesSpeed(trends)
+        await cls.__analyseTrendsSizesVolume(trends)
+
+    # }}}
+    @classmethod  # __analyseTrendsSizesPeriod  # {{{
+    async def __analyseTrendsSizesPeriod(cls, trends: list[Trend]):
+        # NOTE:
+        # логика такая если их меньше 300 то будет в притык к 100шт
+        # бычьих и медвежьих, и классифицировать тут нечего еще.
+        # Главное потом в стратегиях не забыть всегда проверять
+        # а есть ли вообще в БД классификация трендов по этому
+        # активу по этому таймфрейму по s/m/l-term
+        # Пока там ассерт стоит в Keeper стоит потом решу где его
+        # лучше обрабатывать и как.
+        if len(trends) < 300:
+            return
+
+        analyse = cls.Analyse.PERIOD
+        term = trends[0].term
+        tf = trends[0].timeframe
+        asset = trends[0].asset
+        logger.info(f"   - analyse {analyse.name} {term.name}")
+
+        period_bull_list = list()
+        period_bear_list = list()
+
+        for trend in trends:
+            period = trend.period()
+            if trend.isBull():
+                period_bull_list.append(period)
+            elif trend.isBear():
+                period_bear_list.append(period)
+
+        # period bull
+        name = f"{tf}-{term.name}-{analyse.name}-BULL"
+        classify = cls.__classifySizes(period_bull_list)
+        await cls.__saveAnalyticData(name, asset, classify)
+        # period bear
+        name = f"{tf}-{term.name}-{analyse.name}-BEAR"
+        classify = cls.__classifySizes(period_bear_list)
+        await cls.__saveAnalyticData(name, asset, classify)
+
+    # }}}
+    @classmethod  # __analyseTrendsSizesDelta  # {{{
+    async def __analyseTrendsSizesDelta(cls, trends: list[Trend]):
+        # NOTE:
+        # логика такая если их меньше 300 то будет в притык к 100шт
+        # бычьих и медвежьих, и классифицировать тут нечего еще.
+        # Главное потом в стратегиях не забыть всегда проверять
+        # а есть ли вообще в БД классификация трендов по этому
+        # активу по этому таймфрейму по s/m/l-term
+        # Пока там ассерт стоит в Keeper стоит потом решу где его
+        # лучше обрабатывать и как.
+        if len(trends) < 300:
+            return
+
+        analyse = cls.Analyse.DELTA
+        term = trends[0].term
+        tf = trends[0].timeframe
+        asset = trends[0].asset
+        logger.info(f"   - analyse {analyse.name} {term.name}")
+
+        delta_bull_list = list()
+        delta_bear_list = list()
+
+        for trend in trends:
+            delta = trend.deltaPercent()
+            if trend.isBull():
+                delta_bull_list.append(delta)
+            elif trend.isBear():
+                delta_bear_list.append(abs(delta))
+
+        # delta bull
+        name = f"{tf}-{term.name}-{analyse.name}-BULL"
+        classify = cls.__classifySizes(delta_bull_list)
+        await cls.__saveAnalyticData(name, asset, classify)
+        # delta bear
+        name = f"{tf}-{term.name}-{analyse.name}-BEAR"
+        classify = cls.__classifySizes(delta_bear_list)
+        await cls.__saveAnalyticData(name, asset, classify)
+
+    # }}}
+    @classmethod  # __analyseTrendsSizesSpeed  # {{{
+    async def __analyseTrendsSizesSpeed(cls, trends: list[Trend]):
+        # NOTE:
+        # логика такая если их меньше 300 то будет в притык к 100шт
+        # бычьих и медвежьих, и классифицировать тут нечего еще.
+        # Главное потом в стратегиях не забыть всегда проверять
+        # а есть ли вообще в БД классификация трендов по этому
+        # активу по этому таймфрейму по s/m/l-term
+        # Пока там ассерт стоит в Keeper стоит потом решу где его
+        # лучше обрабатывать и как.
+        if len(trends) < 300:
+            return
+
+        analyse = cls.Analyse.SPEED
+        term = trends[0].term
+        tf = trends[0].timeframe
+        asset = trends[0].asset
+        logger.info(f"   - analyse {analyse.name} {term.name}")
+
+        speed_bull_list = list()
+        speed_bear_list = list()
+
+        for trend in trends:
+            speed = trend.speedPercent()
+            if trend.isBull():
+                speed_bull_list.append(speed)
+            elif trend.isBear():
+                speed_bear_list.append(abs(speed))
+
+        # speed bull
+        name = f"{tf}-{term.name}-{analyse.name}-BULL"
+        classify = cls.__classifySizes(speed_bull_list)
+        await cls.__saveAnalyticData(name, asset, classify)
+        # speed bear
+        classify = cls.__classifySizes(speed_bear_list)
+        name = f"{tf}-{term.name}-{analyse.name}-BEAR"
+        await cls.__saveAnalyticData(name, asset, classify)
+
+    # }}}
+    @classmethod  # __analyseTrendsSizesVolume  # {{{
+    async def __analyseTrendsSizesVolume(cls, trends: list[Trend]):
+        # NOTE:
+        # логика такая если их меньше 300 то будет в притык к 100шт
+        # бычьих и медвежьих, и классифицировать тут нечего еще.
+        # Главное потом в стратегиях не забыть всегда проверять
+        # а есть ли вообще в БД классификация трендов по этому
+        # активу по этому таймфрейму по s/m/l-term
+        # Пока там ассерт стоит в Keeper стоит потом решу где его
+        # лучше обрабатывать и как.
+        if len(trends) < 300:
+            return
+
+        analyse = cls.Analyse.VOLUME
+        term = trends[0].term
+        tf = trends[0].timeframe
+        asset = trends[0].asset
+        logger.info(f"   - analyse {analyse.name} {term.name}")
+
+        volume_bull_list = list()
+        volume_bear_list = list()
+
+        for trend in trends:
+            volume = trend.volume()
+
+            if trend.isBull():
+                volume_bull_list.append(volume)
+            elif trend.isBear():
+                volume_bear_list.append(volume)
+
+        # volume bull
+        name = f"{tf}-{term.name}-{analyse.name}-BULL"
+        classify = cls.__classifySizes(volume_bull_list)
+        await cls.__saveAnalyticData(name, asset, classify)
+        # volume bear
+        name = f"{tf}-{term.name}-{analyse.name}-BEAR"
+        classify = cls.__classifySizes(volume_bear_list)
+        await cls.__saveAnalyticData(name, asset, classify)
+
+    # }}}
+    @classmethod  # __classifySizes  # {{{
+    def __classifySizes(cls, value_list: list) -> dict:
+        assert len(value_list) > 100
+
+        # create DataFrame
+        classify = dict()
+        trends_count = len(value_list)
+        counter = collections.Counter(value_list)
+        sorted_values_list = list()
+        count_list = list()
+        for i in sorted(counter):
+            sorted_values_list.append(i)
+            count_list.append(counter[i])
+        df = pd.DataFrame(
+            {
+                "value": sorted_values_list,
+                "count": count_list,
+            }
+        )
+        df["percent"] = df["count"] / trends_count * 100
+
+        # ####
+        # df.to_csv("vcp", sep=";")
+        # fig = px.scatter(x=df["value"], y=df["percent"])
+        # fig.show()
+        # print(df)
+        # exit(0)
+        # ####
+
+        # create classify
+        classify = dict()
+        percent = df["percent"]
+        minimum = df.iloc[0]["value"]
+        last = 1
+        for size in Size:
+            if size in (
+                Size.BLACKSWAN_SMALL,  # не существующие еще черные лебеди
+                Size.BLACKSWAN_BIG,  # не существующие еще черные лебеди
+                Size.GREATEST_BIG,  # last value set up after cycle
+            ):
+                continue
+
+            while percent[0:last].sum() < size.value:
+                last += 1
+
+            # иногда когда значений мало - заглючивает в последней
+            # категории, не охота разбираться, просто возьму 1 значение
+            # из предыдущей и запихаю его в GREATEST_BIG
+            if last == len(percent):
+                last -= 1
+
+            maximum = df.iloc[last]["value"]
+            classify[size] = Range(minimum, maximum)
+            minimum = maximum
+
+        # set last value GREATEST_BIG
+        maximum = df["value"].max()
+        classify[Size.GREATEST_BIG] = Range(minimum, maximum)
+
+        return classify
+
+    # }}}
+    @classmethod  # __saveAnalyticData  # {{{
+    async def __saveAnalyticData(cls, name, asset, classify):
+        # logger.info(f"     save {asset} {name}")
+
+        analytic_data = AnalyticData(
+            analytic_name=cls.name,
+            analyse_name=name,
+            asset=asset,
+            json_str=cls.encoderJson(classify),
+        )
+        await AnalyticData.save(analytic_data)
+
+    # }}}
+
+    @classmethod  # __identifySize  #{{{
+    def __identifySize(cls, value, sizes_dict):
+        # смотрим диапазоны, если value в нем, возвращаем этот размер
+        for size, range_ in sizes_dict.items():
+            if value in range_:
+                return size
+
+        # если значение < чем существующий черный лебедь ->  BLACKSWAN_SMALL
+        range_ = sizes_dict[Size.BLACKSWAN_SMALL]
+        if value < range_.min:
+            return Size.BLACKSWAN_SMALL
+
+        # если значение > чем существующий черный лебедь ->  BLACKSWAN_BIG
+        range_ = sizes_dict[Size.BLACKSWAN_BIG]
+        if value > range_.max:
+            return Size.BLACKSWAN_BIG
+
+    # }}}
+    @classmethod  # __getTrend  # {{{
+    async def __getTrend(cls, trade, tf, term, n):
+        # предварительная инициализация
+        trend = None
+
+        # TODO: надо посчитать максимальные размеры периодов
+        # s-m-l и цифры взять с запасом, а не наглазок с потолка
+        # какк сейчас
+        if term == Term.STERM:
+            min_bars = 100
+        elif term == Term.MTERM:
+            min_bars = 250
+        elif term == Term.LTERM:
+            min_bars = 500
+
+        # loading chart
+        chart = await trade.loadChart(tf, min_bars)
+
+        # get trend
+        elist = ExtremumList(chart)
+        if term == Term.STERM:
+            trend = elist.sTrend(n)
+        elif term == Term.MTERM:
+            trend = elist.mTrend(n)
+        elif term == Term.LTERM:
+            trend = elist.lTrend(n)
+
+        # загружаем больше баров если не выхватывается тренд
+        if trend is None:
+            min_bars = 5000
+            chart = await trade.loadChart(tf, min_bars)
+            elist = ExtremumList(chart)
+            if term == Term.STERM:
+                trend = elist.sTrend(n)
+            elif term == Term.MTERM:
+                trend = elist.mTrend(n)
+            elif term == Term.LTERM:
+                trend = elist.lTrend(n)
+
+        # если и это не помогло - кидаем варнинг
+        if trend is None:
+            logger.warning(
+                f"TrendAnalytic.__getTrend: trend is None! {trade}"
+            )
+
+        return trend
+
+    # }}}
+    @classmethod  # __getSizes  # {{{
+    async def __getSizes(cls, trend: Trend, analyse: Analyse) -> dict:
+        assert analyse != cls.Analyse.TYPE
+
+        asset = trend.asset
+        tf = trend.timeframe
+        term = trend.term
+        typ = trend.type
+
+        return await cls.getSizes(asset, tf, term, typ, analyse)
+
+    # }}}
+    @classmethod  # __filteringType  # {{{
+    async def __filteringType(cls, trade_list, tf, term, n):
+        logger.info(f"   Filtering type {tf} {term.name} {n}")
+
+        bear = list()
+        bull = list()
+        for trade in trade_list:
+            check = await cls.acheckType(trade, tf, term, n, Trend.Type.BEAR)
+            if check:
+                bear.append(trade)
+            else:
+                bull.append(trade)
+
+        bear_name = f"Trend {tf} {term.name} {n} BEAR"
+        bull_name = f"Trend {tf} {term.name} {n} BULL"
+        trade_list.createChild(bear, bear_name)
+        trade_list.createChild(bull, bull_name)
+
+    # }}}
+    @classmethod  # __filteringDelta  # {{{
+    async def __filteringDelta(cls, trade_list, tf, term, n):
+        logger.info(f"   Filtering delta {tf} {term.name} {n}")
+
+        childs = collections.defaultdict(list)
+        for size in Size:
+            for trade in trade_list:
+                check = await cls.acheckDelta(trade, tf, term, n, size)
+                if check:
+                    childs[size].append(trade)
+
+        for size in Size:
+            name = f"Trend {tf} {term.name} {n} DELTA {size}"
+            trades = childs[size]
+            trade_list.createChild(trades, name)
+
+    # }}}
+    @classmethod  # __filteringPeriod  # {{{
+    async def __filteringPeriod(cls, trade_list, tf, term, n):
+        logger.info(f"   Filtering period {tf} {term.name} {n}")
+
+        childs = collections.defaultdict(list)
+        for size in Size:
+            for trade in trade_list:
+                check = await cls.acheckPeriod(trade, tf, term, n, size)
+                if check:
+                    childs[size].append(trade)
+
+        for size in Size:
+            name = f"Trend {tf} {term.name} {n} PERIOD {size}"
+            trades = childs[size]
+            trade_list.createChild(trades, name)
+
+    # }}}
+    @classmethod  # __filteringSpeed  # {{{
+    async def __filteringSpeed(cls, trade_list, tf, term, n):
+        logger.info(f"   Filtering speed {tf} {term.name} {n}")
+
+        childs = collections.defaultdict(list)
+        for size in Size:
+            for trade in trade_list:
+                check = await cls.acheckSpeed(trade, tf, term, n, size)
+                if check:
+                    childs[size].append(trade)
+
+        for size in Size:
+            name = f"Trend {tf} {term.name} {n} SPEED {size}"
+            trades = childs[size]
+            trade_list.createChild(trades, name)
+
+    # }}}
+    @classmethod  # __filteringVolume  # {{{
+    async def __filteringVolume(cls, trade_list, tf, term, n):
+        logger.info(f"   Filtering volume {tf} {term.name} {n}")
+
+        childs = collections.defaultdict(list)
+        for size in Size:
+            for trade in trade_list:
+                check = await cls.acheckVolume(trade, tf, term, n, size)
+                if check:
+                    childs[size].append(trade)
+
+        for size in Size:
+            name = f"Trend {tf} {term.name} {n} VOLUME {size}"
+            trades = childs[size]
+            trade_list.createChild(trades, name)
+
+    # }}}
+
+    @classmethod  # filteringDeltaSimple  # {{{
+    async def filteringDeltaSimple(cls, trade_list, tf, term, n):
+        logger.info(f"   Filtering delta simple {tf} {term.name} {n}")
+
+        childs = collections.defaultdict(list)
+        for size in SimpleSize:
+            for trade in trade_list:
+                check = await cls.acheckDelta(trade, tf, term, n, size)
+                if check:
+                    childs[size].append(trade)
+
+        for size in SimpleSize:
+            name = f"Trend {tf} {term.name} {n} DELTA {size}"
+            trades = childs[size]
+            trade_list.createChild(trades, name)
+
+    # }}}
+
+    @staticmethod  # encoderJson  # {{{
+    def encoderJson(data) -> str:
+        logger.debug("UAnalytic=volume: encoderJson")
+
+        # from data = {Size.NORMAL: <class Range>, ...}
+        # to obj = {"NORMAL": "Range(1.1, 1.5), ..."}
+        obj = dict()
+        for size, range_ in data.items():
+            obj[size.name] = repr(range_)
+
+        # from obj = {"NORMAL": "Range(1.1, 1.5)", ...}
+        # to str = '{"NORMAL": "Range(1.1, 1.5)", ...}'
+        json_string = Cmd.toJson(obj)
+
+        return json_string
+
+    # }}}
+    @staticmethod  # decoderJson  # {{{
+    def decoderJson(pg_json_str) -> dict:
+        logger.debug("UAnalytic=range: decoderJson")
+
+        # from str = '{"NORMAL": "Range(1.1, 1.5)", ...}'
+        # to obj = {"NORMAL": "Range(1.1, 1.5)", ...}
+        obj = Cmd.fromJson(pg_json_str)
+
+        # from obj = {"NORMAL": "Range(1.1, 1.5)", ...}
+        # to dict_sizes = {Size.NORMAL: <class Range>, ...}
+        dict_sizes = dict()
+        for size_str, range_repr in obj.items():
+            size = Size.fromStr(size_str)
+            r = eval(range_repr)
+            dict_sizes[size] = r
+
+        return dict_sizes
+
+    # }}}
+
+
+if __name__ == "__main__":
+    configureLogger(debug=True, info=True)
+    asyncio.run(TrendAnalytic.update())

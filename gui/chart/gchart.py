@@ -526,11 +526,17 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
     def __createGVols(self):  # {{{
         logger.debug(f"{self.__class__.__name__}.__createGVols()")
 
+        #### dbg
+        self.gvols = QtWidgets.QGraphicsItemGroup()
+        return
+        ####
+
         # create volume rects
         self.max_vol = Thread.getMaxVol(
             self.chart.instrument, self.chart.timeframe
         )
         self.gvols = QtWidgets.QGraphicsItemGroup()
+
         for gbar in self.gbars:
             gvol = GVol(gbar)
             self.gvols.addToGroup(gvol)
@@ -541,6 +547,10 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
     # }}}
     def __createGVolsLevels(self):  # {{{
         logger.debug(f"{self.__class__.__name__}.__createGVolsLevels()")
+
+        #### dbg
+        return
+        ####
 
         x0 = 0
         x100 = self.rect.width()

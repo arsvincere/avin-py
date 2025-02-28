@@ -1,0 +1,5153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+CAUTION: Do not modify this file unless you know what you are doing.
+ Unexpected results may occur if the code is changed deliberately.
+-->
+<dbmodel pgmodeler-ver="1.2.0-alpha1" use-changelog="false" max-obj-count="211"
+	 last-position="0,-96" last-zoom="1.1" scene-rect="0,-87,7475.09,5219.12"
+	 default-schema="public" default-owner="postgres"
+	 layers="Default layer"
+	 active-layers="0"
+	 layer-name-colors="#000000"
+	 layer-rect-colors="#b4b4b4"
+	 show-layer-names="false" show-layer-rects="false">
+<role name="alex"
+ superuser="true"
+ createdb="true"
+ createrole="true"
+ inherit="true"
+ login="true"
+ password="********">
+</role>
+
+<role name="pg_database_owner"
+ inherit="true"
+ password="********"
+ sql-disabled="true">
+</role>
+
+<database name="ars_vincere" encoding="UTF8" lc-collate="ru_RU.UTF-8" lc-ctype="ru_RU.UTF-8" is-template="false" allow-conns="true">
+	<role name="alex"/>
+	<tablespace name="pg_default"/>
+</database>
+
+<schema name="public" layers="0" rect-visible="true" fill-color="#d4ffd9" name-color="#000000" sql-disabled="true">
+</schema>
+
+<schema name="data" layers="0" rect-visible="true" fill-color="#fffbbd" name-color="#000000">
+	<role name="pg_database_owner"/>
+	<comment> <![CDATA[market data]]> </comment>
+</schema>
+
+<usertype name="DataSource" configuration="enumeration">
+	<schema name="public"/>
+	<role name="alex"/>
+	<enumeration label="CONVERT"/>
+	<enumeration label="MOEX"/>
+	<enumeration label="TINKOFF"/>
+</usertype>
+
+<usertype name="DataType" configuration="enumeration">
+	<schema name="public"/>
+	<role name="alex"/>
+	<enumeration label="BAR_1M"/>
+	<enumeration label="BAR_5M"/>
+	<enumeration label="BAR_10M"/>
+	<enumeration label="BAR_1H"/>
+	<enumeration label="BAR_D"/>
+	<enumeration label="BAR_W"/>
+	<enumeration label="BAR_M"/>
+	<enumeration label="BAR_Q"/>
+	<enumeration label="BAR_Y"/>
+</usertype>
+
+<usertype name="InstrumentType" configuration="enumeration">
+	<schema name="public"/>
+	<role name="alex"/>
+	<enumeration label="CASH"/>
+	<enumeration label="INDEX"/>
+	<enumeration label="SHARE"/>
+	<enumeration label="BOND"/>
+	<enumeration label="FUTURE"/>
+	<enumeration label="OPTION"/>
+	<enumeration label="CURRENCY"/>
+	<enumeration label="ETF"/>
+</usertype>
+
+<usertype name="Exchange" configuration="enumeration">
+	<schema name="public"/>
+	<role name="alex"/>
+	<enumeration label="MOEX"/>
+	<enumeration label="SPB"/>
+</usertype>
+
+<usertype name="TimeFrame" configuration="enumeration">
+	<schema name="public"/>
+	<role name="alex"/>
+	<enumeration label="1M"/>
+	<enumeration label="5M"/>
+	<enumeration label="10M"/>
+	<enumeration label="1H"/>
+	<enumeration label="D"/>
+	<enumeration label="W"/>
+	<enumeration label="M"/>
+	<enumeration label="Q"/>
+	<enumeration label="Y"/>
+</usertype>
+
+<usertype name="Direction" configuration="enumeration">
+	<schema name="public"/>
+	<role name="alex"/>
+	<enumeration label="BUY"/>
+	<enumeration label="SELL"/>
+</usertype>
+
+<usertype name="Order.Type" configuration="enumeration">
+	<schema name="public"/>
+	<role name="alex"/>
+	<enumeration label="MARKET"/>
+	<enumeration label="LIMIT"/>
+	<enumeration label="STOP"/>
+	<enumeration label="STOP_LOSS"/>
+	<enumeration label="TAKE_PROFIT"/>
+	<enumeration label="WAIT"/>
+	<enumeration label="TRAILING"/>
+</usertype>
+
+<usertype name="Order.Status" configuration="enumeration">
+	<schema name="public"/>
+	<role name="alex"/>
+	<enumeration label="NEW"/>
+	<enumeration label="SUBMIT"/>
+	<enumeration label="POSTED"/>
+	<enumeration label="OFF"/>
+	<enumeration label="PARTIAL"/>
+	<enumeration label="FILLED"/>
+	<enumeration label="EXECUTED"/>
+	<enumeration label="TRIGGERED"/>
+	<enumeration label="CANCELED"/>
+	<enumeration label="BLOCKED"/>
+	<enumeration label="REJECTED"/>
+	<enumeration label="EXPIRED"/>
+</usertype>
+
+<usertype name="Trade.Type" configuration="enumeration">
+	<schema name="public"/>
+	<role name="alex"/>
+	<enumeration label="LONG"/>
+	<enumeration label="SHORT"/>
+</usertype>
+
+<usertype name="Trade.Status" configuration="enumeration">
+	<schema name="public"/>
+	<role name="alex"/>
+	<enumeration label="INITIAL"/>
+	<enumeration label="PENDING"/>
+	<enumeration label="TRIGGERED"/>
+	<enumeration label="MAKE_ORDER"/>
+	<enumeration label="POST_ORDER"/>
+	<enumeration label="AWAIT_EXEC"/>
+	<enumeration label="OPENED"/>
+	<enumeration label="MAKE_STOP"/>
+	<enumeration label="MAKE_TAKE"/>
+	<enumeration label="POST_STOP"/>
+	<enumeration label="POST_TAKE"/>
+	<enumeration label="ACTIVE"/>
+	<enumeration label="CLOSING"/>
+	<enumeration label="CLOSED"/>
+	<enumeration label="CANCELED"/>
+	<enumeration label="BLOCKED"/>
+</usertype>
+
+<usertype name="Test.Status" configuration="enumeration">
+	<schema name="public"/>
+	<role name="alex"/>
+	<enumeration label="NEW"/>
+	<enumeration label="EDITED"/>
+	<enumeration label="PROCESS"/>
+	<enumeration label="COMPLETE"/>
+</usertype>
+
+<table name="Instrument" layers="0" collapse-mode="2" max-obj-count="8" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="3680" y="-20"/>
+	<column name="figi" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="exchange" not-null="true">
+		<type name="public.&quot;Exchange&quot;" length="0"/>
+	</column>
+	<column name="type" not-null="true">
+		<type name="public.&quot;InstrumentType&quot;" length="0"/>
+	</column>
+	<column name="ticker" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="name" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="lot" not-null="true">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="min_price_step">
+		<type name="double precision" length="0"/>
+	</column>
+	<constraint name="Instrument_pkey" type="pk-constr" table="data.&quot;Instrument&quot;">
+		<columns names="figi" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="InstrumentInfo" layers="0" collapse-mode="2" max-obj-count="4" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4160" y="-20"/>
+	<column name="data_source" not-null="true">
+		<type name="public.&quot;DataSource&quot;" length="0"/>
+	</column>
+	<column name="instrument_type" not-null="true">
+		<type name="public.&quot;InstrumentType&quot;" length="0"/>
+	</column>
+	<column name="figi" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="instrument_info" not-null="true">
+		<type name="jsonb" length="0"/>
+	</column>
+	<constraint name="InstrumentInfo_pkey" type="pk-constr" table="data.&quot;InstrumentInfo&quot;">
+		<columns names="data_source,figi" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="DataInfo" layers="0" collapse-mode="2" max-obj-count="6" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4660" y="-20"/>
+	<column name="data_source" not-null="true">
+		<type name="public.&quot;DataSource&quot;" length="0"/>
+	</column>
+	<column name="data_type" not-null="true">
+		<type name="public.&quot;DataType&quot;" length="0"/>
+	</column>
+	<column name="figi" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="first_dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="last_dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<constraint name="DataInfo_pkey" type="pk-constr" table="data.&quot;DataInfo&quot;">
+		<columns names="data_source,data_type,figi" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="Asset" layers="0" collapse-mode="2" max-obj-count="1" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="560" y="240"/>
+	<column name="figi" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<constraint name="Asset_pkey" type="pk-constr" table="public.&quot;Asset&quot;">
+		<columns names="figi" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_AFKS_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5160" y="-20"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_AFKS_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_AFKS_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_AFLT_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5620" y="-20"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_AFLT_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_AFLT_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_ALRS_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6080" y="-20"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_ALRS_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_ALRS_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_MOEX_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6560" y="-20"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_MOEX_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_MOEX_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_MVID_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="7020" y="-20"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_MVID_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_MVID_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_SBER_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="3680" y="240"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_SBER_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_SBER_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_VTBR_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4140" y="240"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_VTBR_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_VTBR_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_BANEP_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4600" y="240"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_BANEP_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_BANEP_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_GAZP_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5080" y="240"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_GAZP_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_GAZP_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_SIBN_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5560" y="240"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_SIBN_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_SIBN_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_LSRG_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6020" y="240"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_LSRG_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_LSRG_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_IRAO_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6480" y="240"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_IRAO_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_IRAO_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_MAGN_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6960" y="240"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_MAGN_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_MAGN_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_MTSS_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="3680" y="500"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_MTSS_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_MTSS_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_NLMK_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4140" y="500"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_NLMK_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_NLMK_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_NVTK_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4620" y="500"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_NVTK_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_NVTK_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_RASP_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5080" y="500"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_RASP_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_RASP_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_ROSN_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5540" y="500"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_ROSN_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_ROSN_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_ENPG_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6020" y="500"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_ENPG_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_ENPG_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_OZON_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6480" y="500"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_OZON_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_OZON_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_POSI_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6960" y="500"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_POSI_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_POSI_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_RTKM_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="3680" y="760"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_RTKM_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_RTKM_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_RTKMP_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4140" y="760"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_RTKMP_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_RTKMP_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_RUAL_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4620" y="760"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_RUAL_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_RUAL_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_HYDR_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5080" y="760"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_HYDR_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_HYDR_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_RNFT_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5560" y="760"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_RNFT_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_RNFT_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_SBERP_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6020" y="760"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_SBERP_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_SBERP_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_CHMF_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6500" y="760"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_CHMF_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_CHMF_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_SELG_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6980" y="760"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_SELG_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_SELG_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_FLOT_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="3680" y="1020"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_FLOT_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_FLOT_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_SNGS_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4140" y="1020"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_SNGS_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_SNGS_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_TATN_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4600" y="1020"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_TATN_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_TATN_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_TATNP_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5080" y="1020"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_TATNP_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_TATNP_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_TRMK_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5540" y="1020"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_TRMK_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_TRMK_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_FEES_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6020" y="1020"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_FEES_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_FEES_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_UPRO_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6480" y="1020"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_UPRO_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_UPRO_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_PIKK_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6960" y="1020"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_PIKK_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_PIKK_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_MTLRP_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="3680" y="1280"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_MTLRP_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_MTLRP_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_SNGSP_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4160" y="1280"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_SNGSP_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_SNGSP_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_BANE_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4620" y="1280"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_BANE_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_BANE_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_NMTP_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5100" y="1280"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_NMTP_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_NMTP_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_YDEX_D" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5560" y="1280"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_YDEX_D_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_YDEX_D&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_AFLT_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6040" y="1280"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_AFLT_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_AFLT_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_ALRS_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6500" y="1280"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_ALRS_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_ALRS_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_BANE_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6980" y="1280"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_BANE_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_BANE_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_BANEP_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="3680" y="1540"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_BANEP_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_BANEP_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_CHMF_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4160" y="1540"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_CHMF_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_CHMF_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_ENPG_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4620" y="1540"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_ENPG_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_ENPG_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_FEES_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5100" y="1540"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_FEES_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_FEES_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_FLOT_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5560" y="1540"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_FLOT_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_FLOT_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_GAZP_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6040" y="1540"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_GAZP_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_GAZP_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_HYDR_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6500" y="1540"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_HYDR_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_HYDR_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_IRAO_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6980" y="1540"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_IRAO_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_IRAO_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_LSRG_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="3680" y="1800"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_LSRG_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_LSRG_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_MAGN_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4140" y="1800"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_MAGN_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_MAGN_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_MOEX_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4620" y="1800"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_MOEX_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_MOEX_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_MTLRP_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5100" y="1800"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_MTLRP_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_MTLRP_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_MTSS_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5580" y="1800"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_MTSS_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_MTSS_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_MVID_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6040" y="1800"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_MVID_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_MVID_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_NLMK_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6520" y="1800"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_NLMK_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_NLMK_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_NMTP_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="7000" y="1800"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_NMTP_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_NMTP_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_NVTK_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="3680" y="2060"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_NVTK_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_NVTK_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_OZON_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4140" y="2060"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_OZON_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_OZON_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_PIKK_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4620" y="2060"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_PIKK_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_PIKK_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_POSI_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5080" y="2060"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_POSI_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_POSI_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_RASP_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5560" y="2060"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_RASP_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_RASP_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_RNFT_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6020" y="2060"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_RNFT_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_RNFT_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_ROSN_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6500" y="2060"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_ROSN_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_ROSN_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_RTKM_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6960" y="2060"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_RTKM_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_RTKM_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_RTKMP_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="3680" y="2320"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_RTKMP_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_RTKMP_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_RUAL_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4160" y="2320"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_RUAL_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_RUAL_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_SBER_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4620" y="2320"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_SBER_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_SBER_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_SBERP_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5100" y="2320"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_SBERP_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_SBERP_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_SELG_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5580" y="2320"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_SELG_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_SELG_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_SIBN_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6040" y="2320"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_SIBN_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_SIBN_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_SNGS_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6520" y="2320"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_SNGS_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_SNGS_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_SNGSP_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6980" y="2320"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_SNGSP_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_SNGSP_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_TATN_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="3680" y="2580"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_TATN_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_TATN_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_TATNP_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4140" y="2580"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_TATNP_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_TATNP_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_TRMK_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4620" y="2580"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_TRMK_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_TRMK_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_UPRO_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5100" y="2580"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_UPRO_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_UPRO_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_VTBR_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5560" y="2580"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_VTBR_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_VTBR_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_YDEX_W" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6040" y="2580"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_YDEX_W_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_YDEX_W&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_AFLT_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6500" y="2580"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_AFLT_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_AFLT_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_ALRS_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6980" y="2580"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_ALRS_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_ALRS_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_BANE_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="3680" y="2840"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_BANE_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_BANE_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_BANEP_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4140" y="2840"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_BANEP_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_BANEP_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_CHMF_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4620" y="2840"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_CHMF_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_CHMF_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_ENPG_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5100" y="2840"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_ENPG_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_ENPG_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_FEES_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5560" y="2840"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_FEES_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_FEES_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_FLOT_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6040" y="2840"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_FLOT_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_FLOT_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_GAZP_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6500" y="2840"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_GAZP_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_GAZP_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_HYDR_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6960" y="2840"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_HYDR_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_HYDR_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_IRAO_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="3680" y="3100"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_IRAO_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_IRAO_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_LSRG_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4140" y="3100"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_LSRG_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_LSRG_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_MAGN_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4600" y="3100"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_MAGN_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_MAGN_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_MOEX_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5080" y="3100"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_MOEX_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_MOEX_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_MTLRP_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5560" y="3100"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_MTLRP_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_MTLRP_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_MTSS_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6040" y="3100"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_MTSS_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_MTSS_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_MVID_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6500" y="3100"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_MVID_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_MVID_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_NLMK_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6980" y="3100"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_NLMK_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_NLMK_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_NMTP_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="3680" y="3360"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_NMTP_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_NMTP_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_NVTK_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4140" y="3360"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_NVTK_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_NVTK_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_OZON_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4620" y="3360"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_OZON_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_OZON_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_PIKK_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5080" y="3360"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_PIKK_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_PIKK_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_POSI_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5560" y="3360"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_POSI_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_POSI_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_RASP_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6020" y="3360"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_RASP_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_RASP_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_RNFT_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6480" y="3360"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_RNFT_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_RNFT_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_ROSN_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6960" y="3360"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_ROSN_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_ROSN_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_RTKM_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="3680" y="3620"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_RTKM_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_RTKM_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_RTKMP_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4140" y="3620"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_RTKMP_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_RTKMP_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_RUAL_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4620" y="3620"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_RUAL_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_RUAL_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_SBER_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5100" y="3620"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_SBER_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_SBER_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_SBERP_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5560" y="3620"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_SBERP_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_SBERP_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_SELG_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6040" y="3620"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_SELG_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_SELG_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_SIBN_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6500" y="3620"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_SIBN_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_SIBN_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_SNGS_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6980" y="3620"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_SNGS_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_SNGS_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_SNGSP_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="3680" y="3880"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_SNGSP_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_SNGSP_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_TATN_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4160" y="3880"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_TATN_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_TATN_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_TATNP_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4620" y="3880"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_TATNP_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_TATNP_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_TRMK_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5100" y="3880"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_TRMK_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_TRMK_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_UPRO_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5560" y="3880"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_UPRO_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_UPRO_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_VTBR_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6040" y="3880"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_VTBR_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_VTBR_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_YDEX_M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6500" y="3880"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_YDEX_M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_YDEX_M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_AFKS_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6980" y="3880"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_AFKS_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_AFKS_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_AFLT_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="3680" y="4140"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_AFLT_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_AFLT_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_ALRS_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4140" y="4140"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_ALRS_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_ALRS_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_MOEX_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4620" y="4140"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_MOEX_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_MOEX_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_MVID_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5100" y="4140"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_MVID_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_MVID_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_SBER_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5580" y="4140"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_SBER_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_SBER_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_VTBR_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6060" y="4140"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_VTBR_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_VTBR_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_BANEP_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6540" y="4140"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_BANEP_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_BANEP_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<usertype name="TradeListOwner" configuration="enumeration">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<enumeration label="TEST"/>
+	<enumeration label="TRADER"/>
+</usertype>
+
+<table name="MOEX_SHARE_GAZP_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="7040" y="4140"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_GAZP_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_GAZP_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_SIBN_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="3680" y="4400"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_SIBN_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_SIBN_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="AssetList" layers="0" collapse-mode="2" max-obj-count="1" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="40" y="240"/>
+	<column name="asset_list_name" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<constraint name="AssetList_pkey" type="pk-constr" table="public.&quot;AssetList&quot;">
+		<columns names="asset_list_name" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="AssetList-Asset" layers="0" collapse-mode="2" max-obj-count="2" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="220" y="20"/>
+	<column name="asset_list_name">
+		<type name="text" length="0"/>
+	</column>
+	<column name="figi">
+		<type name="text" length="0"/>
+	</column>
+</table>
+
+<table name="Strategy" layers="0" collapse-mode="2" max-obj-count="2" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="1680" y="340"/>
+	<column name="strategy_name" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="version" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<constraint name="Strategy_pkey" type="pk-constr" table="public.&quot;Strategy&quot;">
+		<columns names="strategy_name,version" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="StrategySet" layers="0" collapse-mode="2" max-obj-count="1" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="1280" y="340"/>
+	<column name="strategy_set_name" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<constraint name="StrategySet_pkey" type="pk-constr" table="public.&quot;StrategySet&quot;">
+		<columns names="strategy_set_name" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="StrategySet-Strategy" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="1400" y="-20"/>
+	<column name="strategy_set_name">
+		<type name="text" length="0"/>
+	</column>
+	<column name="strategy">
+		<type name="text" length="0"/>
+	</column>
+	<column name="version">
+		<type name="text" length="0"/>
+	</column>
+	<column name="figi">
+		<type name="text" length="0"/>
+	</column>
+	<column name="long" not-null="true">
+		<type name="boolean" length="0"/>
+	</column>
+	<column name="short" not-null="true">
+		<type name="boolean" length="0"/>
+	</column>
+</table>
+
+<table name="Broker" layers="0" collapse-mode="2" max-obj-count="1" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="3200" y="-20"/>
+	<column name="broker_name" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<constraint name="Broker_pkey" type="pk-constr" table="public.&quot;Broker&quot;">
+		<columns names="broker_name" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="Account" layers="0" collapse-mode="2" max-obj-count="2" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="2980" y="620"/>
+	<column name="account_name" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="broker">
+		<type name="text" length="0"/>
+	</column>
+	<constraint name="Account_pkey" type="pk-constr" table="public.&quot;Account&quot;">
+		<columns names="account_name" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="Test/Trader" layers="0" collapse-mode="2" max-obj-count="3" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="400" y="1460"/>
+	<column name="name" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="type" not-null="true">
+		<type name="public.&quot;TradeListOwner&quot;" length="0"/>
+	</column>
+	<column name="config" not-null="true">
+		<type name="jsonb" length="0"/>
+	</column>
+	<constraint name="Test/Trader_pkey" type="pk-constr" table="public.&quot;Test/Trader&quot;">
+		<columns names="name" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="TradeList" layers="0" collapse-mode="2" max-obj-count="2" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="920" y="1140"/>
+	<column name="trade_list_name" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="owner">
+		<type name="text" length="0"/>
+	</column>
+	<constraint name="TradeList_pkey" type="pk-constr" table="public.&quot;TradeList&quot;">
+		<columns names="trade_list_name" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="Trade" layers="0" collapse-mode="2" max-obj-count="10" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="1480" y="780"/>
+	<column name="trade_id" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="trade_list">
+		<type name="text" length="0"/>
+	</column>
+	<column name="figi" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="strategy" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="version" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="status" not-null="true">
+		<type name="public.&quot;Trade.Status&quot;" length="0"/>
+	</column>
+	<column name="trade_type" not-null="true">
+		<type name="public.&quot;Trade.Type&quot;" length="0"/>
+	</column>
+	<column name="trade_info" not-null="true">
+		<type name="jsonb" length="0"/>
+	</column>
+	<constraint name="Trade_pkey" type="pk-constr" table="public.&quot;Trade&quot;">
+		<columns names="trade_id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="Order" layers="0" collapse-mode="2" max-obj-count="19" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="2340" y="480"/>
+	<column name="order_id" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="trade_id">
+		<type name="text" length="0"/>
+	</column>
+	<column name="account">
+		<type name="text" length="0"/>
+	</column>
+	<column name="figi" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="order_type" not-null="true">
+		<type name="public.&quot;Order.Type&quot;" length="0"/>
+	</column>
+	<column name="status" not-null="true">
+		<type name="public.&quot;Order.Status&quot;" length="0"/>
+	</column>
+	<column name="direction" not-null="true">
+		<type name="public.&quot;Direction&quot;" length="0"/>
+	</column>
+	<column name="lots" not-null="true">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="quantity" not-null="true">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="price">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="stop_price">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="exec_price">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="exec_lots" not-null="true">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="exec_quantity" not-null="true">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="broker_id" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="meta" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<constraint name="Order_pkey" type="pk-constr" table="public.&quot;Order&quot;">
+		<columns names="order_id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="Transaction" layers="0" collapse-mode="2" max-obj-count="6" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="2460" y="220"/>
+	<column name="order_id">
+		<type name="text" length="0"/>
+	</column>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="price" not-null="true">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="quantity" not-null="true">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="broker_id" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+</table>
+
+<table name="Operation" layers="0" collapse-mode="2" max-obj-count="15" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="2320" y="1000"/>
+	<column name="operation_id" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="order_id">
+		<type name="text" length="0"/>
+	</column>
+	<column name="trade_id">
+		<type name="text" length="0"/>
+	</column>
+	<column name="account">
+		<type name="text" length="0"/>
+	</column>
+	<column name="figi" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="direction" not-null="true">
+		<type name="public.&quot;Direction&quot;" length="0"/>
+	</column>
+	<column name="lots" not-null="true">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="quantity" not-null="true">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="price" not-null="true">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="amount" not-null="true">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="commission" not-null="true">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="meta" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<constraint name="Operation_pkey" type="pk-constr" table="public.&quot;Operation&quot;">
+		<columns names="operation_id" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="Operation_order_id_key" type="uq-constr" table="public.&quot;Operation&quot;">
+		<columns names="order_id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="TestList" layers="0" collapse-mode="2" max-obj-count="1" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="40" y="1460"/>
+	<column name="test_list_name" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<constraint name="TestList_pkey" type="pk-constr" table="public.&quot;TestList&quot;">
+		<columns names="test_list_name" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="TestList-Tests" layers="0" collapse-mode="2" max-obj-count="2" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="200" y="1180"/>
+	<column name="test_list">
+		<type name="text" length="0"/>
+	</column>
+	<column name="test">
+		<type name="text" length="0"/>
+	</column>
+</table>
+
+<table name="AnalyticData" layers="0" collapse-mode="2" max-obj-count="3" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="520" y="500"/>
+	<column name="analytic_name" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="figi" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="analyse_json" not-null="true">
+		<type name="jsonb" length="0"/>
+	</column>
+	<constraint name="AnalyticData_pkey" type="pk-constr" table="public.&quot;AnalyticData&quot;">
+		<columns names="analytic_name,figi" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_LSRG_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4140" y="4400"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_LSRG_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_LSRG_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_IRAO_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4620" y="4400"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_IRAO_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_IRAO_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_MAGN_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5100" y="4400"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_MAGN_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_MAGN_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<view name="Test" layers="0" collapse-mode="2" max-obj-count="1" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="340" y="1720"/>
+	<reference object="public.&quot;Test/Trader&quot;" type="table" ref-name="Test/Trader" use-signature="true"/>
+	<simplecol name="name" type="text"/>
+	<simplecol name="config" type="jsonb"/>
+	<definition> <![CDATA[ SELECT name,
+    config
+   FROM "Test/Trader"
+  WHERE (type = 'TEST'::"TradeListOwner");]]> </definition>
+</view>
+
+<relationship name="rel_Test_Test/Trader" type="reltv" layers="0"
+	 custom-color="#e491be"
+	 src-table="public.&quot;Test&quot;"
+	 dst-table="public.&quot;Test/Trader&quot;"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="-127.32" y="10.462"/>
+	</label>
+</relationship>
+
+<view name="Trader" layers="0" collapse-mode="2" max-obj-count="1" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="700" y="1720"/>
+	<reference object="public.&quot;Test/Trader&quot;" type="table" ref-name="Test/Trader" use-signature="true"/>
+	<simplecol name="name" type="text"/>
+	<simplecol name="config" type="jsonb"/>
+	<definition> <![CDATA[ SELECT name,
+    config
+   FROM "Test/Trader"
+  WHERE (type = 'TRADER'::"TradeListOwner");]]> </definition>
+</view>
+
+<relationship name="rel_Trader_Test/Trader" type="reltv" layers="0"
+	 custom-color="#52c00e"
+	 src-table="public.&quot;Trader&quot;"
+	 dst-table="public.&quot;Test/Trader&quot;"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="144.783" y="10.462"/>
+	</label>
+</relationship>
+
+<table name="MOEX_SHARE_MTSS_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5580" y="4400"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_MTSS_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_MTSS_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_NLMK_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6060" y="4400"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_NLMK_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_NLMK_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_NVTK_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6540" y="4400"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_NVTK_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_NVTK_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_RASP_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="7020" y="4400"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_RASP_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_RASP_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_ROSN_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="3680" y="4660"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_ROSN_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_ROSN_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_ENPG_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4160" y="4660"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_ENPG_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_ENPG_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_OZON_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4640" y="4660"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_OZON_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_OZON_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_POSI_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5120" y="4660"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_POSI_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_POSI_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_RTKM_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5600" y="4660"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_RTKM_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_RTKM_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_RTKMP_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6080" y="4660"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_RTKMP_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_RTKMP_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_RUAL_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6560" y="4660"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_RUAL_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_RUAL_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_HYDR_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="7040" y="4660"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_HYDR_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_HYDR_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_RNFT_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="3680" y="4920"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_RNFT_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_RNFT_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_SBERP_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4160" y="4920"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_SBERP_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_SBERP_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_CHMF_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="4640" y="4920"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_CHMF_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_CHMF_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_SELG_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5120" y="4920"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_SELG_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_SELG_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_FLOT_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="5600" y="4920"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_FLOT_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_FLOT_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_SNGS_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6080" y="4920"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_SNGS_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_SNGS_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="MOEX_SHARE_TATN_1M" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="data"/>
+	<role name="alex"/>
+	<position x="6560" y="4920"/>
+	<column name="dt" not-null="true">
+		<type name="timestamp with time zone" length="0" with-timezone="true"/>
+	</column>
+	<column name="open">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="high">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="low">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="close">
+		<type name="double precision" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="MOEX_SHARE_TATN_1M_pkey" type="pk-constr" table="data.&quot;MOEX_SHARE_TATN_1M&quot;">
+		<columns names="dt" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<constraint name="AssetList-Asset_asset_list_name_fkey" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="CASCADE" del-action="CASCADE" ref-table="public.&quot;AssetList&quot;" table="public.&quot;AssetList-Asset&quot;">
+	<columns names="asset_list_name" ref-type="src-columns"/>
+	<columns names="asset_list_name" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="AssetList-Asset_figi_fkey" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="public.&quot;Asset&quot;" table="public.&quot;AssetList-Asset&quot;">
+	<columns names="figi" ref-type="src-columns"/>
+	<columns names="figi" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="StrategySet-Strategy_strategy_set_name_fkey" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="CASCADE" del-action="NO ACTION" ref-table="public.&quot;StrategySet&quot;" table="public.&quot;StrategySet-Strategy&quot;">
+	<columns names="strategy_set_name" ref-type="src-columns"/>
+	<columns names="strategy_set_name" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="StrategySet-Strategy_strategy_version_fkey" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="CASCADE" del-action="NO ACTION" ref-table="public.&quot;Strategy&quot;" table="public.&quot;StrategySet-Strategy&quot;">
+	<columns names="strategy,version" ref-type="src-columns"/>
+	<columns names="strategy_name,version" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="StrategySet-Strategy_figi_fkey" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="public.&quot;Asset&quot;" table="public.&quot;StrategySet-Strategy&quot;">
+	<columns names="figi" ref-type="src-columns"/>
+	<columns names="figi" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="Account_broker_fkey" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="CASCADE" del-action="NO ACTION" ref-table="public.&quot;Broker&quot;" table="public.&quot;Account&quot;">
+	<columns names="broker" ref-type="src-columns"/>
+	<columns names="broker_name" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="TradeList_owner_fkey" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="public.&quot;Test/Trader&quot;" table="public.&quot;TradeList&quot;">
+	<columns names="owner" ref-type="src-columns"/>
+	<columns names="name" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="Trade_trade_list_fkey" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="CASCADE" del-action="CASCADE" ref-table="public.&quot;TradeList&quot;" table="public.&quot;Trade&quot;">
+	<columns names="trade_list" ref-type="src-columns"/>
+	<columns names="trade_list_name" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="Trade_strategy_version_fkey" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="CASCADE" del-action="NO ACTION" ref-table="public.&quot;Strategy&quot;" table="public.&quot;Trade&quot;">
+	<columns names="strategy,version" ref-type="src-columns"/>
+	<columns names="strategy_name,version" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="Order_trade_id_fkey" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="NO ACTION" del-action="CASCADE" ref-table="public.&quot;Trade&quot;" table="public.&quot;Order&quot;">
+	<columns names="trade_id" ref-type="src-columns"/>
+	<columns names="trade_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="Order_account_fkey" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="CASCADE" del-action="NO ACTION" ref-table="public.&quot;Account&quot;" table="public.&quot;Order&quot;">
+	<columns names="account" ref-type="src-columns"/>
+	<columns names="account_name" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="Transaction_order_id_fkey" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="NO ACTION" del-action="CASCADE" ref-table="public.&quot;Order&quot;" table="public.&quot;Transaction&quot;">
+	<columns names="order_id" ref-type="src-columns"/>
+	<columns names="order_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="Operation_order_id_fkey" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="NO ACTION" del-action="CASCADE" ref-table="public.&quot;Order&quot;" table="public.&quot;Operation&quot;">
+	<columns names="order_id" ref-type="src-columns"/>
+	<columns names="order_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="Operation_trade_id_fkey" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="NO ACTION" del-action="CASCADE" ref-table="public.&quot;Trade&quot;" table="public.&quot;Operation&quot;">
+	<columns names="trade_id" ref-type="src-columns"/>
+	<columns names="trade_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="Operation_account_fkey" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="CASCADE" del-action="NO ACTION" ref-table="public.&quot;Account&quot;" table="public.&quot;Operation&quot;">
+	<columns names="account" ref-type="src-columns"/>
+	<columns names="account_name" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="TestList-Tests_test_list_fkey" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="public.&quot;TestList&quot;" table="public.&quot;TestList-Tests&quot;">
+	<columns names="test_list" ref-type="src-columns"/>
+	<columns names="test_list_name" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="TestList-Tests_test_fkey" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="public.&quot;Test/Trader&quot;" table="public.&quot;TestList-Tests&quot;">
+	<columns names="test" ref-type="src-columns"/>
+	<columns names="name" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="AnalyticData_figi_fkey" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="public.&quot;Asset&quot;" table="public.&quot;AnalyticData&quot;">
+	<columns names="figi" ref-type="src-columns"/>
+	<columns names="figi" ref-type="dst-columns"/>
+</constraint>
+
+<relationship name="rel_AssetList-Asset_AssetList" type="relfk" layers="0"
+	 custom-color="#ee2d67"
+	 src-table="public.&quot;AssetList-Asset&quot;"
+	 dst-table="public.&quot;AssetList&quot;" reference-fk="AssetList-Asset_asset_list_name_fkey"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="-107.345" y="-56.053"/>
+	</label>
+</relationship>
+
+<relationship name="rel_AssetList-Asset_Asset" type="relfk" layers="0"
+	 custom-color="#00597d"
+	 src-table="public.&quot;AssetList-Asset&quot;"
+	 dst-table="public.&quot;Asset&quot;" reference-fk="AssetList-Asset_figi_fkey"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="93.3377" y="-56.053"/>
+	</label>
+</relationship>
+
+<relationship name="rel_StrategySet-Strategy_StrategySet" type="relfk" layers="0"
+	 custom-color="#7de0b2"
+	 src-table="public.&quot;StrategySet-Strategy&quot;"
+	 dst-table="public.&quot;StrategySet&quot;" reference-fk="StrategySet-Strategy_strategy_set_name_fkey"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="-177.159" y="-35.053"/>
+	</label>
+</relationship>
+
+<relationship name="rel_StrategySet-Strategy_Strategy" type="relfk" layers="0"
+	 custom-color="#344270"
+	 src-table="public.&quot;StrategySet-Strategy&quot;"
+	 dst-table="public.&quot;Strategy&quot;" reference-fk="StrategySet-Strategy_strategy_version_fkey"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="159.103" y="-35.053"/>
+	</label>
+</relationship>
+
+<relationship name="rel_StrategySet-Strategy_Asset" type="relfk" layers="0"
+	 custom-color="#b43a21"
+	 src-table="public.&quot;StrategySet-Strategy&quot;"
+	 dst-table="public.&quot;Asset&quot;" reference-fk="StrategySet-Strategy_figi_fkey"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="-3.94879" y="-99.5259"/>
+	</label>
+</relationship>
+
+<relationship name="rel_Account_Broker" type="relfk" layers="0"
+	 custom-color="#b3cf07"
+	 src-table="public.&quot;Account&quot;"
+	 dst-table="public.&quot;Broker&quot;" reference-fk="Account_broker_fkey"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="65.3418" y="4.54701"/>
+	</label>
+</relationship>
+
+<relationship name="rel_TradeList_Test/Trader" type="relfk" layers="0"
+	 custom-color="#b47851"
+	 src-table="public.&quot;TradeList&quot;"
+	 dst-table="public.&quot;Test/Trader&quot;" reference-fk="TradeList_owner_fkey"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="72.3033" y="3.94701"/>
+	</label>
+</relationship>
+
+<relationship name="rel_Trade_TradeList" type="relfk" layers="0"
+	 custom-color="#e2cad9"
+	 src-table="public.&quot;Trade&quot;"
+	 dst-table="public.&quot;TradeList&quot;" reference-fk="Trade_trade_list_fkey"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="44.5025" y="11.2319"/>
+	</label>
+</relationship>
+
+<relationship name="rel_Trade_Strategy" type="relfk" layers="0"
+	 custom-color="#dc4a64"
+	 src-table="public.&quot;Trade&quot;"
+	 dst-table="public.&quot;Strategy&quot;" reference-fk="Trade_strategy_version_fkey"
+	 src-required="false" dst-required="true">
+	<label ref-type="name-label">
+		<position x="43.5123" y="54.747"/>
+	</label>
+</relationship>
+
+<relationship name="rel_Order_Trade" type="relfk" layers="0"
+	 custom-color="#8bd5ba"
+	 src-table="public.&quot;Order&quot;"
+	 dst-table="public.&quot;Trade&quot;" reference-fk="Order_trade_id_fkey"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="58.3475" y="-2.02051"/>
+	</label>
+</relationship>
+
+<relationship name="rel_Order_Account" type="relfk" layers="0"
+	 custom-color="#6d8865"
+	 src-table="public.&quot;Order&quot;"
+	 dst-table="public.&quot;Account&quot;" reference-fk="Order_account_fkey"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="44.9119" y="8.40709"/>
+	</label>
+</relationship>
+
+<relationship name="rel_Transaction_Order" type="relfk" layers="0"
+	 custom-color="#a567d9"
+	 src-table="public.&quot;Transaction&quot;"
+	 dst-table="public.&quot;Order&quot;" reference-fk="Transaction_order_id_fkey"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="-130.729" y="-35.653"/>
+	</label>
+</relationship>
+
+<relationship name="rel_Operation_Order" type="relfk" layers="0"
+	 custom-color="#9b0edc"
+	 src-table="public.&quot;Operation&quot;"
+	 dst-table="public.&quot;Order&quot;" reference-fk="Operation_order_id_fkey"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="-104.706" y="-22.053"/>
+	</label>
+</relationship>
+
+<relationship name="rel_Operation_Trade" type="relfk" layers="0"
+	 custom-color="#77e4a4"
+	 src-table="public.&quot;Operation&quot;"
+	 dst-table="public.&quot;Trade&quot;" reference-fk="Operation_trade_id_fkey"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="42.3475" y="95.2466"/>
+	</label>
+</relationship>
+
+<relationship name="rel_Operation_Account" type="relfk" layers="0"
+	 custom-color="#0aa687"
+	 src-table="public.&quot;Operation&quot;"
+	 dst-table="public.&quot;Account&quot;" reference-fk="Operation_account_fkey"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="56.7838" y="4.94701"/>
+	</label>
+</relationship>
+
+<relationship name="rel_TestList-Tests_TestList" type="relfk" layers="0"
+	 custom-color="#437d63"
+	 src-table="public.&quot;TestList-Tests&quot;"
+	 dst-table="public.&quot;TestList&quot;" reference-fk="TestList-Tests_test_list_fkey"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="-89.134" y="-66.053"/>
+	</label>
+</relationship>
+
+<relationship name="rel_TestList-Tests_Test/Trader" type="relfk" layers="0"
+	 custom-color="#4d1b93"
+	 src-table="public.&quot;TestList-Tests&quot;"
+	 dst-table="public.&quot;Test/Trader&quot;" reference-fk="TestList-Tests_test_fkey"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="82.9195" y="-66.053"/>
+	</label>
+</relationship>
+
+<relationship name="rel_AnalyticData_Asset" type="relfk" layers="0"
+	 custom-color="#1e4839"
+	 src-table="public.&quot;AnalyticData&quot;"
+	 dst-table="public.&quot;Asset&quot;" reference-fk="AnalyticData_figi_fkey"
+	 src-required="false" dst-required="true">
+	<label ref-type="name-label">
+		<position x="133.176" y="34.547"/>
+	</label>
+</relationship>
+
+</dbmodel>

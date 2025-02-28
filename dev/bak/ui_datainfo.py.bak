@@ -1,0 +1,49 @@
+#!/usr/bin/env  python3
+# ============================================================================
+# URL:          http://arsvincere.com
+# AUTHOR:       Alex Avin
+# E-MAIL:       mr.alexavin@gmail.com
+# LICENSE:      GNU GPLv3
+# ============================================================================
+
+from __future__ import annotations
+
+from avin.data._bar import _BarsDataInfo
+from avin.utils import logger
+from gui.data.ui_data_item import DataInfoItem
+
+
+class UIDataInfo(_BarsDataInfo):  # {{{
+    def __init__(  # {{{
+        self,
+        source: DataSource,
+        instrument: Instrument,
+        data_type: DataType,
+        first_dt: datetime,
+        last_dt: datetime,
+    ):
+        logger.debug(f"{self.__class__.__name__}.__init__()")
+        _BarsDataInfo.__init__(
+            self, source, instrument, data_type, first_dt, last_dt
+        )
+
+        self.__item = None
+
+    # }}}
+
+    def createItem(self) -> DataInfoItem:
+        logger.debug(f"{self.__class__.__name__}.createItem()")
+
+        self.__item = DataInfoItem(self)
+        return self.__item
+
+    @property  # item
+    def item(self):
+        return self.__item
+
+
+# }}}
+
+
+if __name__ == "__main__":
+    ...

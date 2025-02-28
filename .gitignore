@@ -4,9 +4,6 @@ __pycache__/
 .ruff_cache/
 .venv/
 build/
-dev/
-doc/.obsidian
-lang/
 log/
 tmp/
 usr/
@@ -22,7 +19,6 @@ usr/
 9.py
 Session.vim*
 
-avin/keeper/analytic_scheme.sql
 res/sound
 res/voice
 
