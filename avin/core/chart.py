@@ -9,15 +9,21 @@
 from __future__ import annotations
 
 import bisect
-from datetime import UTC, datetime
 from typing import Optional
 
 from avin.const import ONE_DAY
 from avin.core.bar import Bar
 from avin.core.timeframe import TimeFrame
-from avin.data import Instrument
-from avin.keeper import Keeper
-from avin.utils import Signal, binary_search, find_left, logger
+from avin.data import Data, Instrument
+from avin.data.bar import _VoidBar
+from avin.utils import (
+    UTC,
+    AsyncSignal,
+    DateTime,
+    binary_search,
+    find_left,
+    logger,
+)
 
 
 class Chart:
@@ -32,7 +38,11 @@ class Chart:
     ):
         logger.debug(f"{self.__class__.__name__}.__init__()")
 
-        check = self.__checkArgs(instrument, timeframe, bars)
+        check = self.__checkArgs(
+            instrument=instrument,
+            timeframe=timeframe,
+            bars=bars,
+        )
         if not check:
             return
 
@@ -41,14 +51,17 @@ class Chart:
 
         for i in bars:
             i.setChart(self)
-        self.__bars = bars
 
+        if len(bars) > 0:
+            self.__now = bars.pop(-1)
+        else:
+            self.__now = _VoidBar(DateTime(1, 1, 1, tzinfo=UTC))
+        self.__bars = bars
         self.__head = len(self.__bars)  # index of HEAD bar
-        self.__now: Optional[Bar] = None  # realtime bar
 
         # signals
-        self.new_bar = Signal(Chart, Bar)
-        self.updated = Signal(Chart, Bar)
+        self.new_historical_bar = AsyncSignal(Chart, Bar)
+        self.upd_realtime_bar = AsyncSignal(Chart, Bar)
 
     # }}}
     def __getitem__(self, index: int):  # {{{
@@ -132,29 +145,65 @@ class Chart:
 
     # }}}
 
-    def addHistoricalBar(self, new_bar: Bar) -> None:  # {{{
-        logger.debug(f"{self.__class__.__name__}.addNewHistoricalBar()")
+    # INFO: old code...
+    # def addHistoricalBar(self, new_bar: Bar) -> None:  # {{{
+    #     logger.debug(f"{self.__class__.__name__}.addNewHistoricalBar()")
+    #
+    #     new_bar.setChart(self)
+    #     self.__bars.append(new_bar)
+    #
+    #     if (
+    #         Chart.MAX_BARS_COUNT is not None
+    #         and len(self.__bars) > Chart.MAX_BARS_COUNT
+    #     ):
+    #         mid = Chart.MAX_BARS_COUNT // 2
+    #         self.__bars = self.__bars[mid:]
+    #
+    #     self.__head = len(self.__bars)
+    #     self.new_bar.emit(self, new_bar)
+    #
+    # # }}}
+    # def updateNowBar(self, new_bar: Bar) -> None:  # {{{
+    #     logger.debug(f"{self.__class__.__name__}.updateNowBar()")
+    #
+    #     new_bar.setChart(self)
+    #     self.__now = new_bar
+    #     self.updated.emit(self, new_bar)
+    #
+    # # }}}
+    async def receive(self, new_bar: Bar) -> None:  # {{{
+        logger.debug(f"{self.__class__.__name__}.receive()")
 
         new_bar.setChart(self)
-        self.__bars.append(new_bar)
 
-        if (
-            Chart.MAX_BARS_COUNT is not None
-            and len(self.__bars) > Chart.MAX_BARS_COUNT
-        ):
-            mid = Chart.MAX_BARS_COUNT // 2
-            self.__bars = self.__bars[mid:]
+        # only update now bar
+        if self.__now.dt == new_bar.dt:
+            self.__now = new_bar
+            await self.upd_realtime_bar.aemit(self, new_bar)
+            return
 
-        self.__head = len(self.__bars)
-        self.new_bar.emit(self, new_bar)
+        # new historical bar and update now bar
+        if self.__now.dt < new_bar.dt:
+            self.__bars.append(self.__now)
+            self.__now = new_bar
 
-    # }}}
-    def updateNowBar(self, new_bar: Bar) -> None:  # {{{
-        logger.debug(f"{self.__class__.__name__}.updateNowBar()")
+            # trunc bars list if needed
+            if (
+                Chart.MAX_BARS_COUNT is not None
+                and len(self.__bars) > Chart.MAX_BARS_COUNT
+            ):
+                mid = Chart.MAX_BARS_COUNT // 2
+                self.__bars = self.__bars[mid:]
 
-        new_bar.setChart(self)
-        self.__now = new_bar
-        self.updated.emit(self, new_bar)
+            # update head position
+            self.__head = len(self.__bars)
+
+            # emit signals
+            await self.new_historical_bar.aemit(self, self.__bars[-1])
+            await self.upd_realtime_bar.aemit(self, self.__now)
+            return
+
+        assert False, "WTF???"
 
     # }}}
 
@@ -173,15 +222,8 @@ class Chart:
     ) -> list[Bar]:
         logger.debug(f"{self.__class__.__name__}.getBars()")
 
-        if begin is None:
-            begin_index = 0
-        else:
-            begin_index = self.getIndex(begin)
-
-        if end is None:
-            end_index = self.__head
-        else:
-            end_index = self.getIndex(end) + 1
+        begin_index = 0 if begin is None else self.getIndex(begin)
+        end_index = self.__head if end is None else self.getIndex(end) + 1
 
         return self.__bars[begin_index:end_index]
 
@@ -200,7 +242,7 @@ class Chart:
         return self.__bars[i : self.__head]
 
     # }}}
-    def getBarsOfYear(self, dt: datetime) -> list[Bar]:  # {{{
+    def getBarsOfYear(self, dt: DateTime) -> list[Bar]:  # {{{
         """Return list[Bar] with year the same, as year of argument 'dt'"""
 
         logger.debug(f"{self.__class__.__name__}.getBarsOfYear()")
@@ -212,7 +254,7 @@ class Chart:
         return self.__bars[i:j]
 
     # }}}
-    def getBarsOfMonth(self, dt: datetime) -> list[Bar]:  # {{{
+    def getBarsOfMonth(self, dt: DateTime) -> list[Bar]:  # {{{
         """Return list[Bar] with month the same, as month of argument 'dt'"""
 
         logger.debug(f"{self.__class__.__name__}.getBarsOfWeek()")
@@ -228,7 +270,7 @@ class Chart:
         return year_bars[i:j]
 
     # }}}
-    def getBarsOfWeek(self, dt: datetime) -> list[Bar]:  # {{{
+    def getBarsOfWeek(self, dt: DateTime) -> list[Bar]:  # {{{
         """Return list[Bar] with week the same, as week of argument 'dt'"""
 
         logger.debug(f"{self.__class__.__name__}.getBarsOfWeek()")
@@ -248,7 +290,7 @@ class Chart:
         return year_bars[i:j]
 
     # }}}
-    def getBarsOfDay(self, dt: datetime) -> list[Bar]:  # {{{
+    def getBarsOfDay(self, dt: DateTime) -> list[Bar]:  # {{{
         """Return list[Bar] with day the same, as day of argument 'dt'"""
 
         logger.debug(f"{self.__class__.__name__}.getBarsOfDate()")
@@ -263,7 +305,7 @@ class Chart:
         return self.__bars[i:j]
 
     # }}}
-    def getBarsOfHour(self, dt: datetime) -> list[Bar]:  # {{{
+    def getBarsOfHour(self, dt: DateTime) -> list[Bar]:  # {{{
         """Return list[Bar] with hour the same, as hour of argument 'dt'"""
 
         logger.debug(f"{self.__class__.__name__}.getBarsOfHour()")
@@ -406,9 +448,9 @@ class Chart:
         return self.__head
 
     # }}}
-    def setHeadDatetime(self, dt: datetime) -> bool:  # {{{
+    def setHeadDatetime(self, dt: DateTime) -> bool:  # {{{
         logger.debug(f"{self.__class__.__name__}.setHeadDatetime()")
-        assert isinstance(dt, datetime)
+        assert isinstance(dt, DateTime)
 
         index = find_left(self.__bars, dt, lambda x: x.dt)
         if index is not None:
@@ -452,10 +494,11 @@ class Chart:
         cls,
         instrument: Instrument,
         timeframe: TimeFrame,
-        begin: datetime,
-        end: datetime,
+        begin: DateTime,
+        end: DateTime,
     ) -> Chart:
         logger.debug(f"{cls.__name__}.load()")
+
         # check args, may be raise TypeError, ValueError
         cls.__checkArgs(
             instrument=instrument,
@@ -465,13 +508,18 @@ class Chart:
         )
 
         # request bars
-        bars = await Keeper.get(
-            Bar,
+        records = await Data.request(
             instrument=instrument,
-            timeframe=timeframe,
+            data_type=timeframe.toDataType(),
             begin=begin,
             end=end,
         )
+
+        # create bars
+        bars = list()
+        for record in records:
+            bar = Bar.fromRecord(record)
+            bars.append(bar)
 
         # create and return chart
         chart = Chart(instrument, timeframe, bars)
@@ -489,19 +537,20 @@ class Chart:
         end=None,
     ):
         logger.debug(f"{cls.__name__}.__checkArgs()")
-        if instrument:
+
+        if instrument is not None:
             cls.__checkID(instrument)
 
-        if timeframe:
+        if timeframe is not None:
             cls.__checkTimeFrame(timeframe)
 
-        if bars:
+        if bars is not None:
             cls.__checkBars(bars)
 
-        if begin:
+        if begin is not None:
             cls.__checkBegin(begin)
 
-        if end:
+        if end is not None:
             cls.__checkEnd(end)
 
         return True
@@ -532,20 +581,22 @@ class Chart:
         if not isinstance(bars, list):
             logger.critical(f"Invalid bars={bars}")
             raise TypeError(bars)
-        if len(bars) == 0:
-            logger.critical("Impossible create chart from 0 bars")
-            raise ValueError(bars)
-        bar = bars[0]
-        if not isinstance(bar, Bar):
-            logger.critical(f"Invalid bar={bar}")
-            raise TypeError(bar)
+
+        # if len(bars) == 0:
+        #     logger.critical("Impossible create chart from 0 bars")
+        #     raise ValueError(bars)
+        #
+        # bar = bars[0]
+        # if not isinstance(bar, Bar):
+        #     logger.critical(f"Invalid bar={bar}")
+        #     raise TypeError(bar)
 
     # }}}
     @classmethod  # __checkBegin  # {{{
-    def __checkBegin(cls, begin: datetime):
+    def __checkBegin(cls, begin: DateTime):
         logger.debug(f"{cls.__name__}.__checkBegin()")
 
-        if not isinstance(begin, datetime):
+        if not isinstance(begin, DateTime):
             logger.critical(f"Invalid begin={begin}")
             raise TypeError(begin)
 
@@ -555,10 +606,10 @@ class Chart:
 
     # }}}
     @classmethod  # __checkEnd  # {{{
-    def __checkEnd(cls, end: datetime):
+    def __checkEnd(cls, end: DateTime):
         logger.debug(f"{cls.__name__}.__checkEnd()")
 
-        if not isinstance(end, datetime):
+        if not isinstance(end, DateTime):
             logger.critical(f"Invalid end={end}")
             raise TypeError(end)
 

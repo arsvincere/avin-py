@@ -20,6 +20,16 @@ from avin.keeper import Keeper
 from avin.utils import logger
 
 
+class _VoidBar:  # {{{
+    """Utility class for data conversion"""
+
+    def __init__(self, dt: datetime):  # {{{
+        self.dt = dt
+
+    # }}}
+
+
+# }}}
 @dataclass  # _Bar# {{{
 class _Bar:
     dt: datetime

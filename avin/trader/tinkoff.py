@@ -32,7 +32,7 @@ from avin.core import (
     Direction,
     Id,
     LimitOrder,
-    NewHistoricalBarEvent,
+    BarEvent,
     Operation,
     Order,
     StopLoss,
@@ -51,7 +51,7 @@ class Tinkoff(Broker):
     TARGET = ti.constants.INVEST_GRPC_API
     TOKEN = Cmd.read(Usr.TINKOFF_TOKEN).strip()
 
-    new_bar = AsyncSignal(NewHistoricalBarEvent)
+    new_bar = AsyncSignal(BarEvent)
     new_transaction = AsyncSignal(TransactionEvent)
 
     __accounts: list[Account] = list()
@@ -1000,9 +1000,10 @@ class Tinkoff(Broker):
             figi=figi, interval=interval
         )
         cls.__data_subscriptions.append(candle_subscription)
-        cls.__data_stream.candles.waiting_close().subscribe(
-            [candle_subscription]
-        )
+        # cls.__data_stream.candles.waiting_close().subscribe(
+        #     [candle_subscription]
+        # )
+        cls.__data_stream.candles.subscribe([candle_subscription])
 
     # }}}
     @classmethod  # createTransactionStream  # {{{
@@ -1217,7 +1218,7 @@ class Tinkoff(Broker):
                 figi = response.candle.figi
                 timeframe = cls.__ti_to_av(response.candle.interval)
                 bar = cls.__ti_to_av(response.candle)
-                event = NewHistoricalBarEvent(figi, timeframe, bar)
+                event = BarEvent(figi, timeframe, bar)
                 await Tinkoff.new_bar.aemit(event)
 
         # TODO: нет, здесь надо что то более глобальное
@@ -1476,8 +1477,7 @@ class Tinkoff(Broker):
     @staticmethod  # __tiSubscriptionInterval_to_avTimeFrame  # {{{
     def __tiSubscriptionInterval_to_avTimeFrame(ti_interval):
         logger.debug(
-            f"Tinkoff.__tiSubscriptionInterval_to_avTimeFrame"
-            f"({ti_interval})"
+            f"Tinkoff.__tiSubscriptionInterval_to_avTimeFrame({ti_interval})"
         )
 
         t = ti.SubscriptionInterval
@@ -1538,8 +1538,7 @@ class Tinkoff(Broker):
         )
         """  # }}}
         logger.debug(
-            f"Tinkoff.__tiOrderTrades_to_avTransactionEvent"
-            f"({order_trades})"
+            f"Tinkoff.__tiOrderTrades_to_avTransactionEvent({order_trades})"
         )
 
         # find account

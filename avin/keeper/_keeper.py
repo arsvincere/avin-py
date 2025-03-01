@@ -317,7 +317,6 @@ class Keeper:
             "DataType": cls.__getDataType,
             "datetime": cls.__getDateTime,
             "_Bar": cls.__getBarsRecords,
-            "Bar": cls.__getBars,
             "Asset": cls.__getAsset,
             "AssetList": cls.__getAssetList,
             # "Account": cls.__getAccount,
@@ -1098,25 +1097,6 @@ class Keeper:
         records = await cls.transaction(request)
 
         return records
-
-    # }}}
-    @classmethod  # __getBars  # {{{
-    async def __getBars(cls, Bar, kwargs: dict):
-        logger.debug(f"{cls.__name__}.__getBars()")
-
-        # timeframe -> data_type, and add it to kwargs
-        kwargs.setdefault("data_type", kwargs["timeframe"].toDataType())
-
-        # request bars records
-        records = await cls.__getBarsRecords(Bar, kwargs)
-
-        # create bars
-        bars = list()
-        for record in records:
-            bar = Bar.fromRecord(record)
-            bars.append(bar)
-
-        return bars
 
     # }}}
     @classmethod  # __getAsset  # {{{

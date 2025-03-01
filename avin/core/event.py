@@ -65,6 +65,22 @@ class NewHistoricalBarEvent(Event):  # {{{
 
 
 # }}}
+class BarEvent(Event):  # {{{
+    def __init__(self, figi: str, timeframe: TimeFrame, bar: Bar):  # {{{
+        self.figi = figi
+        self.timeframe = timeframe
+        self.bar = bar
+        self.type = Event.Type.BAR_CHANGED
+
+    # }}}
+    def __str__(self):  # {{{
+        s = f"{self.type.name} {self.figi}, {self.timeframe}, {self.bar}"
+        return s
+
+    # }}}
+
+
+# }}}
 class TransactionEvent(Event):  # {{{
     def __init__(  # {{{
         self,

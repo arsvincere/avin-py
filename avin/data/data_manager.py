@@ -12,7 +12,7 @@ from datetime import UTC, date, datetime, timedelta
 
 from avin.config import Auto, Usr
 from avin.const import DAY_BEGIN, DAY_END, WeekDays
-from avin.data.bar import _Bar, _BarsData
+from avin.data.bar import _Bar, _BarsData, _VoidBar
 from avin.data.convert_task import ConvertTaskList
 from avin.data.data_info import DataInfo, DataInfoList
 from avin.data.data_source import DataSource
@@ -28,16 +28,6 @@ class _DataManager:
     __AUTO_UPDATE = Auto.UPDATE_MARKET_DATA
     __LAST_UPDATE_FILE = Cmd.path(Usr.DATA, "last_update")
     __DATA_IS_UP_TO_DATE = None
-
-    class VoidBar:  # {{{
-        """Utility class for data conversion"""
-
-        def __init__(self, dt: datetime):  # {{{
-            self.dt = dt
-
-        # }}}
-
-    # }}}
 
     @classmethod  # cacheInstrumentsInfo  # {{{
     async def cacheInstrumentsInfo(cls) -> None:
@@ -273,7 +263,7 @@ class _DataManager:
                 filled.append(bars[i])
                 i += 1
             else:
-                filled.append(cls.VoidBar(time))
+                filled.append(_VoidBar(time))
             time += step
 
         return filled
@@ -285,7 +275,7 @@ class _DataManager:
 
         i = 0
         while i < len(bars):
-            if isinstance(bars[i], cls.VoidBar):
+            if isinstance(bars[i], _VoidBar):
                 bars.pop(i)
             else:
                 i += 1
@@ -385,8 +375,8 @@ class _DataManager:
     @classmethod  # __join  # {{{
     def __join(cls, bars):
         """
-        Возвращает объединенный bar из bars, игнорируюя VoidBar
-        Если все бары VoidBar, возвращает None
+        Возвращает объединенный bar из bars, игнорируюя _VoidBar
+        Если все бары _VoidBar, возвращает None
         """
         logger.debug(f"{cls.__name__}.__convertMonthTimeFrame()")
 

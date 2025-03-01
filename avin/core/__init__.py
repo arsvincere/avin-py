@@ -16,6 +16,7 @@ from avin.core.direction import Direction
 from avin.core.elist import ExtremumList
 from avin.core.event import (
     BarChangedEvent,
+    BarEvent,
     Event,
     NewHistoricalBarEvent,
     TransactionEvent,
@@ -78,6 +79,7 @@ __all__ = (
     "Event",
     "BarChangedEvent",
     "NewHistoricalBarEvent",
+    "BarEvent",
     "TransactionEvent",
     "Account",
     "Broker",
