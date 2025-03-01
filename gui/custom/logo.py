@@ -13,9 +13,11 @@ from PyQt6 import QtGui, QtWidgets
 class Logo(QtWidgets.QLabel):
     def __init__(self, parent=None):
         QtWidgets.QLabel.__init__(self, parent)
+
         logo = QtGui.QPixmap()
         logo.load("/home/alex/yandex/src/moex.data/res/logo.png")
         logo = logo.scaledToWidth(32)
+
         self.setPixmap(logo)
 
 
