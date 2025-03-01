@@ -6,6 +6,8 @@
 # LICENSE:      GNU GPLv3
 # ============================================================================
 
+from datetime import UTC
+
 from avin.utils.cmd import Cmd
 from avin.utils.logger import configureLogger, logger
 from avin.utils.misc import (
@@ -35,6 +37,7 @@ __all__ = (
     "Cmd",
     "logger",
     "configureLogger",
+    "UTC",
     "Date",
     "DateTime",
     "Time",
