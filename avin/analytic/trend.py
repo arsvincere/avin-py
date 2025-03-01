@@ -17,7 +17,6 @@ from avin.analytic._analytic import Analytic
 from avin.analytic.size import Size
 from avin.core import Asset, TimeFrame
 from avin.data import Data
-from avin.extremum import *
 from avin.utils import configureLogger, logger, now
 
 __all__ = ("TrendAnalytic",)

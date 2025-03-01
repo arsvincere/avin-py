@@ -8,8 +8,8 @@
 
 from __future__ import annotations
 
-from avin.extremum.trend import Trend
-from avin.extremum.vawe import Vawe
+from avin.core.trend import Trend
+from avin.core.vawe import Vawe
 from avin.utils import logger
 
 

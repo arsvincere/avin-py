@@ -11,7 +11,7 @@ from __future__ import annotations
 import asyncio
 import enum
 
-from avin.extremum._extremum import Extremum
+from avin.core._extremum import Extremum
 from avin.utils import logger
 
 

@@ -10,13 +10,11 @@ import sys
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 
-from avin.core import TimeFrame
-from avin.utils import logger
+from avin import Extremum, ExtremumList, Move, Term, TimeFrame, Trend, logger
 from gui.chart.gchart import GBar, GChart, Thread
 from gui.custom import Css, Icon, Label, Theme, ToolButton
 from gui.indicator.item import IndicatorItem
 from gui.marker import GShape
-from usr.lib import Extremum, ExtremumList, Move, Term, Trend
 
 
 class ExtremumIndicator:  # {{{

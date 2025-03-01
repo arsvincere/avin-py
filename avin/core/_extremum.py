@@ -11,7 +11,7 @@ from __future__ import annotations
 import enum
 
 from avin.config import Usr
-from avin.core import Bar
+from avin.core.bar import Bar
 
 
 class Extremum:  # {{{

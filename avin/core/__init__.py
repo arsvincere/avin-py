@@ -6,12 +6,14 @@
 # LICENSE:      GNU GPLv3
 # ============================================================================
 
+from avin.core._extremum import Extremum
 from avin.core.account import Account
 from avin.core.asset import Asset, AssetList, Index, Share
 from avin.core.bar import Bar
 from avin.core.broker import Broker
 from avin.core.chart import Chart
 from avin.core.direction import Direction
+from avin.core.elist import ExtremumList
 from avin.core.event import (
     BarChangedEvent,
     Event,
@@ -20,6 +22,7 @@ from avin.core.event import (
 )
 from avin.core.filter import Filter, FilterList
 from avin.core.id import Id
+from avin.core.move import Move
 from avin.core.operation import Operation
 from avin.core.order import (
     LimitOrder,
@@ -38,9 +41,12 @@ from avin.core.strategy import (
     StrategySetNode,
 )
 from avin.core.summary import Summary
+from avin.core.term import Term
 from avin.core.timeframe import TimeFrame, TimeFrameList
 from avin.core.trade import Trade, TradeList
 from avin.core.transaction import Transaction, TransactionList
+from avin.core.trend import Trend
+from avin.core.vawe import Vawe
 
 __all__ = (
     "Id",
@@ -79,4 +85,10 @@ __all__ = (
     "Filter",
     "FilterList",
     "Risk",
+    "Extremum",
+    "ExtremumList",
+    "Move",
+    "Term",
+    "Trend",
+    "Vawe",
 )

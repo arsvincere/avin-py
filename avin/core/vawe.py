@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import asyncio
 
-from avin.extremum._extremum import Extremum
-from avin.extremum.trend import Trend
+from avin.core._extremum import Extremum
+from avin.core.trend import Trend
 
 
 class Vawe:  # {{{
