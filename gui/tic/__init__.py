@@ -6,22 +6,9 @@
 # LICENSE:      GNU GPLv3
 # ============================================================================
 
-
-class AssetError(Exception): ...
-
-
-class BrokerError(Exception): ...
-
-
-class CoreError(Exception): ...
-
-
-class GuiError(Exception): ...
-
+from gui.tic.widget import TicDockWidget, TicWidget
 
 __all__ = (
-    "AssetError",
-    "BrokerError",
-    "CoreError",
-    "GuiError",
+    "TicDockWidget",
+    "TicWidget",
 )

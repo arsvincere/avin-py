@@ -15,8 +15,6 @@ from avin.const import DAY_BEGIN, ONE_MINUTE
 from avin.core import (
     Asset,
     Bar,
-    BarChangedEvent,
-    NewHistoricalBarEvent,
     TimeFrame,
     TimeFrameList,
 )

@@ -10,9 +10,8 @@ import sys
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 
-from avin import Filter, FilterList, Test, TestList, logger
+from avin import Test, TestList, logger
 from gui.custom import Css, Dialog, Menu
-from gui.filter.dialog_select import FilterSelectDialog
 from gui.tester.dialog_test_edit import TestEditDialog
 from gui.tester.dialog_test_select import TestSelectDialog
 from gui.tester.item import TestItem, TestListItem
@@ -121,7 +120,7 @@ class TestTree(QtWidgets.QTreeWidget):  # {{{
         logger.debug(f"{self.__class__.__name__}.__createMenus()")
 
         self.test_menu = _TestMenu(self)
-        self.tlist_menu = _TradeListMenu(self)
+        # self.tlist_menu = _TradeListMenu(self)
 
     # }}}
     def __connect(self):  # {{{
@@ -137,14 +136,14 @@ class TestTree(QtWidgets.QTreeWidget):  # {{{
         self.test_menu.rename.triggered.connect(self.__onRename)
         self.test_menu.delete.triggered.connect(self.__onDelete)
 
-        self.tlist_menu.filter.triggered.connect(self.__onSelectFilter)
-        self.tlist_menu.any_of.triggered.connect(self.__onAnyOf)
-        self.tlist_menu.strategy.triggered.connect(self.__onSelectStrategy)
-        self.tlist_menu.long_short.triggered.connect(self.__onSelectLongShort)
-        self.tlist_menu.win_loss.triggered.connect(self.__onSelectWinLoss)
-        self.tlist_menu.assets.triggered.connect(self.__onSelectAssets)
-        self.tlist_menu.years.triggered.connect(self.__onSelectYears)
-        self.tlist_menu.clear.triggered.connect(self.__onClearChilds)
+        # self.tlist_menu.filter.triggered.connect(self.__onSelectFilter)
+        # self.tlist_menu.any_of.triggered.connect(self.__onAnyOf)
+        # self.tlist_menu.strategy.triggered.connect(self.__onSelectStrategy)
+        # self.tlist_menu.long_short.triggered.connect(self.__onSelectLongShort)
+        # self.tlist_menu.win_loss.triggered.connect(self.__onSelectWinLoss)
+        # self.tlist_menu.assets.triggered.connect(self.__onSelectAssets)
+        # self.tlist_menu.years.triggered.connect(self.__onSelectYears)
+        # self.tlist_menu.clear.triggered.connect(self.__onClearChilds)
 
     # }}}
 
@@ -304,95 +303,95 @@ class TestTree(QtWidgets.QTreeWidget):  # {{{
 
     # }}}
 
-    @QtCore.pyqtSlot()  # __onSelectFilter# {{{
-    def __onSelectFilter(self):
-        logger.debug(f"{self.__class__.__name__}.__onSelectFilter()")
-
-        if self.filter_select_dialog is None:
-            self.filter_select_dialog = FilterSelectDialog()
-
-        f = self.filter_select_dialog.selectFilter()
-        if f is None:
-            return
-
-        trade_list_item = self.__current_item
-        if isinstance(f, Filter):
-            trade_list_item.selectFilter(f)
-        elif isinstance(f, FilterList):
-            trade_list_item.selectFilterList(f)
-
-    # }}}
-    @QtCore.pyqtSlot()  # __onAnyOf# {{{
-    def __onAnyOf(self):
-        logger.debug(f"{self.__class__.__name__}.__onAnyOf()")
-
-        if self.filter_select_dialog is None:
-            self.filter_select_dialog = FilterSelectDialog()
-
-        f = self.filter_select_dialog.selectFilter()
-        if f is None:
-            return
-
-        trade_list_item = self.__current_item
-        if isinstance(f, Filter):
-            logger.error("Select FilterList, not simple Filter")
-        elif isinstance(f, FilterList):
-            trade_list_item.anyOfFilterList(f)
-
-    # }}}
-    @QtCore.pyqtSlot()  # __onSelectStrategy# {{{
-    def __onSelectStrategy(self):
-        logger.debug(f"{self.__class__.__name__}.__onSelectStrategy()")
-
-        trade_list_item = self.__current_item
-        trade_list_item.selectStrategys()
-
-    # }}}
-    @QtCore.pyqtSlot()  # __onSelectLongShort# {{{
-    def __onSelectLongShort(self):
-        logger.debug(f"{self.__class__.__name__}.__onSelectLongShort()")
-
-        trade_list_item = self.__current_item
-        trade_list_item.selectLong()
-        trade_list_item.selectShort()
-
-    # }}}
-    @QtCore.pyqtSlot()  # __onSelectWinLoss# {{{
-    def __onSelectWinLoss(self):
-        logger.debug(f"{self.__class__.__name__}.__onSelectWinLoss()")
-
-        trade_list_item = self.__current_item
-        trade_list_item.selectWin()
-        trade_list_item.selectLoss()
-
-    # }}}
-    @QtCore.pyqtSlot()  # __onSelectAssets# {{{
-    def __onSelectAssets(self):
-        logger.debug(f"{self.__class__.__name__}.__onSelectAssets()")
-
-        trade_list_item = self.__current_item
-        trade_list_item.selectAssets()
-
-    # }}}
-    @QtCore.pyqtSlot()  # __onSelectYears# {{{
-    def __onSelectYears(self):
-        logger.debug(f"{self.__class__.__name__}.__onSelectYears()")
-
-        item = self.__current_item
-        trade_list = item.trade_list
-        test = trade_list.owner
-        for year in range(test.begin.year, test.end.year):
-            item.selectYear(year)
-
-    # }}}
-    @QtCore.pyqtSlot()  # __onClearChilds# {{{
-    def __onClearChilds(self):
-        logger.debug(f"{self.__class__.__name__}.__onClearChilds()")
-
-        trade_list_item = self.__current_item
-        trade_list_item.clearChilds()
-
-    # }}}
+    # @QtCore.pyqtSlot()  # __onSelectFilter# {{{
+    # def __onSelectFilter(self):
+    #     logger.debug(f"{self.__class__.__name__}.__onSelectFilter()")
+    #
+    #     if self.filter_select_dialog is None:
+    #         self.filter_select_dialog = FilterSelectDialog()
+    #
+    #     f = self.filter_select_dialog.selectFilter()
+    #     if f is None:
+    #         return
+    #
+    #     trade_list_item = self.__current_item
+    #     if isinstance(f, Filter):
+    #         trade_list_item.selectFilter(f)
+    #     elif isinstance(f, FilterList):
+    #         trade_list_item.selectFilterList(f)
+    #
+    # # }}}
+    # @QtCore.pyqtSlot()  # __onAnyOf# {{{
+    # def __onAnyOf(self):
+    #     logger.debug(f"{self.__class__.__name__}.__onAnyOf()")
+    #
+    #     if self.filter_select_dialog is None:
+    #         self.filter_select_dialog = FilterSelectDialog()
+    #
+    #     f = self.filter_select_dialog.selectFilter()
+    #     if f is None:
+    #         return
+    #
+    #     trade_list_item = self.__current_item
+    #     if isinstance(f, Filter):
+    #         logger.error("Select FilterList, not simple Filter")
+    #     elif isinstance(f, FilterList):
+    #         trade_list_item.anyOfFilterList(f)
+    #
+    # # }}}
+    # @QtCore.pyqtSlot()  # __onSelectStrategy# {{{
+    # def __onSelectStrategy(self):
+    #     logger.debug(f"{self.__class__.__name__}.__onSelectStrategy()")
+    #
+    #     trade_list_item = self.__current_item
+    #     trade_list_item.selectStrategys()
+    #
+    # # }}}
+    # @QtCore.pyqtSlot()  # __onSelectLongShort# {{{
+    # def __onSelectLongShort(self):
+    #     logger.debug(f"{self.__class__.__name__}.__onSelectLongShort()")
+    #
+    #     trade_list_item = self.__current_item
+    #     trade_list_item.selectLong()
+    #     trade_list_item.selectShort()
+    #
+    # # }}}
+    # @QtCore.pyqtSlot()  # __onSelectWinLoss# {{{
+    # def __onSelectWinLoss(self):
+    #     logger.debug(f"{self.__class__.__name__}.__onSelectWinLoss()")
+    #
+    #     trade_list_item = self.__current_item
+    #     trade_list_item.selectWin()
+    #     trade_list_item.selectLoss()
+    #
+    # # }}}
+    # @QtCore.pyqtSlot()  # __onSelectAssets# {{{
+    # def __onSelectAssets(self):
+    #     logger.debug(f"{self.__class__.__name__}.__onSelectAssets()")
+    #
+    #     trade_list_item = self.__current_item
+    #     trade_list_item.selectAssets()
+    #
+    # # }}}
+    # @QtCore.pyqtSlot()  # __onSelectYears# {{{
+    # def __onSelectYears(self):
+    #     logger.debug(f"{self.__class__.__name__}.__onSelectYears()")
+    #
+    #     item = self.__current_item
+    #     trade_list = item.trade_list
+    #     test = trade_list.owner
+    #     for year in range(test.begin.year, test.end.year):
+    #         item.selectYear(year)
+    #
+    # # }}}
+    # @QtCore.pyqtSlot()  # __onClearChilds# {{{
+    # def __onClearChilds(self):
+    #     logger.debug(f"{self.__class__.__name__}.__onClearChilds()")
+    #
+    #     trade_list_item = self.__current_item
+    #     trade_list_item.clearChilds()
+    #
+    # # }}}
 
 
 # }}}
@@ -451,34 +450,35 @@ class _TestMenu(Menu):  # {{{
 
 
 # }}}
-class _TradeListMenu(Menu):  # {{{
-    def __init__(self, parent=None):  # {{{
-        logger.debug(f"{self.__class__.__name__}.__init__()")
-        Menu.__init__(self, parent=parent)
 
-        self.filter = QtGui.QAction("Filter ...", self)
-        self.any_of = QtGui.QAction("Any of ...", self)
-        self.strategy = QtGui.QAction("Strategy", self)
-        self.long_short = QtGui.QAction("Long/Short", self)
-        self.win_loss = QtGui.QAction("Win/Loss", self)
-        self.assets = QtGui.QAction("Assets", self)
-        self.years = QtGui.QAction("Years", self)
-        self.clear = QtGui.QAction("Clear childs", self)
-
-        self.addAction(self.filter)
-        self.addAction(self.any_of)
-        self.addTextSeparator("Select")
-        self.addAction(self.strategy)
-        self.addAction(self.long_short)
-        self.addAction(self.win_loss)
-        self.addAction(self.assets)
-        self.addAction(self.years)
-        self.addAction(self.clear)
-
-    # }}}
-
-
-# }}}
+# class _TradeListMenu(Menu):  # {{{
+#     def __init__(self, parent=None):  # {{{
+#         logger.debug(f"{self.__class__.__name__}.__init__()")
+#         Menu.__init__(self, parent=parent)
+#
+#         self.filter = QtGui.QAction("Filter ...", self)
+#         self.any_of = QtGui.QAction("Any of ...", self)
+#         self.strategy = QtGui.QAction("Strategy", self)
+#         self.long_short = QtGui.QAction("Long/Short", self)
+#         self.win_loss = QtGui.QAction("Win/Loss", self)
+#         self.assets = QtGui.QAction("Assets", self)
+#         self.years = QtGui.QAction("Years", self)
+#         self.clear = QtGui.QAction("Clear childs", self)
+#
+#         self.addAction(self.filter)
+#         self.addAction(self.any_of)
+#         self.addTextSeparator("Select")
+#         self.addAction(self.strategy)
+#         self.addAction(self.long_short)
+#         self.addAction(self.win_loss)
+#         self.addAction(self.assets)
+#         self.addAction(self.years)
+#         self.addAction(self.clear)
+#
+#     # }}}
+#
+#
+# # }}}
 
 
 if __name__ == "__main__":

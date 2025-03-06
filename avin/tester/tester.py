@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from avin.core import BarChangedEvent, Chart, NewHistoricalBarEvent
+from avin.core import Chart
 from avin.tester.test import Test
 from avin.tester.virtual_broker import VirtualBroker
 from avin.utils import logger

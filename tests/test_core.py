@@ -8,7 +8,6 @@
 
 import pytest
 from avin import *
-from usr.lib import *
 
 
 def test_Id():  # {{{
@@ -232,29 +231,16 @@ def test_TimeFrameList():  # {{{
 
 
 # }}}
-def test_BarChangedEvent():  # {{{
+def test_BarEvent():  # {{{
     figi = "BBG004730N88"
     timeframe = TimeFrame("1M")
     bar = Bar("2023-01-01", 10, 12, 9, 11, 1000, chart=None)
 
-    event = BarChangedEvent(figi, timeframe, bar)
+    event = BarEvent(figi, timeframe, bar)
     assert event.figi == figi
     assert event.timeframe == timeframe
     assert event.bar == bar
-    assert event.type == Event.Type.BAR_CHANGED
-
-
-# }}}
-def test_NewHistoricalBarEvent():  # {{{
-    figi = "BBG004730N88"
-    timeframe = TimeFrame("1M")
-    bar = Bar("2023-01-01", 10, 12, 9, 11, 1000, chart=None)
-
-    event = NewHistoricalBarEvent(figi, timeframe, bar)
-    assert event.figi == figi
-    assert event.timeframe == timeframe
-    assert event.bar == bar
-    assert event.type == Event.Type.NEW_HISTORICAL_BAR
+    assert event.type == Event.Type.BAR
 
 
 # }}}
@@ -352,9 +338,11 @@ async def test_Chart(event_loop):
     tf = TimeFrame("1M")
     begin = DateTime(2023, 8, 1, 0, 0, tzinfo=UTC)
     end = DateTime(2023, 9, 1, 0, 0, tzinfo=UTC)
-    bars = await Keeper.get(
-        Bar, instrument=sber, timeframe=tf, begin=begin, end=end
-    )
+    records = await Data.request(sber, tf.toDataType(), begin, end)
+    bars = list()
+    for record in records:
+        bar = Bar.fromRecord(record)
+        bars.append(bar)
 
     # create chart
     chart = Chart(sber, tf, bars)

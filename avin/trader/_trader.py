@@ -6,12 +6,13 @@
 # LICENSE:      GNU GPLv3
 # ============================================================================
 
+from __future__ import annotations
+
 import asyncio
 
 from avin.core import (
     AssetList,
     Event,
-    NewHistoricalBarEvent,
     Strategy,
     TimeFrame,
 )

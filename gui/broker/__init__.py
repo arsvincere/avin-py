@@ -6,22 +6,9 @@
 # LICENSE:      GNU GPLv3
 # ============================================================================
 
-
-class AssetError(Exception): ...
-
-
-class BrokerError(Exception): ...
-
-
-class CoreError(Exception): ...
-
-
-class GuiError(Exception): ...
-
+from gui.broker.widget import BrokerDockWidget, BrokerWidget
 
 __all__ = (
-    "AssetError",
-    "BrokerError",
-    "CoreError",
-    "GuiError",
+    "BrokerDockWidget",
+    "BrokerWidget",
 )

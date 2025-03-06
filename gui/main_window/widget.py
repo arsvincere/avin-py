@@ -17,6 +17,7 @@ from avin.core import Account, Asset, Broker, Trade, TradeList
 from avin.tester import Test
 from avin.utils import Cmd, logger
 from gui.asset import AssetListDockWidget
+from gui.broker import BrokerDockWidget
 from gui.chart import ChartWidget
 from gui.console import ConsoleDockWidget
 from gui.custom import Css
@@ -26,6 +27,7 @@ from gui.main_window.toolbar import LeftToolBar, RightToolBar
 from gui.strategy import StrategyDockWidget
 from gui.summary import SummaryDockWidget
 from gui.tester import TesterDockWidget
+from gui.tic import TicDockWidget
 from gui.trade import TradeDockWidget
 
 
@@ -155,7 +157,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def __createWidgets(self):  # {{{
         logger.debug(f"{self.__class__.__name__}.__createLeftWidgets()")
 
-        # left toolbar
+        # left
         self.data_widget = None
         self.asset_widget = None
         self.filter_widget = None
@@ -165,8 +167,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.summary_widget = None
         self.console_widget = None
 
-        # right toolbar
+        # right
+        self.broker_widget = None
         self.chart_widget = None
+        self.tic_widget = None
 
     # }}}
     def __connect(self):  # {{{
@@ -187,19 +191,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ltool.shutdown.triggered.connect(self.__onShutdown)
 
         # right tools
-        # self.rtool.broker.triggered.connect(self.__onBroker)
+        self.rtool.broker.triggered.connect(self.__onBroker)
         self.rtool.chart.triggered.connect(self.__onChart)
         # self.rtool.book.triggered.connect(self.__onBook)
-        # self.rtool.tic.triggered.connect(self.__onTic)
+        self.rtool.tic.triggered.connect(self.__onTic)
         # self.rtool.order.triggered.connect(self.__onOrder)
         # self.rtool.account.triggered.connect(self.__onAccount)
         # self.rtool.trader.triggered.connect(self.__onTrader)
         # self.rtool.report.triggered.connect(self.__onReport)
 
         # widget signals
-        # self.widget_broker.connectEnabled.connect(self.__onConnect)
-        # self.widget_broker.connectDisabled.connect(self.__onDisconnect)
-        # self.widget_broker.accountSetUp.connect(self.__onAccountSetUp)
+        # self.widget_broker.accountSetUp.connect(self.__onAccountSetup)
 
     # }}}
     def __initUI(self):  # {{{
@@ -392,6 +394,32 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # }}}
 
+    @pyqtSlot()  # __onBroker  # {{{
+    def __onBroker(self):
+        logger.debug(f"{self.__class__.__name__}.__onBroker()")
+
+        if self.broker_widget is None:
+            # create dock widget
+            self.broker_widget = BrokerDockWidget(self)
+            area = Qt.DockWidgetArea.RightDockWidgetArea
+            self.addDockWidget(area, self.broker_widget)
+
+            # connect signal
+            self.broker_widget.widget.brokerConnected.connect(
+                self.__onBrokerConnect
+            )
+            self.broker_widget.widget.brokerDisconnected.connect(
+                self.__onBrokerDisconnect
+            )
+            self.broker_widget.widget.accountChanged.connect(
+                self.__onAccountChanged
+            )
+            return
+
+        state = self.broker_widget.isVisible()
+        self.broker_widget.setVisible(not state)
+
+    # }}}
     @pyqtSlot()  # __onChart  # {{{
     def __onChart(self):
         logger.debug(f"{self.__class__.__name__}.__onChart()")
@@ -404,11 +432,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.chart_widget.setVisible(not state)
 
     # }}}
-    @pyqtSlot()  # __onBroker  # {{{
-    def __onBroker(self):
+    @pyqtSlot()  # __onTic  # {{{
+    def __onTic(self):
         logger.debug(f"{self.__class__.__name__}.__onBroker()")
 
-        assert False
+        if self.tic_widget is None:
+            # create dock widget
+            self.tic_widget = TicDockWidget(self)
+            area = Qt.DockWidgetArea.RightDockWidgetArea
+            self.addDockWidget(area, self.tic_widget)
+
+            return
+
+        state = self.tic_widget.isVisible()
+        self.tic_widget.setVisible(not state)
 
     # }}}
     @pyqtSlot()  # __onAccount  # {{{
@@ -438,8 +475,11 @@ class MainWindow(QtWidgets.QMainWindow):
         logger.debug(f"{self.__class__.__name__}.__onAssetChanged()")
         assert isinstance(asset, Asset)
 
-        self.chart_widget.setAsset(asset)
-        # self.widget_order.setAsset(iasset)
+        if self.chart_widget is not None:
+            self.chart_widget.setAsset(asset)
+
+        if self.tic_widget is not None:
+            self.tic_widget.widget.setAsset(asset)
 
     # }}}
     @pyqtSlot(Test)  # __onTestChanged # {{{
@@ -472,26 +512,32 @@ class MainWindow(QtWidgets.QMainWindow):
             self.chart_widget.showTrade(trade)
 
     # }}}
-    @pyqtSlot(Broker)  # __onConnect  # {{{
-    def __onConnect(self, broker: Broker):
-        logger.debug(f"{self.__class__.__name__}.__onConnect()")
-        ...
+    @pyqtSlot(Broker)  # __onBrokerConnect  # {{{
+    def __onBrokerConnect(self, broker: Broker):
+        logger.debug(f"{self.__class__.__name__}.__onBrokerConnect()")
+
+        if self.tic_widget is not None:
+            self.tic_widget.widget.setBroker(broker)
 
     # }}}
-    @pyqtSlot(Account)  # __onAccountSetUp  # {{{
-    def __onAccountSetUp(self, account: Account):
-        logger.debug(f"{self.__class__.__name__}.__onAccountSetUp()")
-        self.widget_order.connectAccount(account)
-        self.widget_account.connectAccount(account)
+    @pyqtSlot(Broker)  # __onBrokerDisconnect  # {{{
+    def __onBrokerDisconnect(self, broker: Broker):
+        logger.debug(f"{self.__class__.__name__}.__onBrokerDisconnect()")
 
-    # }}}
-    @pyqtSlot(Broker)  # __onDisconnect  # {{{
-    def __onDisconnect(self, broker: Broker):
-        logger.debug(f"{self.__class__.__name__}.__onDisconnect()")
+        if self.tic_widget is not None:
+            self.tic_widget.widget.clearAll()
+
         # self.widget_order.disconnectAccount(iaccount)
 
+    # }}}
+    @pyqtSlot(Account)  # __onAccountChanged  # {{{
+    def __onAccountChanged(self, account: Account):
+        logger.debug(f"{self.__class__.__name__}.__onAccountChanged()")
 
-# }}}
+        # self.widget_order.connectAccount(account)
+        # self.widget_account.connectAccount(account)
+
+    # }}}
 
 
 if __name__ == "__main__":

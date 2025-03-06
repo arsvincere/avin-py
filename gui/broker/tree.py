@@ -6,173 +6,253 @@
 # LICENSE:      GNU GPLv3
 # ============================================================================
 
-import enum
+import abc
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import Qt
-from tinkoff.invest.services import Services
 
-from avin.gui.account import IAccount
-from avin.gui.custom import Font
+from avin import Account, Broker, logger
+from gui.broker.item import AccountItem, BrokerItem
+from gui.broker.thread import TConnect
+from gui.custom import Css, Dialog, Menu
 
 
-class Tree(QtWidgets.QTreeWidget):  # {{{
-    class Column(enum.IntEnum):  # {{{
-        Broker = 0
+class BrokerTree(QtWidgets.QTreeWidget):  # {{{
+    connected = QtCore.pyqtSignal(abc.ABCMeta)
+    disconnected = QtCore.pyqtSignal(abc.ABCMeta)
 
-    # }}}
-    class Type(enum.Enum):  # {{{
-        BROKER = enum.auto()
-        TOKEN = enum.auto()
-        ACCOUNT = enum.auto()
-
-    # }}}
     def __init__(self, parent=None):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
         QtWidgets.QTreeWidget.__init__(self, parent)
+
         self.__config()
-        self.__createActions()
         self.__createMenu()
         self.__connect()
-        self.thread = None
-        self.current_itoken = None
-        self.current_iaccount = None
-        self.current_ibroker = None
+
+        self.__thread = None
+        self.__connected_broker = None
 
     # }}}
+
+    def contextMenuEvent(self, e: QtGui.QContextMenuEvent):  # {{{
+        logger.debug(f"{self.__class__.__name__}.contextMenuEvent(e)")
+
+        self.__current_item = self.itemAt(e.pos())
+        self.__menu.exec(QtGui.QCursor.pos())
+
+        return e.ignore()
+
+    # }}}
+    def addBroker(self, broker: Broker):  # {{{
+        item = BrokerItem(broker)
+        self.addTopLevelItem(item)
+
+    # }}}
+    def currentBroker(self):  # {{{
+        return self.__connected_broker
+
+    # }}}
+
     def __config(self):  # {{{
         logger.debug(f"{self.__class__.__name__}.__config()")
+
+        # config style
+        self.setWindowTitle("AVIN")
+        self.setStyleSheet(Css.TREE)
+        self.setContentsMargins(0, 0, 0, 0)
+        self.setWindowFlags(QtCore.Qt.WindowType.FramelessWindowHint)
+
+        # config header
         labels = list()
-        for l in self.Column:
+        for l in BrokerItem.Column:
             labels.append(l.name)
         self.setHeaderLabels(labels)
-        self.setFont(Font.MONO)
-        self.setSortingEnabled(True)
-        self.sortByColumn(self.Column.Broker, Qt.SortOrder.AscendingOrder)
-        self.setItemsExpandable(True)
-        self.setColumnWidth(Tree.Column.Broker, 250)
+        self.header().setStyleSheet(Css.TREE_HEADER)
 
-    # }}}
-    def __createActions(self):  # {{{
-        logger.debug(f"{self.__class__.__name__}.__createActions()")
-        self.action_connect = QtGui.QAction("Connect")
-        self.action_set_account = QtGui.QAction("Set account")
-        self.action_disconnect = QtGui.QAction("Disconnect")
+        # config sorting
+        self.setSortingEnabled(True)
+        self.sortByColumn(BrokerItem.Column.Name, Qt.SortOrder.AscendingOrder)
+
+        # config width
+        self.setColumnWidth(BrokerItem.Column.Name, 180)
+        self.setMinimumWidth(200)
 
     # }}}
     def __createMenu(self):  # {{{
-        logger.debug(f"{self.__class__.__name__}.__createMenu()")
-        self.menu = QtWidgets.QMenu(self)
-        self.menu.addAction(self.action_connect)
-        self.menu.addAction(self.action_disconnect)
-        self.menu.addSeparator()
-        self.menu.addAction(self.action_set_account)
+        logger.debug(f"{self.__class__.__name__}.__createMenus()")
+
+        self.__menu = _BrokerMenu(parent=self)
 
     # }}}
     def __connect(self):  # {{{
         logger.debug(f"{self.__class__.__name__}.__connect()")
-        self.action_connect.triggered.connect(self.__onConnect)
-        self.action_set_account.triggered.connect(self.__onSetAccount)
-        self.action_disconnect.triggered.connect(self.__onDisconnect)
+
+        self.__menu.connect.triggered.connect(self.__onConnect)
+        self.__menu.disconnect.triggered.connect(self.__onDisconnect)
 
     # }}}
-    def __resetActions(self):  # {{{
-        logger.debug(f"{self.__class__.__name__}.__resetActions()")
-        self.action_connect.setEnabled(False)
-        self.action_set_account.setEnabled(False)
-        self.action_disconnect.setEnabled(False)
 
-    # }}}
-    def __setVisibleActions(self, item):  # {{{
-        logger.debug(f"{self.__class__.__name__}.__setVisibleActions()")
-        if item is None:
-            pass
-        elif item.type == Tree.Type.TOKEN:
-            self.action_connect.setEnabled(True)
-            self.action_disconnect.setEnabled(True)
-        elif item.type == Tree.Type.ACCOUNT:
-            self.action_set_account.setEnabled(True)
-
-    # }}}
-    @QtCore.pyqtSlot()  # __onConnect# {{{
+    @QtCore.pyqtSlot()  # __onConnect  # {{{
     def __onConnect(self):
         logger.debug(f"{self.__class__.__name__}.__onConnect()")
-        self.current_itoken = self.currentItem()
-        self.current_ibroker = self.current_itoken.parent()
-        self.thread = TConnect(self.current_ibroker, self.current_itoken)
-        self.thread.brokerConnected.connect(self.__threadBrokerConnected)
-        self.thread.finished.connect(self.__threadFinish)
-        self.thread.start()
-        logger.info(f"Connection enabled: '{self.current_ibroker.name}'")
+
+        self.__thread = TConnect(self.__current_item.broker)
+        self.__thread.successful.connect(self.__threadSuccessful)
+        self.__thread.failure.connect(self.__threadFailure)
+        self.__thread.finished.connect(self.__threadFinished)
+        self.__thread.start()
 
     # }}}
-    @QtCore.pyqtSlot()  # __onSetAccount# {{{
-    def __onSetAccount(self):
-        logger.debug(f"{self.__class__.__name__}.__onSetAccount()")
-        self.current_iaccount = self.currentItem()
-        broker_widget = self.parent()
-        broker_widget.accountSetUp.emit(
-            self.current_iaccount,
-        )
-        logger.info(
-            f"Broker '{self.current_ibroker.name}' "
-            f"account '{self.current_iaccount.name}' is active, "
-            f"account_id={self.current_iaccount.ID}"
-        )
-
-    # }}}
-    @QtCore.pyqtSlot()  # __onDisconnect# {{{
+    @QtCore.pyqtSlot()  # __onDisconnect  # {{{
     def __onDisconnect(self):
         logger.debug(f"{self.__class__.__name__}.__onDisconnect()")
-        self.thread.work = False
+
+        self.__thread.stop()
 
     # }}}
-    @QtCore.pyqtSlot(Services)  # __threadBrokerConnected# {{{
-    def __threadBrokerConnected(self, client):
-        logger.debug(f"{self.__class__.__name__}.__onBrokerConnected()")
-        self.current_ibroker.activate(client)
-        accounts = self.current_ibroker.getAllAccounts()
-        for acc in accounts:
-            iaccount = IAccount(self.current_ibroker, acc)
-            self.current_itoken.addChild(iaccount)
-        broker_widget = self.parent()
-        broker_widget.connectEnabled.emit(
-            self.current_ibroker,
-        )
+    @QtCore.pyqtSlot(Broker)  # __threadSuccessful  # {{{
+    def __threadSuccessful(self, connected_broker: Broker):
+        logger.debug(f"{self.__class__.__name__}.__threadSuccessful()")
+
+        self.__connected_broker = connected_broker
+        self.connected.emit(connected_broker)
 
     # }}}
-    @QtCore.pyqtSlot()  # __threadFinish# {{{
-    def __threadFinish(self):
-        logger.debug(f"{self.__class__.__name__}.__onFinish()")
-        logger.info(
-            f"Connection disabled: broker '{self.current_ibroker.name}'"
-        )
-        broker_widget = self.parent()
-        broker_widget.connectDisabled.emit(self.current_ibroker)
-        while self.current_itoken.takeChild(0):
-            pass
-        self.current_ibroker = None
-        self.current_itoken = None
-        self.current_iaccount = None
+    @QtCore.pyqtSlot(Broker)  # __threadFailure  # {{{
+    def __threadFailure(self, broker: Broker):
+        logger.debug(f"{self.__class__.__name__}.__threadFailure()")
+
+        self.__connected_broker = None
+
+        Dialog.error(f"Fail to connect {broker.name}")
 
     # }}}
-    def contextMenuEvent(self, e):  # {{{
-        logger.debug(f"{self.__class__.__name__}.contextMenuEvent()")
-        item = self.currentItem()
-        self.__resetActions()
-        self.__setVisibleActions(item)
-        self.menu.exec(QtGui.QCursor.pos())
+    @QtCore.pyqtSlot()  # __threadFinished  # {{{
+    def __threadFinished(self):
+        logger.debug(f"{self.__class__.__name__}.__threadFinished()")
+
+        self.disconnected.emit(self.__connected_broker)
+        self.__connected_broker = None
+
+    # }}}
+
+
+# }}}
+class AccountTree(QtWidgets.QTreeWidget):  # {{{
+    def __init__(self, parent=None):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__init__()")
+        QtWidgets.QTreeWidget.__init__(self, parent)
+
+        self.__config()
+        self.__createMenu()
+        self.__connect()
+
+        self.__active_account = None
+
+    # }}}
+
+    def contextMenuEvent(self, e: QtGui.QContextMenuEvent):  # {{{
+        logger.debug(f"{self.__class__.__name__}.contextMenuEvent(e)")
+
+        self.__current_item = self.itemAt(e.pos())
+        self.__menu.exec(QtGui.QCursor.pos())
+
         return e.ignore()
 
+    # }}}
+    def addAccount(self, account: Account):  # {{{
+        item = AccountItem(account)
+        self.addTopLevelItem(item)
+
+    # }}}
+    def currentAccount(self):  # {{{
+        return self.__active_account
+
+    # }}}
+
+    def __config(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__config()")
+
+        # config style
+        self.setWindowTitle("AVIN")
+        self.setStyleSheet(Css.TREE)
+        self.setContentsMargins(0, 0, 0, 0)
+        self.setWindowFlags(QtCore.Qt.WindowType.FramelessWindowHint)
+
+        # config header
+        labels = list()
+        for l in AccountItem.Column:
+            labels.append(l.name)
+        self.setHeaderLabels(labels)
+        self.header().setStyleSheet(Css.TREE_HEADER)
+
+        # config sorting
+        self.setSortingEnabled(True)
+        self.sortByColumn(
+            AccountItem.Column.Name, Qt.SortOrder.AscendingOrder
+        )
+
+        # config width
+        self.setColumnWidth(AccountItem.Column.Name, 180)
+        self.setMinimumWidth(200)
+
+    # }}}
+    def __createMenu(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__createMenus()")
+
+        self.__menu = _AccountMenu(parent=self)
+
+    # }}}
+    def __connect(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__connect()")
+
+        self.__menu.select.triggered.connect(self.__onSelect)
+
+    # }}}
+
+    @QtCore.pyqtSlot()  # __onSelect  # {{{
+    def __onSelect(self):
+        logger.debug(f"{self.__class__.__name__}.__onSelect()")
+
+        self.__active_account = self.__current_item.account
+
+    # }}}
+
 
 # }}}
+
+
+class _BrokerMenu(Menu):  # {{{
+    def __init__(self, parent=None):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__init__()")
+        Menu.__init__(self, parent=parent)
+
+        self.connect = QtGui.QAction("Connect", self)
+        self.disconnect = QtGui.QAction("Disconnect", self)
+
+        self.addAction(self.connect)
+        self.addAction(self.disconnect)
+
+    # }}}
+
+
 # }}}
+class _AccountMenu(Menu):  # {{{
+    def __init__(self, parent=None):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__init__()")
+        Menu.__init__(self, parent=parent)
+
+        self.select = QtGui.QAction("Select", self)
+
+        self.addAction(self.select)
+
+    # }}}
+
+    # }}}
+
 
 if __name__ == "__main__":
-    app = QtWidgets.QApplication(sys.argv)
-    w = Tree()
-    w.setWindowTitle("AVIN  -  Ars  Vincere")
-    w.setWindowFlags(QtCore.Qt.WindowType.FramelessWindowHint)
-    # w.showMaximized()
+    app = QtWidgets.QApplication([])
+    w = BrokerTree()
     w.show()
-    sys.exit(app.exec())
+    app.exec()

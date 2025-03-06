@@ -14,13 +14,11 @@ from avin.core import (
     Account,
     Asset,
     Bar,
-    BarChangedEvent,
     Broker,
     Direction,
     Event,
     LimitOrder,
     MarketOrder,
-    NewHistoricalBarEvent,
     Operation,
     Order,
     StopLoss,
@@ -38,8 +36,8 @@ from avin.utils import AsyncSignal, logger
 class VirtualBroker(Broker):
     name = "_VirtualBroker"
 
-    new_bar = AsyncSignal(NewHistoricalBarEvent)
-    bar_changed = AsyncSignal(BarChangedEvent)
+    # new_bar = AsyncSignal(NewHistoricalBarEvent)
+    # bar_changed = AsyncSignal(BarChangedEvent)
     new_transaction = AsyncSignal(TransactionEvent)
 
     __test: Optional[Test] = None

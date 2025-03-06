@@ -210,7 +210,7 @@ class _MoexData(_AbstractDataSource):
             return list()
 
         # Without authorization - delay is more than 15min
-        # for authorized users delay is 2-5 min
+        # for authorized users delay is 2 min
         await cls.__authorizate()
 
         begin = cls.__toMSK(begin)
@@ -498,11 +498,11 @@ class _MoexData(_AbstractDataSource):
                     candles.append(i)
 
             except httpx.ConnectError as e:
-                logger.error(f"ConnectionError {moex_asset} {period} {e}")
+                logger.error(f"ConnectError {moex_asset} {period} {e}")
                 logger.info("Try again after 3 sec")
                 timer.sleep(3)
             except httpx.ConnectTimeout as e:
-                logger.error(f"ConnectionError {moex_asset} {period} {e}")
+                logger.error(f"ConnectTimeout {moex_asset} {period} {e}")
                 logger.info("Try again after 3 sec")
                 timer.sleep(3)
             else:

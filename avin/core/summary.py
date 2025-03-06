@@ -363,8 +363,6 @@ class Summary:
 
         results = list()
         for trade in tlist.trades:
-            if trade.isBlocked():
-                continue
             if trade.status == Trade.Status.CLOSED:
                 results.append(trade.result())
 

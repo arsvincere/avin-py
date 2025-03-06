@@ -15,10 +15,9 @@ from avin.core.chart import Chart
 from avin.core.direction import Direction
 from avin.core.elist import ExtremumList
 from avin.core.event import (
-    BarChangedEvent,
     BarEvent,
     Event,
-    NewHistoricalBarEvent,
+    TicEvent,
     TransactionEvent,
 )
 from avin.core.filter import Filter, FilterList
@@ -43,6 +42,7 @@ from avin.core.strategy import (
 )
 from avin.core.summary import Summary
 from avin.core.term import Term
+from avin.core.tic import Tic
 from avin.core.timeframe import TimeFrame, TimeFrameList
 from avin.core.trade import Trade, TradeList
 from avin.core.transaction import Transaction, TransactionList
@@ -53,6 +53,7 @@ __all__ = (
     "Id",
     "Range",
     "Bar",
+    "Tic",
     "TimeFrame",
     "TimeFrameList",
     "Chart",
@@ -77,9 +78,8 @@ __all__ = (
     "StrategySet",
     "StrategySetNode",
     "Event",
-    "BarChangedEvent",
-    "NewHistoricalBarEvent",
     "BarEvent",
+    "TicEvent",
     "TransactionEvent",
     "Account",
     "Broker",

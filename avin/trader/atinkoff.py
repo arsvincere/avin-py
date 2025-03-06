@@ -11,7 +11,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, ClassVar, Iterable, Optional
+from typing import Any, AsyncIterable, ClassVar, Optional
 
 import tinkoff.invest as ti
 from grpc import StatusCode
@@ -36,39 +36,40 @@ from avin.core import (
     StopLoss,
     StopOrder,
     TakeProfit,
-    Tic,
-    TicEvent,
     TimeFrame,
     TransactionEvent,
 )
-from avin.data import Instrument
+from avin.data import Exchange, Instrument
 from avin.exceptions import BrokerError
-from avin.utils import Cmd, Signal, logger
+from avin.utils import AsyncSignal, Cmd, logger
 
 
-class Tinkoff(Broker):
+class ATinkoff(Broker):
     name = "Tinkoff"
     TARGET = ti.constants.INVEST_GRPC_API
     TOKEN = Cmd.read(Usr.TINKOFF_TOKEN).strip()
 
-    new_bar = Signal(BarEvent)
-    new_tic = Signal(TicEvent)
-    new_transaction = Signal(TransactionEvent)
+    new_bar = AsyncSignal(BarEvent)
+    new_transaction = AsyncSignal(TransactionEvent)
 
     __accounts: list[Account] = list()
 
     __connect_cycle: Optional[asyncio.Task] = None
     __connect_cycle_is_active = False
-    __connect: Optional[ti.services.Services] = None
+    __connect: Optional[ti.async_services.AsyncServices] = None
 
     __data_cycle: Optional[asyncio.Task] = None
     __data_cycle_is_active = False
-    __data_stream: Optional[ti.services.MarketDataStreamManager] = None
+    __data_stream: Optional[
+        ti.async_services.AsyncMarketDataStreamManager
+    ] = None
     __data_subscriptions: list[ti.CandleInstrument] = list()
 
     __transaction_cycle: Optional[asyncio.Task] = None
     __transaction_cycle_is_active = False
-    __transaction_stream: Optional[Iterable[ti.TradesStreamResponse]] = None
+    __transaction_stream: Optional[AsyncIterable[ti.TradesStreamResponse]] = (
+        None
+    )
 
     @classmethod  # isConnect  # {{{
     def isConnect(cls) -> bool:
@@ -99,11 +100,11 @@ class Tinkoff(Broker):
 
     # }}}
     @classmethod  # disconnect  # {{{
-    def disconnect(cls) -> None:
+    async def disconnect(cls) -> None:
         logger.debug("Tinkoff.disconnect()")
 
-        cls.stopDataStream()
-        cls.stopTransactionStream()
+        await cls.stopDataStream()
+        await cls.stopTransactionStream()
 
         if cls.__connect_cycle:
             cls.__connect_cycle.cancel()
@@ -116,21 +117,7 @@ class Tinkoff(Broker):
 
     # }}}
     @classmethod  # isMarketOpen  # {{{
-    def isMarketOpen(cls) -> bool:
-        """Response example# {{{
-        GetTradingStatusResponse(
-            figi='BBG004730N88',
-            trading_status=\
-                <SecurityTradingStatus.\
-                SECURITY_TRADING_STATUS_NORMAL_TRADING: 5>,
-            limit_order_available_flag=True,
-            market_order_available_flag=True,
-            api_trade_available_flag=True,
-            instrument_uid='e6123145-9665-43e0-8413-cd61b8aa9b13',
-            bestprice_order_available_flag=True,
-            only_best_price=False
-            )
-        """  # }}}
+    async def isMarketOpen(cls) -> bool:
         logger.debug("Tinkoff.isMarketOpen()")
         assert cls.__connect is not None
 
@@ -140,24 +127,24 @@ class Tinkoff(Broker):
             )
             return False
 
-        sber_figi = "BBG004730N88"
-        response = cls.__connect.market_data.get_trading_status(
-            figi=sber_figi
+        sber = await Asset.byTicker(Asset.Type.SHARE, Exchange.MOEX, "SBER")
+
+        response = await cls.__connect.market_data.get_trading_status(
+            figi=sber.figi
         )
         logger.debug(f"Tinkoff.isMarketOpen: Response='{response}'")
 
         return (
             response.market_order_available_flag
-            and response.limit_order_available_flag
             and response.api_trade_available_flag
         )
 
     # }}}
     @classmethod  # getAccount  # {{{
-    def getAccount(cls, account_name: str) -> Account | None:
+    async def getAccount(cls, account_name: str) -> Account | None:
         # If you have never requested accounts, then request now
         if not cls.__accounts:
-            cls.getAllAccounts()
+            await cls.getAllAccounts()
 
         # find 'account_name' & return it
         for account in cls.__accounts:
@@ -169,7 +156,7 @@ class Tinkoff(Broker):
 
     # }}}
     @classmethod  # getAllAccounts  # {{{
-    def getAllAccounts(cls) -> list[Account]:
+    async def getAllAccounts(cls) -> list[Account]:
         logger.debug("Tinkoff.getAllAccounts()")
         assert cls.__connect is not None
 
@@ -177,7 +164,7 @@ class Tinkoff(Broker):
             return cls.__accounts
 
         # request tinkoff accounts
-        response = cls.__connect.users.get_accounts()
+        response = await cls.__connect.users.get_accounts()
         logger.debug(f"Tinkoff.getAllAccounts: Response='{response}'")
 
         # create list of avin.core.Account objects
@@ -190,7 +177,7 @@ class Tinkoff(Broker):
 
     # }}}
     @classmethod  # getMoney  # {{{
-    def getMoney(cls, account: Account) -> float:
+    async def getMoney(cls, account: Account) -> float:
         """Response example# {{{
         PositionsResponse(
             money=[
@@ -207,7 +194,7 @@ class Tinkoff(Broker):
         assert cls.__connect is not None
 
         response: ti.PositionsResponse = (
-            cls.__connect.operations.get_positions(
+            await cls.__connect.operations.get_positions(
                 account_id=account.meta.id,
             )
         )
@@ -222,7 +209,7 @@ class Tinkoff(Broker):
 
     # }}}
     @classmethod  # getLimitOrders  # {{{
-    def getLimitOrders(cls, account: Account) -> list[LimitOrder]:
+    async def getLimitOrders(cls, account: Account) -> list[LimitOrder]:
         """Response example# {{{
         GetOrdersResponse(
             orders=[
@@ -274,14 +261,14 @@ class Tinkoff(Broker):
         logger.debug(f"Tinkoff.getLimitOrders({account.name})")
         assert cls.__connect is not None
 
-        response: ti.GetOrdersResponse = cls.__connect.orders.get_orders(
-            account_id=account.meta.id
+        response: ti.GetOrdersResponse = (
+            await cls.__connect.orders.get_orders(account_id=account.meta.id)
         )
         logger.debug(f"Tinkoff.getLimitOrders: Response='{response}'")
 
         orders = list()
         for i in response.orders:
-            instrument = Instrument.fromFigi(i.figi)
+            instrument = await Instrument.fromFigi(i.figi)
             order = LimitOrder(
                 account_name=account.name,
                 direction=cls.__ti_to_av(i.direction),
@@ -303,7 +290,7 @@ class Tinkoff(Broker):
 
     # }}}
     @classmethod  # getStopOrders  # {{{
-    def getStopOrders(cls, account: Account) -> list[StopOrder]:
+    async def getStopOrders(cls, account: Account) -> list[StopOrder]:
         """Response example# {{{
         GetStopOrdersResponse(
             stop_orders=[
@@ -360,7 +347,7 @@ class Tinkoff(Broker):
         assert cls.__connect is not None
 
         try:
-            response = cls.__connect.stop_orders.get_stop_orders(
+            response = await cls.__connect.stop_orders.get_stop_orders(
                 account_id=account.meta.id
             )
             logger.debug(f"Tinkoff.getStopOrders: Response='{response}'")
@@ -370,7 +357,7 @@ class Tinkoff(Broker):
 
         orders = list()
         for i in response.stop_orders:
-            instrument = Instrument.fromFigi(i.figi)
+            instrument = await Instrument.fromFigi(i.figi)
             order = StopOrder(
                 account_name=account.name,
                 direction=cls.__ti_to_av(i.direction),
@@ -394,7 +381,7 @@ class Tinkoff(Broker):
 
     # }}}
     @classmethod  # getOperations  # {{{
-    def getOperations(
+    async def getOperations(
         cls, account: Account, from_: datetime, to: datetime
     ) -> list[Operation]:
         # TODO: здесь в респонсе же есть figi, нахер тогда использовал
@@ -444,7 +431,7 @@ class Tinkoff(Broker):
 
         # request operations
         response: ti.OperationsResponse = (
-            cls.__connect.operations.get_operations(
+            await cls.__connect.operations.get_operations(
                 account_id=account.meta.id,
                 from_=from_,
                 to=to,
@@ -466,7 +453,7 @@ class Tinkoff(Broker):
                 ti.OperationType.OPERATION_TYPE_SELL,
             ):
                 assert i.instrument_type == "share"
-                instrument = Instrument.fromFigi(i.figi)
+                instrument = await Instrument.fromFigi(i.figi)
                 assert instrument is not None
 
                 op = Operation(
@@ -490,36 +477,40 @@ class Tinkoff(Broker):
 
     # }}}
     @classmethod  # getPositions  # {{{
-    def getPositions(cls, account: Account) -> list[Postition]:
+    async def getPositions(cls, account: Account) -> list[Postition]:
         logger.debug(f"Tinkoff.getPositions({account})")
         assert cls.__connect is not None
 
         response: ti.PositionsResponse = (
-            cls.__connect.operations.get_positions(account_id=account.meta.id)
+            await cls.__connect.operations.get_positions(
+                account_id=account.meta.id
+            )
         )
         logger.debug(f"Tinkoff.getPositions: Response='{response}'")
         return response
 
     # }}}
     @classmethod  # getPortfolio  # {{{
-    def getDetailedPortfolio(cls, account: Account) -> Portfolio:
+    async def getDetailedPortfolio(cls, account: Account) -> Portfolio:
         logger.debug(f"Tinkoff.getDetailedPortfolio({account})")
         assert cls.__connect is not None
 
         response: ti.PortfolioResponse = (
-            cls.__connect.operations.get_portfolio(account_id=account.meta.id)
+            await cls.__connect.operations.get_portfolio(
+                account_id=account.meta.id
+            )
         )
         logger.debug(f"Tinkoff.getDetailedPortfolio: Response='{response}'")
         return response
 
     # }}}
     @classmethod  # getWithdrawLimits  # {{{
-    def getWithdrawLimits(cls, account: Account):
+    async def getWithdrawLimits(cls, account: Account):
         logger.debug(f"Tinkoff.getWithdrawLimits({account})")
         assert cls.__connect is not None
 
         response: ti.WithdrawLimitsResponse = (
-            cls.__connect.operations.get_withdraw_limits(
+            await cls.__connect.operations.get_withdraw_limits(
                 account_id=account.meta.id
             )
         )
@@ -528,10 +519,12 @@ class Tinkoff(Broker):
 
     # }}}
     @classmethod  # getOrderOperation  # {{{
-    def getOrderOperation(cls, account: Account, order: Order) -> Operation:
+    async def getOrderOperation(
+        cls, account: Account, order: Order
+    ) -> Operation:
         logger.debug(f"Tinkoff.getOrderOperation({account}, {order})")
 
-        response: ti.OrderState = cls.__getOrderState(account, order)
+        response: ti.OrderState = await cls.__getOrderState(account, order)
         assert (
             response.execution_report_status
             == ti.OrderExecutionReportStatus.EXECUTION_REPORT_STATUS_FILL
@@ -557,10 +550,12 @@ class Tinkoff(Broker):
 
     # }}}
     @classmethod  # getExecutedCommission  # {{{
-    def getExecutedCommission(cls, account: Account, order: Order) -> float:
+    async def getExecutedCommission(
+        cls, account: Account, order: Order
+    ) -> float:
         logger.debug(f"Tinkoff.getExecutedCommission({account}, {order})")
 
-        response: ti.OrderState = cls.__getOrderState(account, order)
+        response: ti.OrderState = await cls.__getOrderState(account, order)
         assert (
             response.execution_report_status
             == ti.OrderExecutionReportStatus.EXECUTION_REPORT_STATUS_FILL
@@ -572,7 +567,7 @@ class Tinkoff(Broker):
 
     # }}}
     @classmethod  # getHistoricalBars  # {{{
-    def getHistoricalBars(
+    async def getHistoricalBars(
         cls,
         asset: Asset,
         timeframe: TimeFrame,
@@ -584,7 +579,7 @@ class Tinkoff(Broker):
 
         new_bars = list()
         try:
-            for candle in cls.__connect.get_all_candles(
+            async for candle in cls.__connect.get_all_candles(
                 figi=asset.figi,
                 from_=begin,
                 to=end,
@@ -623,7 +618,7 @@ class Tinkoff(Broker):
     # }}}
 
     @classmethod  # syncOrder  # {{{
-    def syncOrder(cls, account: Account, order: Order) -> bool:
+    async def syncOrder(cls, account: Account, order: Order) -> bool:
         """response example # {{{
         OrderState(
         order_id='R270663867',
@@ -679,26 +674,28 @@ class Tinkoff(Broker):
 
         t = Order.Type
         if order.type in (t.MARKET, t.LIMIT):
-            response: ti.OrderState = cls.__getOrderState(account, order)
+            response: ti.OrderState = await cls.__getOrderState(
+                account, order
+            )
             order.exec_lots = response.lots_executed
             order.meta = str(response)
             status = cls.__ti_to_av(response.execution_report_status)
-            order.setStatus(status)
+            await order.setStatus(status)
             return True
 
         if order.type in (t.STOP, t.STOP_LOSS, t.TAKE_PROFIT):
-            stop_orders = cls.getStopOrders(account)
+            stop_orders = await cls.getStopOrders(account)
             for i in stop_orders:
                 if i.broker_id == order.broker_id:
                     order.meta = i.meta
-                    order.setStatus(i.status)
+                    await order.setStatus(i.status)
                     return True
 
         return False
 
     # }}}
     @classmethod  # postMarketOrder  # {{{
-    def postMarketOrder(cls, account: Account, order: Order) -> bool:
+    async def postMarketOrder(cls, account: Account, order: Order) -> bool:
         """Response example# {{{
         Response='PostOrderResponse(
             order_id='R270663867',
@@ -746,14 +743,16 @@ class Tinkoff(Broker):
         assert cls.__connect is not None
 
         try:
-            response: ti.PostOrderResponse = cls.__connect.orders.post_order(
-                account_id=account.meta.id,
-                order_type=cls.__av_to_ti(order, ti.OrderType),
-                direction=cls.__av_to_ti(order, ti.OrderDirection),
-                figi=order.instrument.figi,
-                quantity=order.lots,
+            response: ti.PostOrderResponse = (
+                await cls.__connect.orders.post_order(
+                    account_id=account.meta.id,
+                    order_type=cls.__av_to_ti(order, ti.OrderType),
+                    direction=cls.__av_to_ti(order, ti.OrderDirection),
+                    figi=order.instrument.figi,
+                    quantity=order.lots,
+                    order_id=str(order.order_id),
+                )
             )
-            # order_id=str(order.order_id),
             logger.debug(f"Tinkoff.postMarketOrder: Response='{response}'")
         except ti.exceptions.AioRequestError as err:
             logger.error(f"{err}")
@@ -765,7 +764,9 @@ class Tinkoff(Broker):
 
     # }}}
     @classmethod  # postLimitOrder  # {{{
-    def postLimitOrder(cls, account: Account, order: LimitOrder) -> bool:
+    async def postLimitOrder(
+        cls, account: Account, order: LimitOrder
+    ) -> bool:
         """Response example# {{{
         PostOrderResponse(
             order_id='52004328245',
@@ -813,14 +814,16 @@ class Tinkoff(Broker):
         assert cls.__connect is not None
 
         try:
-            response: ti.PostOrderResponse = cls.__connect.orders.post_order(
-                order_type=cls.__av_to_ti(order, ti.OrderType),
-                account_id=account.meta.id,
-                direction=cls.__av_to_ti(order, ti.OrderDirection),
-                figi=order.instrument.figi,
-                quantity=order.lots,
-                price=Tinkoff.__av_to_ti(order.price, ti.Quotation),
-                order_id="",
+            response: ti.PostOrderResponse = (
+                await cls.__connect.orders.post_order(
+                    order_type=cls.__av_to_ti(order, ti.OrderType),
+                    account_id=account.meta.id,
+                    direction=cls.__av_to_ti(order, ti.OrderDirection),
+                    figi=order.instrument.figi,
+                    quantity=order.lots,
+                    price=Tinkoff.__av_to_ti(order.price, ti.Quotation),
+                    order_id=str(order.order_id),
+                )
             )
             logger.debug(f"Tinkoff.postLimitOrder: Response='{response}'")
         except ti.exceptions.AioRequestError as err:
@@ -833,7 +836,7 @@ class Tinkoff(Broker):
 
     # }}}
     @classmethod  # postStopOrder  # {{{
-    def postStopOrder(cls, account: Account, order: StopOrder) -> bool:
+    async def postStopOrder(cls, account: Account, order: StopOrder) -> bool:
         """Response example  # {{{
         PostStopOrderResponse(
             stop_order_id='f3f7e4e7-f076-4cc9-861d-d9995ed84b0f',
@@ -851,7 +854,7 @@ class Tinkoff(Broker):
         assert cls.__connect is not None
 
         try:
-            response = cls.__connect.stop_orders.post_stop_order(
+            response = await cls.__connect.stop_orders.post_stop_order(
                 stop_order_type=cls.__av_to_ti(order, ti.StopOrderType),
                 account_id=account.meta.id,
                 direction=cls.__av_to_ti(order, ti.StopOrderDirection),
@@ -877,21 +880,23 @@ class Tinkoff(Broker):
 
     # }}}
     @classmethod  # postStopLoss  # {{{
-    def postStopLoss(cls, account: Account, order: StopLoss) -> bool:
+    async def postStopLoss(cls, account: Account, order: StopLoss) -> bool:
         logger.debug(f"Tinkoff.postStopLoss({account}, {order})")
-        result = cls.postStopOrder(account, order)
+        result = await cls.postStopOrder(account, order)
         return result
 
     # }}}
     @classmethod  # postTakeProfit:  # {{{
-    def postTakeProfit(cls, account: Account, order: TakeProfit) -> bool:
+    async def postTakeProfit(
+        cls, account: Account, order: TakeProfit
+    ) -> bool:
         logger.debug(f"Tinkoff.postTakeProfit({account}, {order})")
-        result = cls.postStopOrder(account, order)
+        result = await cls.postStopOrder(account, order)
         return result
 
     # }}}
     @classmethod  # cancelLimitOrder  # {{{
-    def cancelLimitOrder(cls, account: Account, order: Order) -> bool:
+    async def cancelLimitOrder(cls, account: Account, order: Order) -> bool:
         """Response example # {{{
         CancelOrderResponse(
             time=datetime.datetime(
@@ -915,7 +920,7 @@ class Tinkoff(Broker):
 
         try:
             response: ti.CancelOrderResponse = (
-                cls.__connect.orders.cancel_order(
+                await cls.__connect.orders.cancel_order(
                     account_id=account.meta.id,
                     order_id=order.broker_id,
                 )
@@ -925,12 +930,12 @@ class Tinkoff(Broker):
             logger.error(f"{err}")
             return False
 
-        order.setStatus(Order.Status.CANCELED)
+        await order.setStatus(Order.Status.CANCELED)
         return True
 
     # }}}
     @classmethod  # cancelStopOrder  # {{{
-    def cancelStopOrder(cls, account: Account, order: Order) -> bool:
+    async def cancelStopOrder(cls, account: Account, order: Order) -> bool:
         """Response example# {{{
         CancelStopOrderResponse(
             time=datetime.datetime(
@@ -959,7 +964,7 @@ class Tinkoff(Broker):
         # а какой у него статус...
 
         try:
-            response = cls.__connect.stop_orders.cancel_stop_order(
+            response = await cls.__connect.stop_orders.cancel_stop_order(
                 account_id=account.meta.id,
                 stop_order_id=order.broker_id,
             )
@@ -972,13 +977,15 @@ class Tinkoff(Broker):
                 ) from err
             return False
 
-        order.setStatus(Order.Status.CANCELED)
+        await order.setStatus(Order.Status.CANCELED)
         return True
 
     # }}}
 
     @classmethod  # createBarStream  # {{{
-    def createBarStream(cls, asset: Asset, timeframe: TimeFrame) -> None:
+    async def createBarStream(
+        cls, asset: Asset, timeframe: TimeFrame
+    ) -> None:
         logger.info(f"  - create bar stream {asset}-{timeframe}")
         assert cls.__connect is not None
 
@@ -997,21 +1004,8 @@ class Tinkoff(Broker):
         cls.__data_stream.candles.subscribe([candle_subscription])
 
     # }}}
-    @classmethod  # createTicStream  # {{{
-    def createTicStream(cls, asset: Asset) -> None:
-        logger.info(f"  - create tic stream {asset}")
-        assert cls.__connect is not None
-
-        if not cls.__data_stream:
-            cls.__data_stream = cls.__connect.create_market_data_stream()
-
-        tic_subscription = ti.TradeInstrument(figi=asset.figi)
-        cls.__data_subscriptions.append(tic_subscription)
-        cls.__data_stream.trades.subscribe([tic_subscription])
-
-    # }}}
     @classmethod  # createTransactionStream  # {{{
-    def createTransactionStream(cls, account: Account) -> None:
+    async def createTransactionStream(cls, account: Account) -> None:
         logger.info(f"  Tinkoff create transaction stream: account={account}")
         assert cls.__connect is not None
 
@@ -1023,7 +1017,7 @@ class Tinkoff(Broker):
 
     # }}}
     @classmethod  # createPositionSteam  # {{{
-    def createPositionSteam(cls, account: Account) -> None:
+    async def createPositionSteam(cls, account: Account) -> None:
         """см Тинькофф АПИ, сервис операций, PositionsStream
         из него можно сделать поток обновляющегося портфеля.
         Он выдает позиции в портфеле, по группам деньги, акции, фьючерсы...
@@ -1045,14 +1039,14 @@ class Tinkoff(Broker):
 
     # }}}
     @classmethod  # startDataStream  # {{{
-    def startDataStream(cls) -> bool:
+    async def startDataStream(cls) -> bool:
         logger.info("  Tinkoff try start data stream")
         cls.__data_cycle = asyncio.create_task(cls.__dataCycle())
 
         seconds_elapsed = 0
         while not cls.__data_cycle_is_active:
             logger.info(f"  - waiting data... ({seconds_elapsed} sec)")
-            asyncio.sleep(1)
+            await asyncio.sleep(1)
             seconds_elapsed += 1
             if seconds_elapsed == 5:
                 logger.error("  - fail to start data stream Tinkoff :(")
@@ -1063,7 +1057,7 @@ class Tinkoff(Broker):
 
     # }}}
     @classmethod  # stopDataStream  # {{{
-    def stopDataStream(cls):
+    async def stopDataStream(cls):
         if cls.__data_cycle:
             cls.__data_cycle.cancel()
             cls.__data_cycle_is_active = False
@@ -1075,22 +1069,17 @@ class Tinkoff(Broker):
 
     # }}}
     @classmethod  # startTransactionStream  # {{{
-    def startTransactionStream(cls):
+    async def startTransactionStream(cls):
         logger.info("  Tinkoff start transaction stream")
-
-        if cls.__transaction_cycle_is_active:
-            return
-
         cls.__transaction_cycle = asyncio.create_task(
             cls.__transactionCycle()
         )
         cls.__transaction_cycle_is_active = True
-
         return True
 
     # }}}
     @classmethod  # stopTransactionStream  # {{{
-    def stopTransactionStream(cls):
+    async def stopTransactionStream(cls):
         if cls.__transaction_cycle:
             cls.__transaction_cycle.cancel()
             cls.__transaction_cycle_is_active = False
@@ -1100,7 +1089,7 @@ class Tinkoff(Broker):
     # }}}
 
     @classmethod  # __getOrderState  # {{{
-    def __getOrderState(cls, account: Account, order: Order):
+    async def __getOrderState(cls, account: Account, order: Order):
         """Response example # {{{
         OrderState(
         order_id='R270663867',
@@ -1159,7 +1148,7 @@ class Tinkoff(Broker):
         logger.debug(f"Tinkoff.__getOrderState({order})")
         assert cls.__connect is not None
 
-        response: ti.OrderState = cls.__connect.orders.get_order_state(
+        response: ti.OrderState = await cls.__connect.orders.get_order_state(
             account_id=account.meta.id,
             order_id=order.broker_id,
         )
@@ -1172,8 +1161,8 @@ class Tinkoff(Broker):
     async def __connectionCycle(cls):
         logger.debug("Tinkoff.__connectionCycle()")
 
-        with ti.Client(cls.TOKEN, target=cls.TARGET) as client:
-            response = client.users.get_accounts()
+        async with ti.AsyncClient(cls.TOKEN, target=cls.TARGET) as client:
+            response = await client.users.get_accounts()
             if not response:
                 return
 
@@ -1184,7 +1173,7 @@ class Tinkoff(Broker):
 
     # }}}
     @classmethod  # __dataCycle  # {{{
-    def __dataCycle(cls):
+    async def __dataCycle(cls):
         """Response example# {{{
         MarketDataResponse(
             subscribe_candles_response=None,
@@ -1208,29 +1197,17 @@ class Tinkoff(Broker):
                 last_trade_ts=datetime.datetime(
                     2024, 9, 10, 11, 54, 30, 770361,
                     tzinfo=datetime.timezone.utc),
-                instrument_uid='cf1c6158-a303-43ac-89eb-9b1db8f96043'
-            ),
-            trade=Trade(
-                figi='BBG004730ZJ9',
-                direction=<TradeDirection.TRADE_DIRECTION_SELL: 2>,
-                price=Quotation(units=90, nano=880000000),
-                quantity=1,
-                time=datetime.datetime(
-                    2025, 3, 2, 13, 6, 41, 954345,
-                    tzinfo=datetime.timezone.utc
-                ),
-                instrument_uid='8e2b0325-0292-4654-8a18-4f63ed3b0e09',
-                trade_source=<TradeSourceType.TRADE_SOURCE_EXCHANGE: 1>
-            )
+                instrument_uid='cf1c6158-a303-43ac-89eb-9b1db8f96043'),
+            trade=None,
             orderbook=None,
             trading_status=None,
             last_price=None
             ping=None,
             )
         """  # }}}
-        logger.debug("Tinkoff.__dataCycle()")
+        logger.debug("async Tinkoff.__dataCycle()")
 
-        for response in cls.__data_stream:
+        async for response in cls.__data_stream:
             logger.debug(f"Tinkoff.__dataCycle: Response='{response}'")
             cls.__data_cycle_is_active = True
             if response.candle:
@@ -1238,13 +1215,7 @@ class Tinkoff(Broker):
                 timeframe = cls.__ti_to_av(response.candle.interval)
                 bar = cls.__ti_to_av(response.candle)
                 event = BarEvent(figi, timeframe, bar)
-                Tinkoff.new_bar.emit(event)
-
-            if response.trade:
-                figi = response.trade.figi
-                tic = cls.__ti_to_av(response.trade)
-                event = TicEvent(figi, tic)
-                Tinkoff.new_tic.emit(event)
+                await Tinkoff.new_bar.aemit(event)
 
         # TODO: нет, здесь надо что то более глобальное
         # смена флага и че, про нее никто не узнает
@@ -1259,7 +1230,7 @@ class Tinkoff(Broker):
 
     # }}}
     @classmethod  # __transactionCycle  # {{{
-    def __transactionCycle(cls):
+    async def __transactionCycle(cls):
         """Response example# {{{
         TradesStreamResponse(
             order_trades=OrderTrades(
@@ -1290,16 +1261,16 @@ class Tinkoff(Broker):
         """  # }}}
         logger.debug("Tinkoff.__transactionCycle()")
 
-        for response in cls.__transaction_stream:
+        async for response in cls.__transaction_stream:
             logger.debug(f"Tinkoff.__transactionCycle: Response='{response}'")
 
             if response.order_trades:
                 event = cls.__ti_to_av(response.order_trades)
-                Tinkoff.new_transaction.emit(event)
+                await Tinkoff.new_transaction.aemit(event)
 
                 for i in cls.__accounts:
                     if i.name == event.account:
-                        i.receive(event)
+                        await i.receive(event)
 
             # if response is ping - do nothing
             if response.ping:
@@ -1339,8 +1310,6 @@ class Tinkoff(Broker):
                 return Tinkoff.__tiCandle_to_avBar(obj)
             case "HistoricCandle":
                 return Tinkoff.__tiCandle_to_avBar(obj)
-            case "Trade":
-                return Tinkoff.__tiTrade_to_avTic(obj)
             case "OrderTrades":
                 return Tinkoff.__tiOrderTrades_to_avTransactionEvent(obj)
             case _:
@@ -1533,51 +1502,6 @@ class Tinkoff(Broker):
 
         bar = Bar(dt, open, high, low, close, vol)
         return bar
-
-    # }}}
-    @staticmethod  # __tiTradeDirection_to_avDirection  # {{{
-    def __tiTradeDirection_to_avDirection(tinkoff_direction):
-        logger.debug(
-            f"Tinkoff.__tiTradeDirection_to_avDirection({tinkoff_direction})"
-        )
-
-        directions = {
-            "TRADE_DIRECTION_UNSPECIFIED": Direction.UNDEFINE,
-            "TRADE_DIRECTION_BUY": Direction.BUY,
-            "TRADE_DIRECTION_SELL": Direction.SELL,
-        }
-        avin_direction = directions[tinkoff_direction.name]
-
-        return avin_direction
-
-    # }}}
-    @staticmethod  # __tiTrade_to_avTic  # {{{
-    def __tiTrade_to_avTic(trade: ti.Trade):
-        """Trade example
-        Trade(
-            figi='BBG004730ZJ9',
-            direction=<TradeDirection.TRADE_DIRECTION_BUY: 1>,
-            price=Quotation(units=90, nano=840000000),
-            quantity=11,
-            time=datetime.datetime(
-                2025, 3, 2, 13, 47, 45, 986916,
-                tzinfo=datetime.timezone.utc
-            ),
-            instrument_uid='8e2b0325-0292-4654-8a18-4f63ed3b0e09',
-            trade_source=<TradeSourceType.TRADE_SOURCE_EXCHANGE: 1>
-        )
-        """
-        logger.debug(f"Tinkoff.__tiTrade_to_avTic({trade})")
-
-        tic = Tic(
-            dt=trade.time,
-            direction=Tinkoff.__tiTradeDirection_to_avDirection(
-                trade.direction
-            ),
-            price=Tinkoff.__tiQuotation_to_avPrice(trade.price),
-            lots=trade.quantity,
-        )
-        return tic
 
     # }}}
     @staticmethod  # __tiOrderTrades_to_avTransactionEvent  # {{{

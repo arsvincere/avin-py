@@ -6,45 +6,52 @@
 # LICENSE:      GNU GPLv3
 # ============================================================================
 
-import time as timer
+import abc
+import asyncio
 
 from PyQt6 import QtCore
-from tinkoff.invest import (
-    Client,
-)
-from tinkoff.invest.services import Services
+
+from avin import Broker
 
 
 class TConnect(QtCore.QThread):  # {{{
-    """Signal"""  # {{{
+    successful = QtCore.pyqtSignal(abc.ABCMeta)
+    failure = QtCore.pyqtSignal(abc.ABCMeta)
 
-    brokerConnected = QtCore.pyqtSignal(Services)
-
-    # }}}
-    def __init__(self, ibroker, itoken, parent=None):  # {{{
+    def __init__(self, broker: Broker, parent=None):  # {{{
         QtCore.QThread.__init__(self, parent)
-        self.ibroker = ibroker
-        self.itoken = itoken
-        self.iaccount = None
-        self.work = True
+
+        self.__broker = broker
+        self.__work = False
 
     # }}}
     def run(self):  # {{{
-        token = self.itoken.token
-        target = self.ibroker.TARGET
-        with Client(token, target=target) as client:
-            self.brokerConnected.emit(client)
-            while self.work:
-                timer.sleep(1)
-                pass
+        asyncio.run(self.__aconnect())
 
     # }}}
-    def closeConnection(self):  # {{{
-        self.work = False
+    def stop(self):  # {{{
+        self.__work = False
+
+    # }}}
+
+    async def __aconnect(self):  # {{{
+        result = await self.__broker.connect()
+
+        if result:
+            self.__work = True
+            self.successful.emit(self.__broker)
+            while self.__work:
+                await asyncio.sleep(1)
+            self.__broker.disconnect()
+        else:
+            self.__work = False
+            self.failure.emit(self.__broker)
+
+    # }}}
 
 
 # }}}
-# }}}
+
 
 if __name__ == "__main__":
     ...

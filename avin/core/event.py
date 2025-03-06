@@ -13,8 +13,8 @@ from __future__ import annotations
 import enum
 from abc import ABC, abstractmethod
 
-from avin.core.bar import Bar
 from avin.core.order import Order
+from avin.core.tic import Tic
 from avin.core.timeframe import TimeFrame
 from avin.core.transaction import Transaction
 
@@ -22,8 +22,8 @@ from avin.core.transaction import Transaction
 class Event(ABC):  # {{{
     class Type(enum.Enum):  # {{{
         UNDEFINE = 0
-        BAR_CHANGED = 1
-        NEW_HISTORICAL_BAR = 2
+        BAR = 1
+        TIC = 2
         TRANSACTION = 3
 
     # }}}
@@ -32,49 +32,31 @@ class Event(ABC):  # {{{
 
 
 # }}}
-class BarChangedEvent(Event):  # {{{
-    def __init__(self, figi: str, timeframe: TimeFrame, bar: Bar):  # {{{
-        self.figi = figi
-        self.timeframe = timeframe
-        self.bar = bar
-        self.type = Event.Type.BAR_CHANGED
-
-    # }}}
-    def __str__(self):  # {{{
-        s = f"{self.type.name} {self.figi}, {self.timeframe}, {self.bar}"
-        return s
-
-    # }}}
-
-
-# }}}
-class NewHistoricalBarEvent(Event):  # {{{
-    def __init__(self, figi: str, timeframe: TimeFrame, bar: Bar):  # {{{
-        self.figi = figi
-        self.timeframe = timeframe
-        self.bar = bar
-        self.type = Event.Type.NEW_HISTORICAL_BAR
-
-    # }}}
-    def __str__(self):  # {{{
-        s = f"{self.type.name} {self.figi}, {self.timeframe}, {self.bar}"
-        return s
-
-
-# }}}
-
-
-# }}}
 class BarEvent(Event):  # {{{
     def __init__(self, figi: str, timeframe: TimeFrame, bar: Bar):  # {{{
         self.figi = figi
         self.timeframe = timeframe
         self.bar = bar
-        self.type = Event.Type.BAR_CHANGED
+        self.type = Event.Type.BAR
 
     # }}}
     def __str__(self):  # {{{
-        s = f"{self.type.name} {self.figi}, {self.timeframe}, {self.bar}"
+        s = f"BarEvent={self.figi}, {self.timeframe}, {self.bar}"
+        return s
+
+    # }}}
+
+
+# }}}
+class TicEvent(Event):  # {{{
+    def __init__(self, figi: str, tic: Tic):  # {{{
+        self.figi = figi
+        self.tic = tic
+        self.type = Event.Type.TIC
+
+    # }}}
+    def __str__(self):  # {{{
+        s = f"TickEvent={self.figi}, {self.tic}"
         return s
 
     # }}}
@@ -99,7 +81,7 @@ class TransactionEvent(Event):  # {{{
 
     # }}}
     def __str__(self):  # {{{
-        string = f"{self.transaction}"
+        string = f"TransactionEvent={self.transaction}"
         return string
 
     # }}}
