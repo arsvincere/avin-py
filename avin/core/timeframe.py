@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 from typing import Iterator, Optional
 
 from avin.data import DataType
+from avin.exceptions import CoreError
 from avin.utils import logger
 
 # PERF:
@@ -84,7 +85,7 @@ class TimeFrame:  # {{{
             other = TimeFrame(other)
             return self.__period == other.__period
         else:
-            raise TimeFrameError(
+            raise CoreError(
                 f"Недопустимое сравнение <TimeFrame> и {type(other)}"
             )
 
@@ -98,7 +99,7 @@ class TimeFrame:  # {{{
             other = TimeFrame(other)
             return self.__period < other.__period
         else:
-            raise TimeFrameError(
+            raise CoreError(
                 f"Недопустимое сравнение <TimeFrame> и {type(other)}"
             )
 
@@ -112,7 +113,7 @@ class TimeFrame:  # {{{
             other = TimeFrame(other)
             return self.__period <= other.__period
         else:
-            raise TimeFrameError(
+            raise CoreError(
                 f"Недопустимое сравнение <TimeFrame> и {type(other)}"
             )
 
@@ -126,7 +127,7 @@ class TimeFrame:  # {{{
             other = TimeFrame(other)
             return self.__period > other.__period
         else:
-            raise TimeFrameError(
+            raise CoreError(
                 f"Недопустимое сравнение <TimeFrame> и {type(other)}"
             )
 
@@ -140,7 +141,7 @@ class TimeFrame:  # {{{
             other = TimeFrame(other)
             return self.__period >= other.__period
         else:
-            raise TimeFrameError(
+            raise CoreError(
                 f"Недопустимое сравнение <TimeFrame> и {type(other)}"
             )
 
@@ -151,7 +152,7 @@ class TimeFrame:  # {{{
         if isinstance(other, datetime):
             return other + self.__period
         else:
-            raise TimeFrameError(
+            raise CoreError(
                 f"Недопустимое сложение <TimeFrame> и {type(other)}"
             )
 
@@ -162,7 +163,7 @@ class TimeFrame:  # {{{
         if isinstance(other, datetime):
             return other + self.__period
         else:
-            raise TimeFrameError(
+            raise CoreError(
                 f"Недопустимое сложение <TimeFrame> и {type(other)}"
             )
 
@@ -171,7 +172,7 @@ class TimeFrame:  # {{{
         if isinstance(other, int):
             return self.__period * other
         else:
-            raise TimeFrameError(
+            raise CoreError(
                 f"Недопустимое умножение <TimeFrame> и {type(other)}"
             )
 
@@ -180,7 +181,7 @@ class TimeFrame:  # {{{
         if isinstance(other, int):
             return self.__period * other
         else:
-            raise TimeFrameError(
+            raise CoreError(
                 f"Недопустимое умножение <TimeFrame> и {type(other)}"
             )
 
