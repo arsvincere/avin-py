@@ -13,8 +13,10 @@ from abc import ABC
 
 import pandas as pd
 
-from avin import Asset, Cmd, Usr, logger
 from avin.analytic.size import Size
+from avin.config import Usr
+from avin.core.asset import Asset
+from avin.utils import Cmd, logger
 
 
 class Analytic(ABC):  # {{{
