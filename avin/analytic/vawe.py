@@ -15,7 +15,7 @@ import enum
 import pandas as pd
 
 from avin.analytic._analytic import Analytic
-from avin.utils import Tree
+from avin.utils import Tree, logger
 
 __all__ = ("VaweAnalytic",)
 

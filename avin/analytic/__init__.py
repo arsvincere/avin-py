@@ -6,11 +6,6 @@
 # LICENSE:      GNU GPLv3
 # ============================================================================
 
-import time as timer
-from pprint import pprint
-
-import pandas as pd
-
 from avin.analytic._analytic import Analytic, Indicator
 from avin.analytic.bar import BarAnalytic
 from avin.analytic.size import SimpleSize, Size
