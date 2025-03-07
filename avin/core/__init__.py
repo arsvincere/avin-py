@@ -42,7 +42,7 @@ from avin.core.strategy import (
 )
 from avin.core.summary import Summary
 from avin.core.term import Term
-from avin.core.tic import Tic
+from avin.core.tic import Tic, Tics
 from avin.core.timeframe import TimeFrame, TimeFrameList
 from avin.core.trade import Trade, TradeList
 from avin.core.transaction import Transaction, TransactionList
@@ -54,6 +54,7 @@ __all__ = (
     "Range",
     "Bar",
     "Tic",
+    "Tics",
     "TimeFrame",
     "TimeFrameList",
     "Chart",

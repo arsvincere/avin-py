@@ -6,12 +6,18 @@
 # LICENSE:      GNU GPLv3
 # ============================================================================
 
-
+import tinkoff.invest as ti
 from PyQt6 import QtCore, QtWidgets
 from PyQt6.QtCore import Qt
 
-from avin import Asset, Broker, TicEvent, logger
+from avin import (
+    Asset,
+    Tic,
+    TicEvent,
+    logger,
+)
 from gui.custom import Css
+from gui.tic.thread import TTic
 from gui.tic.tree import TicTree
 
 
@@ -50,35 +56,42 @@ class TicWidget(QtWidgets.QWidget):  # {{{
         self.__connect()
 
         self.__asset = None
-        self.__broker = None
+        self.__client = None
+        self.__data_stream = None
+        self.__thread = None
 
     # }}}
 
     def setAsset(self, asset: Asset) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.setAsset()")
 
-        self.__asset = asset
-
-        if self.__broker is not None:
-            self.__broker.createTicStream(self.__asset)
-            self.__broker.startDataStream()
-
-    # }}}
-    def setBroker(self, broker: Broker) -> None:  # {{{
-        logger.debug(f"{self.__class__.__name__}.setBroker()")
-
-        self.__broker = broker
-        broker.new_tic.connect(self.__onNewTicEvent)
+        if self.__data_stream is None:
+            self.__asset = asset
+            return
 
         if self.__asset is not None:
-            self.__broker.createTicStream(self.__asset)
-            self.__broker.startDataStream()
+            print("try unsubscribe")
+            tic_subscription = ti.TradeInstrument(figi=self.__asset.figi)
+            self.__data_stream.trades.unsubscribe([tic_subscription])
+
+        self.__asset = asset
+        tic_subscription = ti.TradeInstrument(figi=self.__asset.figi)
+        self.__data_stream.trades.subscribe([tic_subscription])
+        self.__tic_tree.clear()
+        self.__start()
+
+    # }}}
+    def setClient(self, client) -> None:  # {{{
+        self.__client = client
+
+    # }}}
+    def setStream(self, data_stream) -> None:  # {{{
+        self.__data_stream = data_stream
 
     # }}}
     def clearAll(self) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.clearAll()")
 
-        self.__broker = None
         self.__asset = None
         self.__tic_tree.clear()
 
@@ -111,13 +124,21 @@ class TicWidget(QtWidgets.QWidget):  # {{{
         logger.debug(f"{self.__class__.__name__}.__connect()")
 
     # }}}
+    def __start(self):  # {{{
+        if self.__thread is None:
+            self.__thread = TTic(self.__data_stream)
+            self.__thread.new_tic.connect(self.__onNewTic)
+            self.__thread.start()
 
-    @QtCore.pyqtSlot(TicEvent)  # __onNewTicEvent  # {{{
-    def __onNewTicEvent(self, tic_event: TicEvent) -> None:
-        logger.debug(f"{self.__class__.__name__}.__onNewTicEvent()")
+    # }}}
+    @QtCore.pyqtSlot(TicEvent)  # __onNewTic  # {{{
+    def __onNewTic(self, tic: Tic) -> None:
+        logger.debug(f"{self.__class__.__name__}.__onNewTic()")
 
-        tic = tic_event.tic
+        tic.setAsset(self.__asset)
         self.__tic_tree.addTic(tic)
+
+    # }}}
 
     # }}}
 

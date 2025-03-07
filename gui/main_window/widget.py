@@ -32,9 +32,12 @@ from gui.trade import TradeDockWidget
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, parent=None):  # {{{
+    def __init__(self, client=None, parent=None):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
         QtWidgets.QMainWindow.__init__(self, parent)
+
+        self.client = client
+        self.data_stream = client.create_market_data_stream()
 
         # HACK: хз че за херня, но если тут тоже не вызвать заставку
         # то в hyprland она не отображается. Ее нужно в 2 местах
@@ -439,6 +442,9 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.tic_widget is None:
             # create dock widget
             self.tic_widget = TicDockWidget(self)
+            self.tic_widget.widget.setClient(self.client)
+            self.tic_widget.widget.setStream(self.data_stream)
+
             area = Qt.DockWidgetArea.RightDockWidgetArea
             self.addDockWidget(area, self.tic_widget)
 

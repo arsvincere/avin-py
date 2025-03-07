@@ -99,6 +99,11 @@ class Theme:
         MARK = QtGui.QColor("#0000AA")
 
     # }}}
+    class Tic:  # {{{
+        SELL = QtGui.QColor("#55FF5D62")  # kanagawa 5.3
+        BUY = QtGui.QColor("#5598BB6C")  # kanagawa 4.2
+
+    # }}}
 
 
 if __name__ == "__main__":

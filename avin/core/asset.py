@@ -14,7 +14,8 @@ from typing import Optional, Union
 import pandas as pd
 
 from avin.core.chart import Chart
-from avin.core.event import BarEvent
+from avin.core.event import BarEvent, Event, TicEvent
+from avin.core.tic import Tics
 from avin.core.timeframe import TimeFrame
 from avin.data import Data, DataType, Exchange, Instrument
 from avin.exceptions import AssetError
@@ -30,6 +31,7 @@ class Asset(Instrument, ABC):  # {{{
 
         # private fields
         self.__charts: dict[TimeFrame, Chart] = dict()
+        self.__tics: Tics = Tics(self)
 
         # signals
         # self.newBar1M = AsyncSignal(Asset, Chart)
@@ -40,6 +42,18 @@ class Asset(Instrument, ABC):  # {{{
         # self.newBarW = AsyncSignal(Asset, Chart)
         # self.newBarM = AsyncSignal(Asset, Chart)
         self.updated = AsyncSignal(Asset, Chart)
+        self.new_tic = AsyncSignal(Asset)
+
+    # }}}
+
+    @property  # tics  # {{{
+    def tics(self) -> Tics:
+        return self.__tics
+
+    @tics.setter
+    def tics(self, tics: Tics) -> None:
+        assert isinstance(tics, Tics)
+        self.__tics = tics
 
     # }}}
 
@@ -127,37 +141,14 @@ class Asset(Instrument, ABC):  # {{{
         return df
 
     # }}}
-    async def receive(self, event: BarEvent) -> None:  # {{{
+    async def receive(self, event: Event) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.receive({event})")
 
-        # select chart
-        timeframe = event.timeframe
-        chart = self.chart(timeframe)
-
-        # send bar to chart
-        await chart.receive(event.bar)
-
-        # emit signal
-        await self.updated.aemit(self, chart)
-
-        # INFO: old code...
-        # if event.type == Event.Type.BAR_CHANGED:
-        #     chart.updateNowBar(event.bar)
-        #     await self.updated.aemit(self, chart)
-        #
-        # if event.type == Event.Type.NEW_HISTORICAL_BAR:
-        #     chart.addHistoricalBar(event.bar)
-        #     signals = {
-        #         "1M": self.newBar1M,
-        #         "5M": self.newBar5M,
-        #         "10M": self.newBar10M,
-        #         "1H": self.newBar1H,
-        #         "D": self.newBarD,
-        #         "W": self.newBarW,
-        #         "M": self.newBarM,
-        #     }
-        #     signal = signals[str(timeframe)]
-        #     await signal.aemit(self, chart)
+        match event.type:
+            case Event.Type.BAR:
+                await self.__receiveBar(event)
+            case Event.Type.TIC:
+                await self.__receiveTic(event)
 
     # }}}
 
@@ -251,6 +242,27 @@ class Asset(Instrument, ABC):  # {{{
 
         assets = await Keeper.get(cls)
         return assets
+
+    # }}}
+
+    async def __receiveBar(self, event: BarEvent) -> None:  # {{{
+        # select chart
+        timeframe = event.timeframe
+        chart = self.chart(timeframe)
+
+        # send bar to chart
+        await chart.receive(event.bar)
+
+        # emit signal
+        await self.updated.aemit(self, chart)
+
+    # }}}
+    async def __receiveTic(self, event: TicEvent) -> None:  # {{{
+        assert event.type == Event.Type.TIC
+        assert event.figi == self.figi
+
+        self.__tics.add(event.tic)
+        await self.new_tic.aemit(self)
 
     # }}}
 

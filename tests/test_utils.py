@@ -8,6 +8,7 @@
 
 from datetime import datetime
 
+from avin.core.timeframe import TimeFrame
 from avin.utils import *
 
 
@@ -56,6 +57,17 @@ def test_next_month():  # {{{
     dt = datetime(2023, 12, 30, 11, 16)
     dt = next_month(dt)
     assert dt == datetime(2024, 1, 1)
+
+
+# }}}
+def test_next_dt():  # {{{
+    dt = DateTime(2025, 3, 7, 10, 1)
+    next = next_dt(dt, TimeFrame("1M"))
+    assert next == DateTime(2025, 3, 7, 10, 2)
+    next = next_dt(dt, TimeFrame("5M"))
+    assert next == DateTime(2025, 3, 7, 10, 5)
+    next = next_dt(dt, TimeFrame("1H"))
+    assert next == DateTime(2025, 3, 7, 11, 0)
 
 
 # }}}

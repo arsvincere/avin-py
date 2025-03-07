@@ -16,11 +16,16 @@ class Direction(enum.Enum):  # {{{
     BUY = 1
     SELL = 2
 
+    def short(self) -> str:
+        return self.name[0]
+
     @classmethod  # fromStr
     def fromStr(cls, string: str) -> Direction:
         directions = {
             "BUY": cls.BUY,
             "SELL": cls.SELL,
+            "B": cls.BUY,
+            "S": cls.SELL,
         }
         return directions[string]
 

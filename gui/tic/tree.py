@@ -10,7 +10,7 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 from avin import Tic, logger
-from gui.custom import Css, Menu
+from gui.custom import Menu
 from gui.tic.item import TicItem
 
 
@@ -36,7 +36,7 @@ class TicTree(QtWidgets.QTreeWidget):  # {{{
     # }}}
     def addTic(self, tic: Tic):  # {{{
         item = TicItem(tic)
-        self.addTopLevelItem(item)
+        self.insertTopLevelItem(0, item)
 
     # }}}
 
@@ -45,7 +45,7 @@ class TicTree(QtWidgets.QTreeWidget):  # {{{
 
         # config style
         self.setWindowTitle("AVIN")
-        self.setStyleSheet(Css.TREE)
+        # self.setStyleSheet(Css.TREE)
         self.setContentsMargins(0, 0, 0, 0)
         self.setWindowFlags(QtCore.Qt.WindowType.FramelessWindowHint)
 
@@ -54,11 +54,14 @@ class TicTree(QtWidgets.QTreeWidget):  # {{{
         for l in TicItem.Column:
             labels.append(l.name)
         self.setHeaderLabels(labels)
-        self.header().setStyleSheet(Css.TREE_HEADER)
+        # self.header().setStyleSheet(Css.TREE_HEADER)
 
         # config width
-        self.setColumnWidth(TicItem.Column.Time, 100)
-        self.setMinimumWidth(200)
+        self.setColumnWidth(TicItem.Column.Time, 90)
+        self.setColumnWidth(TicItem.Column.Price, 60)
+        self.setColumnWidth(TicItem.Column.Lots, 40)
+        self.setColumnWidth(TicItem.Column.Amount, 90)
+        self.setMinimumWidth(300)
 
     # }}}
     def __createMenu(self):  # {{{

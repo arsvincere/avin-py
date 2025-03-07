@@ -11,31 +11,38 @@
 import sys
 
 import PyQt6
+import tinkoff.invest as ti
 
-from avin import configureLogger, logger
+from avin import Tinkoff, configureLogger, logger
 from gui import MainWindow, Splash
 
 
 def main():
-    try:
-        # start app
-        app = PyQt6.QtWidgets.QApplication(sys.argv)
+    with ti.Client(Tinkoff.TOKEN, target=Tinkoff.TARGET) as client:
+        response = client.users.get_accounts()
+        if not response:
+            logger.error("Connection failed!")
+            return
 
-        # show splash
-        splash = Splash()
-        splash.show()
+        try:
+            # start app
+            app = PyQt6.QtWidgets.QApplication(sys.argv)
 
-        # show main window
-        w = MainWindow()
-        w.show()
-        splash.finish(w)
-        code = app.exec()
+            # show splash
+            splash = Splash()
+            splash.show()
 
-        # before quit actions
-        sys.exit(code)
+            # show main window
+            w = MainWindow(client)
+            w.show()
+            splash.finish(w)
+            code = app.exec()
 
-    except Exception as e:
-        logger.exception(e)
+            # before quit actions
+            sys.exit(code)
+
+        except Exception as e:
+            logger.exception(e)
 
 
 if __name__ == "__main__":

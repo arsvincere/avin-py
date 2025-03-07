@@ -284,12 +284,12 @@ class Tinkoff(Broker):
             instrument = Instrument.fromFigi(i.figi)
             order = LimitOrder(
                 account_name=account.name,
-                direction=cls.__ti_to_av(i.direction),
+                direction=cls.ti_to_av(i.direction),
                 instrument=instrument,
                 lots=i.lots_requested,
                 quantity=i.lots_requested * instrument.lot,
-                price=cls.__ti_to_av(i.initial_order_price),
-                status=cls.__ti_to_av(i.execution_report_status),
+                price=cls.ti_to_av(i.initial_order_price),
+                status=cls.ti_to_av(i.execution_report_status),
                 order_id=Id.fromStr(i.order_request_id),
                 trade_id=None,
                 exec_lots=i.lots_executed,
@@ -373,13 +373,13 @@ class Tinkoff(Broker):
             instrument = Instrument.fromFigi(i.figi)
             order = StopOrder(
                 account_name=account.name,
-                direction=cls.__ti_to_av(i.direction),
+                direction=cls.ti_to_av(i.direction),
                 instrument=instrument,
                 lots=i.lots_requested,
                 quantity=i.lots_requested * instrument.lot,
-                stop_price=cls.__ti_to_av(i.stop_price),
-                exec_price=cls.__ti_to_av(i.price),
-                status=cls.__ti_to_av(i.status),
+                stop_price=cls.ti_to_av(i.stop_price),
+                exec_price=cls.ti_to_av(i.price),
+                status=cls.ti_to_av(i.status),
                 order_id=None,
                 trade_id=None,
                 exec_lots=0,  # XXX: у него не может быть исполненных лотов...
@@ -472,12 +472,12 @@ class Tinkoff(Broker):
                 op = Operation(
                     account_name=account.name,
                     dt=i.date,
-                    direction=cls.__ti_to_av(i.operation_type),
+                    direction=cls.ti_to_av(i.operation_type),
                     instrument=instrument,
                     lots=int(i.quantity / instrument.lot),
                     quantity=i.quantity,
-                    price=cls.__ti_to_av(i.price),
-                    amount=cls.__ti_to_av(i.price),
+                    price=cls.ti_to_av(i.price),
+                    amount=cls.ti_to_av(i.price),
                     commission=None,
                     operation_id=None,
                     order_id=None,
@@ -567,7 +567,7 @@ class Tinkoff(Broker):
         )
 
         tinkoff_commission: ti.MoneyValue = response.executed_commission
-        commission = cls.__ti_to_av(tinkoff_commission)
+        commission = cls.ti_to_av(tinkoff_commission)
         return commission
 
     # }}}
@@ -588,10 +588,10 @@ class Tinkoff(Broker):
                 figi=asset.figi,
                 from_=begin,
                 to=end,
-                interval=cls.__av_to_ti(timeframe, ti.CandleInterval),
+                interval=cls.av_to_ti(timeframe, ti.CandleInterval),
             ):
                 if candle.is_complete:
-                    bar = cls.__ti_to_av(candle)
+                    bar = cls.ti_to_av(candle)
                     new_bars.append(bar)
         except ti.exceptions.AioRequestError as err:
             logger.exception(err)
@@ -613,7 +613,7 @@ class Tinkoff(Broker):
                         instrument.figi,
                     ]
                 )
-                last_price = cls.__ti_to_av(response.last_prices[0].price)
+                last_price = cls.ti_to_av(response.last_prices[0].price)
             except ti.exceptions.AioRequestError as err:
                 logger.error(err)
                 return None
@@ -682,7 +682,7 @@ class Tinkoff(Broker):
             response: ti.OrderState = cls.__getOrderState(account, order)
             order.exec_lots = response.lots_executed
             order.meta = str(response)
-            status = cls.__ti_to_av(response.execution_report_status)
+            status = cls.ti_to_av(response.execution_report_status)
             order.setStatus(status)
             return True
 
@@ -748,8 +748,8 @@ class Tinkoff(Broker):
         try:
             response: ti.PostOrderResponse = cls.__connect.orders.post_order(
                 account_id=account.meta.id,
-                order_type=cls.__av_to_ti(order, ti.OrderType),
-                direction=cls.__av_to_ti(order, ti.OrderDirection),
+                order_type=cls.av_to_ti(order, ti.OrderType),
+                direction=cls.av_to_ti(order, ti.OrderDirection),
                 figi=order.instrument.figi,
                 quantity=order.lots,
             )
@@ -814,12 +814,12 @@ class Tinkoff(Broker):
 
         try:
             response: ti.PostOrderResponse = cls.__connect.orders.post_order(
-                order_type=cls.__av_to_ti(order, ti.OrderType),
+                order_type=cls.av_to_ti(order, ti.OrderType),
                 account_id=account.meta.id,
-                direction=cls.__av_to_ti(order, ti.OrderDirection),
+                direction=cls.av_to_ti(order, ti.OrderDirection),
                 figi=order.instrument.figi,
                 quantity=order.lots,
-                price=Tinkoff.__av_to_ti(order.price, ti.Quotation),
+                price=Tinkoff.av_to_ti(order.price, ti.Quotation),
                 order_id="",
             )
             logger.debug(f"Tinkoff.postLimitOrder: Response='{response}'")
@@ -852,15 +852,15 @@ class Tinkoff(Broker):
 
         try:
             response = cls.__connect.stop_orders.post_stop_order(
-                stop_order_type=cls.__av_to_ti(order, ti.StopOrderType),
+                stop_order_type=cls.av_to_ti(order, ti.StopOrderType),
                 account_id=account.meta.id,
-                direction=cls.__av_to_ti(order, ti.StopOrderDirection),
+                direction=cls.av_to_ti(order, ti.StopOrderDirection),
                 figi=order.instrument.figi,
                 quantity=order.lots,
-                price=cls.__av_to_ti(order.exec_price, ti.Quotation),
-                stop_price=cls.__av_to_ti(order.stop_price, ti.Quotation),
+                price=cls.av_to_ti(order.exec_price, ti.Quotation),
+                stop_price=cls.av_to_ti(order.stop_price, ti.Quotation),
                 # order_id=str(order.order_id),
-                expiration_type=cls.__av_to_ti(
+                expiration_type=cls.av_to_ti(
                     order,
                     ti.StopOrderExpirationType,
                     # expire_date=
@@ -986,7 +986,7 @@ class Tinkoff(Broker):
             cls.__data_stream = cls.__connect.create_market_data_stream()
 
         figi = asset.figi
-        interval = cls.__av_to_ti(timeframe, ti.SubscriptionInterval)
+        interval = cls.av_to_ti(timeframe, ti.SubscriptionInterval)
         candle_subscription = ti.CandleInstrument(
             figi=figi, interval=interval
         )
@@ -1235,14 +1235,14 @@ class Tinkoff(Broker):
             cls.__data_cycle_is_active = True
             if response.candle:
                 figi = response.candle.figi
-                timeframe = cls.__ti_to_av(response.candle.interval)
-                bar = cls.__ti_to_av(response.candle)
+                timeframe = cls.ti_to_av(response.candle.interval)
+                bar = cls.ti_to_av(response.candle)
                 event = BarEvent(figi, timeframe, bar)
                 Tinkoff.new_bar.emit(event)
 
             if response.trade:
                 figi = response.trade.figi
-                tic = cls.__ti_to_av(response.trade)
+                tic = cls.ti_to_av(response.trade)
                 event = TicEvent(figi, tic)
                 Tinkoff.new_tic.emit(event)
 
@@ -1294,7 +1294,7 @@ class Tinkoff(Broker):
             logger.debug(f"Tinkoff.__transactionCycle: Response='{response}'")
 
             if response.order_trades:
-                event = cls.__ti_to_av(response.order_trades)
+                event = cls.ti_to_av(response.order_trades)
                 Tinkoff.new_transaction.emit(event)
 
                 for i in cls.__accounts:
@@ -1309,9 +1309,9 @@ class Tinkoff(Broker):
 
     # }}}
 
-    @staticmethod  # __ti_to_av  # {{{
-    def __ti_to_av(obj: Any):
-        logger.debug(f"Tinkoff.__ti_to_av({obj})")
+    @staticmethod  # ti_to_av  # {{{
+    def ti_to_av(obj: Any):
+        logger.debug(f"Tinkoff.ti_to_av({obj})")
 
         class_name = obj.__class__.__name__
         match class_name:
@@ -1350,6 +1350,36 @@ class Tinkoff(Broker):
                 )
 
     # }}}
+    @staticmethod  # av_to_ti  # {{{
+    def av_to_ti(av_obj: Any, ti_class: ClassVar):
+        logger.debug(f"Tinkoff.av_to_ti({av_obj}, {ti_class})")
+
+        class_name = ti_class.__name__
+        match class_name:
+            case "Quotation":
+                return Tinkoff.__avPrice_to_tiQuotation(av_obj)
+            case "OrderType":
+                return Tinkoff.__avOrder_to_tiOrderType(av_obj)
+            case "StopOrderType":
+                return Tinkoff.__avOrder_to_tiStopOrderType(av_obj)
+            case "OrderDirection":
+                return Tinkoff.__avOrder_to_tiOrderDirection(av_obj)
+            case "StopOrderDirection":
+                return Tinkoff.__avOrder_to_tiStopOrderDirection(av_obj)
+            case "StopOrderExpirationType":
+                return Tinkoff.__avOrder_to_tiStopOrderExpirationType(av_obj)
+            case "SubscriptionInterval":
+                return Tinkoff.__avTimeFrame_to_tiSubscriptionInterval(av_obj)
+            case "CandleInterval":
+                return Tinkoff.__avTimeFrame_to_tiCandleInterval(av_obj)
+            case _:
+                raise BrokerError(
+                    f"Tinkoff fail extract: ti_class='{ti_class}', "
+                    f"av_obj='{av_obj}'"
+                )
+
+    # }}}
+
     @staticmethod  # __tiMoneyValue_to_avPrice  # {{{
     def __tiMoneyValue_to_avPrice(ti_money_value):
         logger.debug(f"Tinkoff.__tiMoneyValue_to_avPrice({ti_money_value})")
@@ -1622,7 +1652,7 @@ class Tinkoff(Broker):
 
         # extract args
         figi = order_trades.figi
-        direction = Tinkoff.__ti_to_av(order_trades.direction)
+        direction = Tinkoff.ti_to_av(order_trades.direction)
         order_broker_id = order_trades.order_id
         # FIX:  тут вообще жесть... order_trades содержит список
         # транзакций, а транзактион эвент ожидает одну транзакцию
@@ -1638,35 +1668,6 @@ class Tinkoff(Broker):
             transaction=transaction,
         )
         return transaction_event
-
-    # }}}
-    @staticmethod  # __av_to_ti  # {{{
-    def __av_to_ti(av_obj: Any, ti_class: ClassVar):
-        logger.debug(f"Tinkoff.__av_to_ti({av_obj}, {ti_class})")
-
-        class_name = ti_class.__name__
-        match class_name:
-            case "Quotation":
-                return Tinkoff.__avPrice_to_tiQuotation(av_obj)
-            case "OrderType":
-                return Tinkoff.__avOrder_to_tiOrderType(av_obj)
-            case "StopOrderType":
-                return Tinkoff.__avOrder_to_tiStopOrderType(av_obj)
-            case "OrderDirection":
-                return Tinkoff.__avOrder_to_tiOrderDirection(av_obj)
-            case "StopOrderDirection":
-                return Tinkoff.__avOrder_to_tiStopOrderDirection(av_obj)
-            case "StopOrderExpirationType":
-                return Tinkoff.__avOrder_to_tiStopOrderExpirationType(av_obj)
-            case "SubscriptionInterval":
-                return Tinkoff.__avTimeFrame_to_tiSubscriptionInterval(av_obj)
-            case "CandleInterval":
-                return Tinkoff.__avTimeFrame_to_tiCandleInterval(av_obj)
-            case _:
-                raise BrokerError(
-                    f"Tinkoff fail extract: ti_class='{ti_class}', "
-                    f"av_obj='{av_obj}'"
-                )
 
     # }}}
     @staticmethod  # __avPrice_to_tiQuotation()  # {{{

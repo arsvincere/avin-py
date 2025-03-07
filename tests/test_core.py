@@ -396,6 +396,54 @@ async def test_Chart(event_loop):
 
 
 # }}}
+@pytest.mark.asyncio  # test_Tics  # {{{
+async def test_Chart(event_loop):
+    asset = await Asset.fromStr("moex share sber")
+    dt1 = DateTime(2025, 3, 7, 10, 0, tzinfo=UTC)
+    dt2 = DateTime(2025, 3, 7, 10, 1, tzinfo=UTC)
+
+    t1 = Tic(dt1, Direction.BUY, 100, 1)
+    t1.setAsset(asset)
+    t2 = Tic(dt2, Direction.SELL, 110, 10)
+    t2.setAsset(asset)
+
+    # add 4 tics
+    tics = Tics(asset)
+    tics.add(t1)
+    tics.add(t1)
+    tics.add(t2)
+    tics.add(t2)
+
+    # set tics to asset
+    asset.tics = tics
+
+    # add one tic by event
+    event = TicEvent(figi=asset.figi, tic=t2)
+    await asset.receive(event)
+
+    # asset tics == 5
+    df = asset.tics.data_frame
+    assert len(df) == 5
+
+    # levels DataFrame:
+    #    price   buy   sell
+    # 0    100  2000      0
+    # 1    110     0  33000
+    levels = asset.tics.levels()
+    df = levels.set_index("price")
+
+    buy_amount = df.at[t1.price, "buy"]
+    sell_amount = df.at[t1.price, "sell"]
+    assert buy_amount == 2000
+    assert sell_amount == 0
+
+    buy_amount = df.at[t2.price, "buy"]
+    sell_amount = df.at[t2.price, "sell"]
+    assert buy_amount == 0
+    assert sell_amount == 33000
+
+
+# }}}
 @pytest.mark.asyncio  # test_Asset  # {{{
 async def test_Asset(event_loop):
     info = {

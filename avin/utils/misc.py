@@ -6,6 +6,8 @@
 # LICENSE:      GNU GPLv3
 # ============================================================================
 
+from __future__ import annotations
+
 import bisect
 import os
 from collections import defaultdict
@@ -24,6 +26,11 @@ TimeZone = timezone
 
 def now():  # {{{
     return datetime.now(timezone.utc)
+
+
+# }}}
+def now_local():  # {{{
+    return datetime.now()
 
 
 # }}}
@@ -181,8 +188,25 @@ def next_month(dt: datetime) -> datetime:  # {{{
 
 
 # }}}
+def next_dt(dt: DateTime, tf: TimeFrame) -> DateTime:  # {{{
+    match str(tf):
+        case "1M":
+            next = dt.replace(second=0, microsecond=0)
+            next += TimeDelta(minutes=1)
+        case "5M":
+            need_minutes = 5 - (dt.minute % 5)
+            next = dt.replace(second=0, microsecond=0)
+            next += TimeDelta(minutes=need_minutes)
+        case "1H":
+            next = dt.replace(minute=0, second=0, microsecond=0)
+            next += TimeDelta(hours=1)
+        case _:
+            assert False, "TODO_ME"
+
+    return next
 
 
+# }}}
 def Tree():  # {{{
     return defaultdict(Tree)
 

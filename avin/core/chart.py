@@ -145,32 +145,6 @@ class Chart:
 
     # }}}
 
-    # INFO: old code...
-    # def addHistoricalBar(self, new_bar: Bar) -> None:  # {{{
-    #     logger.debug(f"{self.__class__.__name__}.addNewHistoricalBar()")
-    #
-    #     new_bar.setChart(self)
-    #     self.__bars.append(new_bar)
-    #
-    #     if (
-    #         Chart.MAX_BARS_COUNT is not None
-    #         and len(self.__bars) > Chart.MAX_BARS_COUNT
-    #     ):
-    #         mid = Chart.MAX_BARS_COUNT // 2
-    #         self.__bars = self.__bars[mid:]
-    #
-    #     self.__head = len(self.__bars)
-    #     self.new_bar.emit(self, new_bar)
-    #
-    # # }}}
-    # def updateNowBar(self, new_bar: Bar) -> None:  # {{{
-    #     logger.debug(f"{self.__class__.__name__}.updateNowBar()")
-    #
-    #     new_bar.setChart(self)
-    #     self.__now = new_bar
-    #     self.updated.emit(self, new_bar)
-    #
-    # # }}}
     async def receive(self, new_bar: Bar) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.receive()")
 
