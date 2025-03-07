@@ -12,6 +12,7 @@ import asyncio
 
 from avin.core._extremum import Extremum
 from avin.core.trend import Trend
+from avin.utils import logger
 
 
 class Vawe:  # {{{
