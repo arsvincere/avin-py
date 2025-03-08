@@ -14,11 +14,12 @@ from PyQt6 import QtCore, QtWidgets
 from avin import Cfg, Tics, TimeFrame, logger
 from gui.chart.gchart import GChart
 from gui.custom import Css, Icon, Label, Theme, ToolButton
-from gui.indicator.item import IndicatorItem
+from gui.indicator.item import Indicator, IndicatorItem
 
 
-class GraphIndicator:  # {{{
-    name = "Graph"
+class HistIndicator:  # {{{
+    name = "Hist"
+    position = Indicator.Position.FOOTER
 
     def __init__(self):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
@@ -43,7 +44,7 @@ class GraphIndicator:  # {{{
         logger.debug(f"{self.__class__.__name__}.label()")
 
         if self.__label is None:
-            self.__label = _GraphLabel(self)
+            self.__label = _HistLabel(self)
 
         return self.__label
 
@@ -51,10 +52,10 @@ class GraphIndicator:  # {{{
     def graphics(self, gchart: GChart):  # {{{
         logger.debug(f"{self.__class__.__name__}.graphics()")
 
-        self.gitem = _GraphGraphics(gchart)
+        self.gitem = _HistGraphics(gchart)
 
         if self.__settings is None:
-            self.__settings = _GraphSettings(self)
+            self.__settings = _HistSettings(self)
 
         self.__settings.configureSilent(self.gitem)
         return self.gitem
@@ -64,7 +65,7 @@ class GraphIndicator:  # {{{
         logger.debug(f"{self.__class__.__name__}.configure()")
 
         if self.__settings is None:
-            self.__settings = _GraphSettings(self)
+            self.__settings = _HistSettings(self)
 
         self.__settings.configure(self.gitem)
 
@@ -74,7 +75,7 @@ class GraphIndicator:  # {{{
 # }}}
 
 
-class _GraphGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
+class _HistGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
     WIDTH = Cfg.Chart.BAR_WIDTH
     INDENT = Cfg.Chart.BAR_INDENT
     HEIGHT = 300
@@ -85,14 +86,15 @@ class _GraphGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
 
         self.gchart = gchart
 
-        self.__loadGraph()
+        self.__loadHist()
         self.__calcMaxAmount()
-        self.__createGraph()
+        self.__createFrame()
+        self.__createHist()
 
     # }}}
 
-    def __loadGraph(self) -> None:  # {{{
-        """self.graph = DataFrame
+    def __loadHist(self) -> None:  # {{{
+        """self.hist = DataFrame
                              dt          buy         sell
         0   2025-03-06 06:59:34    8421750.0    5790060.0
         """
@@ -101,7 +103,7 @@ class _GraphGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
 
         df = pd.read_parquet(file_path)
         self.tics = Tics(self.gchart.chart.instrument, df)
-        self.graph = self.tics.graph(TimeFrame("1M"))
+        self.hist = self.tics.hist(TimeFrame("1M"))
 
         logger.warning("DEBUG MODE - USING GAZP TICS FROM 2025-03-07")
 
@@ -109,22 +111,34 @@ class _GraphGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
     def __calcMaxAmount(self) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.__calcCoordinates()")
 
-        max_amount_buy = self.graph["buy"].max()
-        max_amount_sell = self.graph["sell"].max()
+        max_amount_buy = self.hist["buy"].max()
+        max_amount_sell = self.hist["sell"].max()
         self.max_amount = float(max(max_amount_buy, max_amount_sell))
 
     # }}}
-    def __createGraph(self) -> None:  # {{{
-        for i, row in self.graph.iterrows():
-            self.__createGraphBar(row)
+    def __createFrame(self) -> None:  # {{{
+        x0 = 0
+        y0 = -self.HEIGHT
+        width = self.gchart.rect.width()
+        height = self.HEIGHT
+
+        frame = QtWidgets.QGraphicsRectItem(x0, y0, width, height)
+        frame.setPen(Theme.Chart.BG_FOOTER)
+        frame.setBrush(Theme.Chart.BG_FOOTER)
+        self.addToGroup(frame)
 
     # }}}
-    def __createGraphBar(self, graph_bar: pd.Series):  # {{{
+    def __createHist(self) -> None:  # {{{
+        for i, row in self.hist.iterrows():
+            self.__createHistBar(row)
+
+    # }}}
+    def __createHistBar(self, hist_bar: pd.Series) -> None:  # {{{
         # alias
         gchart = self.gchart
-        dt = graph_bar["dt"]
-        buy = graph_bar["buy"]
-        sell = graph_bar["sell"]
+        dt = hist_bar["dt"]
+        buy = hist_bar["buy"]
+        sell = hist_bar["sell"]
 
         # coordinate
         gbar = gchart.barFromDatetime(dt)
@@ -134,8 +148,7 @@ class _GraphGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
 
         buy_percent = float(buy) / self.max_amount
         sell_percent = float(sell) / self.max_amount
-        # y0 = self.HEIGHT / 2
-        y0 = gchart.rect.height() * 0.08
+        y0 = -self.HEIGHT / 2
         height_buy = buy_percent * self.HEIGHT / 2
         height_sell = sell_percent * self.HEIGHT / 2
 
@@ -155,7 +168,7 @@ class _GraphGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
 
 
 # }}}
-class _GraphLabel(QtWidgets.QWidget):  # {{{
+class _HistLabel(QtWidgets.QWidget):  # {{{
     def __init__(self, indicator, parent=None):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
         QtWidgets.QWidget.__init__(self, parent)
@@ -229,7 +242,7 @@ class _GraphLabel(QtWidgets.QWidget):  # {{{
 
 
 # }}}
-class _GraphSettings(QtWidgets.QDialog):  # {{{
+class _HistSettings(QtWidgets.QDialog):  # {{{
     def __init__(self, indicator, parent=None):  # {{{
         QtWidgets.QDialog.__init__(self, parent)
         self.__indicator = indicator
@@ -248,7 +261,7 @@ class _GraphSettings(QtWidgets.QDialog):  # {{{
 
     # }}}
 
-    def configureSilent(self, gextr: _GraphGraphics):  # {{{
+    def configureSilent(self, gextr: _HistGraphics):  # {{{
         logger.debug(f"{self.__class__.__name__}.configure")
 
     # }}}
@@ -307,6 +320,6 @@ class _GraphSettings(QtWidgets.QDialog):  # {{{
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     indicator = ExtremumIndicator()
-    w = _GraphSettings(indicator)
+    w = _HistSettings(indicator)
     w.show()
     sys.exit(app.exec())

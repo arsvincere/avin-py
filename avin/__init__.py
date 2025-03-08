@@ -12,6 +12,7 @@ from pprint import pprint
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objs as go
+import polars as pl
 
 from avin.analytic import *
 from avin.config import *

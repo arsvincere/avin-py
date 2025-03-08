@@ -326,6 +326,9 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
 
         self.__createSceneRect()
         self.__createGBars()
+
+        # TODO: вынести в отдельный индикатор
+        # чтобы можно было убрать с графика volume
         self.__createGVols()
         self.__createGVolsLevels()
 

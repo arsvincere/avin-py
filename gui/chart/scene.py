@@ -13,6 +13,7 @@ from gui.chart.gchart import GChart
 from gui.chart.glabels import BarInfo, ChartLabels, VolumeInfo
 from gui.chart.gtest import GTradeList
 from gui.custom import Theme
+from gui.indicator.item import Indicator
 
 
 class ChartScene(QtWidgets.QGraphicsScene):
@@ -172,9 +173,17 @@ class ChartScene(QtWidgets.QGraphicsScene):
     def setIndList(self, ind_list) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.setIndList()")
 
+        # add labels
         for i in ind_list:
             label = i.label()
             self.labels.add(label)
+
+        # add footer...
+        # XXX: это пока говнорешение, пока только один
+        # индикатор в футере может быть - тупо туда его присваиваю
+        for i in ind_list:
+            if i.position == Indicator.Position.FOOTER:
+                self.footer = i.gitem
 
     # }}}
     def removeIndicators(self) -> None:  # {{{
@@ -225,6 +234,7 @@ class ChartScene(QtWidgets.QGraphicsScene):
         self.__has_chart = False
         self.gchart = None
         self.volumes = QtWidgets.QGraphicsItemGroup()
+        self.footer = QtWidgets.QGraphicsItemGroup()
 
     # }}}
     def __createTListGroup(self):  # {{{

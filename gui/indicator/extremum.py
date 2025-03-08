@@ -13,12 +13,13 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from avin import Extremum, ExtremumList, Move, Term, TimeFrame, Trend, logger
 from gui.chart.gchart import GBar, GChart, Thread
 from gui.custom import Css, Icon, Label, Theme, ToolButton
-from gui.indicator.item import IndicatorItem
+from gui.indicator.item import Indicator, IndicatorItem
 from gui.marker import GShape
 
 
 class ExtremumIndicator:  # {{{
     name = "Extremum"
+    position = Indicator.Position.CHART
 
     def __init__(self):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
