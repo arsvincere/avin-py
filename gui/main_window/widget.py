@@ -212,8 +212,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # self.ltool.asset.trigger()
         # self.ltool.tester.trigger()
-        self.ltool.console.trigger()
-        self.ltool.summary.trigger()
+        # self.ltool.console.trigger()
+        # self.ltool.summary.trigger()
         self.rtool.chart.trigger()
 
     # }}}
