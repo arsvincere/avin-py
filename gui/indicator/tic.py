@@ -1,0 +1,312 @@
+#!/usr/bin/env  python3
+# ============================================================================
+# URL:          http://arsvincere.com
+# AUTHOR:       Alex Avin
+# E-MAIL:       mr.alexavin@gmail.com
+# LICENSE:      GNU GPLv3
+# ============================================================================
+
+import sys
+
+import pandas as pd
+from PyQt6 import QtCore, QtWidgets
+
+from avin import Cfg, Tics, TimeFrame, logger
+from gui.chart.gchart import GChart
+from gui.custom import Css, Icon, Label, Theme, ToolButton
+from gui.indicator.item import IndicatorItem
+
+
+class GraphIndicator:  # {{{
+    name = "Graph"
+
+    def __init__(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__init__()")
+
+        self.gitem = None
+        self.__item = None
+        self.__label = None
+        self.__settings = None
+
+    # }}}
+
+    def item(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.item()")
+
+        if self.__item is None:
+            self.__item = IndicatorItem(self)
+
+        return self.__item
+
+    # }}}
+    def label(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.label()")
+
+        if self.__label is None:
+            self.__label = _GraphLabel(self)
+
+        return self.__label
+
+    # }}}
+    def graphics(self, gchart: GChart):  # {{{
+        logger.debug(f"{self.__class__.__name__}.graphics()")
+
+        self.gitem = _GraphGraphics(gchart)
+
+        if self.__settings is None:
+            self.__settings = _GraphSettings(self)
+
+        self.__settings.configureSilent(self.gitem)
+        return self.gitem
+
+    # }}}
+    def configure(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.configure()")
+
+        if self.__settings is None:
+            self.__settings = _GraphSettings(self)
+
+        self.__settings.configure(self.gitem)
+
+    # }}}
+
+
+# }}}
+
+
+class _GraphGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
+    WIDTH = Cfg.Chart.BAR_WIDTH
+    INDENT = Cfg.Chart.BAR_INDENT
+    HEIGHT = 300
+
+    def __init__(self, gchart: GChart, parent=None):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__init__()")
+        QtWidgets.QGraphicsItemGroup.__init__(self, parent)
+
+        self.gchart = gchart
+
+        self.__loadGraph()
+        self.__calcMaxAmount()
+        self.__createGraph()
+
+    # }}}
+
+    def __loadGraph(self) -> None:  # {{{
+        """self.graph = DataFrame
+                             dt          buy         sell
+        0   2025-03-06 06:59:34    8421750.0    5790060.0
+        """
+
+        file_path = "/home/alex/AVIN/usr/data/MOEX/SHARE/GAZP/TIC/2025-03-07 tic.parquet"
+
+        df = pd.read_parquet(file_path)
+        self.tics = Tics(self.gchart.chart.instrument, df)
+        self.graph = self.tics.graph(TimeFrame("1M"))
+
+        logger.warning("DEBUG MODE - USING GAZP TICS FROM 2025-03-07")
+
+    # }}}
+    def __calcMaxAmount(self) -> None:  # {{{
+        logger.debug(f"{self.__class__.__name__}.__calcCoordinates()")
+
+        max_amount_buy = self.graph["buy"].max()
+        max_amount_sell = self.graph["sell"].max()
+        self.max_amount = float(max(max_amount_buy, max_amount_sell))
+
+    # }}}
+    def __createGraph(self) -> None:  # {{{
+        for i, row in self.graph.iterrows():
+            self.__createGraphBar(row)
+
+    # }}}
+    def __createGraphBar(self, graph_bar: pd.Series):  # {{{
+        # alias
+        gchart = self.gchart
+        dt = graph_bar["dt"]
+        buy = graph_bar["buy"]
+        sell = graph_bar["sell"]
+
+        # coordinate
+        gbar = gchart.barFromDatetime(dt)
+        x0 = gbar.x0_cundle
+        x1 = gbar.x1_cundle
+        width = x1 - x0
+
+        buy_percent = float(buy) / self.max_amount
+        sell_percent = float(sell) / self.max_amount
+        # y0 = self.HEIGHT / 2
+        y0 = gchart.rect.height() * 0.08
+        height_buy = buy_percent * self.HEIGHT / 2
+        height_sell = sell_percent * self.HEIGHT / 2
+
+        # graphics item
+        buy_body = QtWidgets.QGraphicsRectItem(x0, y0, width, -height_buy)
+        buy_body.setPen(Theme.Chart.BULL)
+        buy_body.setBrush(Theme.Chart.BULL)
+
+        sell_body = QtWidgets.QGraphicsRectItem(x0, y0, width, height_sell)
+        sell_body.setPen(Theme.Chart.BEAR)
+        sell_body.setBrush(Theme.Chart.BEAR)
+
+        self.addToGroup(buy_body)
+        self.addToGroup(sell_body)
+
+    # }}}
+
+
+# }}}
+class _GraphLabel(QtWidgets.QWidget):  # {{{
+    def __init__(self, indicator, parent=None):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__init__()")
+        QtWidgets.QWidget.__init__(self, parent)
+
+        self.__indicator = indicator
+        self.__createWidgets()
+        self.__createLayots()
+        self.__connect()
+
+    # }}}
+
+    @property  # indicator  # {{{
+    def indicator(self):
+        return self.__indicator
+
+    # }}}
+
+    def setGChart(self, gchart):  # {{{
+        self.gchart = gchart
+
+    # }}}
+    def update(self, x):  # {{{
+        pass
+
+    # }}}
+
+    def __createWidgets(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__createWidgets()")
+
+        self.label_name = QtWidgets.QLabel(self.__indicator.name)
+        self.btn_hide = ToolButton(Icon.HIDE)
+        self.btn_settings = ToolButton(Icon.CONFIG)
+        self.btn_delete = ToolButton(Icon.DELETE)
+
+        self.info_5m = Label("5M")
+        self.info_1h = Label("1H")
+        self.info_d = Label("D")
+
+        self.info_5m.setStyleSheet(Css.CHART_LABEL)
+        self.info_1h.setStyleSheet(Css.CHART_LABEL)
+        self.info_d.setStyleSheet(Css.CHART_LABEL)
+
+    # }}}
+    def __createLayots(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__createLayots()")
+
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addWidget(self.label_name)
+        hbox.addWidget(self.btn_hide)
+        hbox.addWidget(self.btn_settings)
+        hbox.addWidget(self.btn_delete)
+        hbox.addStretch()
+        hbox.setContentsMargins(0, 0, 0, 0)
+
+        self.setLayout(hbox)
+
+    # }}}
+    def __connect(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__connect()")
+        self.btn_settings.clicked.connect(self.__onSettings)
+
+    # }}}
+
+    @QtCore.pyqtSlot()  # __onSettings  # {{{
+    def __onSettings(self):
+        logger.debug(f"{self.__class__.__name__}.__onSettings()")
+
+        self.indicator.configure()
+
+    # }}}
+
+
+# }}}
+class _GraphSettings(QtWidgets.QDialog):  # {{{
+    def __init__(self, indicator, parent=None):  # {{{
+        QtWidgets.QDialog.__init__(self, parent)
+        self.__indicator = indicator
+
+        self.__config()
+        self.__createWidgets()
+        self.__createLayots()
+        self.__connect()
+        self.__initUI()
+
+    # }}}
+
+    @property  # indicator  # {{{
+    def indicator(self):
+        return self.__indicator
+
+    # }}}
+
+    def configureSilent(self, gextr: _GraphGraphics):  # {{{
+        logger.debug(f"{self.__class__.__name__}.configure")
+
+    # }}}
+    def configure(self, gextr):  # {{{
+        logger.debug(f"{self.__class__.__name__}.showSettings")
+
+    # }}}
+
+    def __config(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__config()")
+
+        self.setWindowTitle("AVIN")
+        self.setStyleSheet(Css.DIALOG)
+        self.setWindowFlags(QtCore.Qt.WindowType.FramelessWindowHint)
+
+    # }}}
+    def __createWidgets(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__createWidgets()")
+
+        self.title_label = Label("| Extremum settings:", parent=self)
+        self.title_label.setStyleSheet(Css.TITLE)
+
+        self.ok_btn = ToolButton(Icon.OK)
+        self.cancel_btn = ToolButton(Icon.CANCEL)
+
+    # }}}
+    def __createLayots(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__createLayots()")
+
+        hbox_btn = QtWidgets.QHBoxLayout()
+        hbox_btn.addWidget(self.title_label)
+        hbox_btn.addStretch()
+        hbox_btn.addWidget(self.ok_btn)
+        hbox_btn.addWidget(self.cancel_btn)
+
+        vbox = QtWidgets.QVBoxLayout(self)
+        vbox.addLayout(hbox_btn)
+
+    # }}}
+    def __connect(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__connect()")
+
+        self.ok_btn.clicked.connect(self.accept)
+        self.cancel_btn.clicked.connect(self.reject)
+
+    # }}}
+    def __initUI(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__initUI()")
+
+    # }}}
+
+
+# }}}
+
+
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    indicator = ExtremumIndicator()
+    w = _GraphSettings(indicator)
+    w.show()
+    sys.exit(app.exec())

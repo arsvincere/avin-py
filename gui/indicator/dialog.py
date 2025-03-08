@@ -21,6 +21,7 @@ from gui.custom import (
     ToolButton,
 )
 from gui.indicator.extremum import ExtremumIndicator
+from gui.indicator.tic import GraphIndicator
 
 
 class IndicatorSelectDialog(QtWidgets.QDialog):  # {{{
@@ -85,6 +86,7 @@ class IndicatorSelectDialog(QtWidgets.QDialog):  # {{{
         # full list of user indicators
         self.__indicators = [
             ExtremumIndicator(),
+            GraphIndicator(),
         ]
 
         # create items in tree

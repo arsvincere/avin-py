@@ -13,6 +13,7 @@ from typing import TypeVar
 import pandas as pd
 
 from avin.config import Usr
+from avin.const import ONE_DAY
 from avin.core.direction import Direction
 from avin.core.timeframe import TimeFrame
 from avin.data import Instrument
@@ -210,11 +211,12 @@ class Tics:  # {{{
 
         begin = df.at[0, "dt"]
         end = next_dt(begin, tf)
+        next_day = end.date() + ONE_DAY
         condition = (begin <= df["dt"]) & (df["dt"] < end)
         selected = df.loc[condition]
-        while not selected.empty:
-            buy = selected.loc[selected["direction"] == Direction.BUY]
-            sell = selected.loc[selected["direction"] == Direction.SELL]
+        while end.date() < next_day:
+            buy = selected.loc[selected["direction"] == "B"]
+            sell = selected.loc[selected["direction"] == "S"]
             buy_amount = buy["amount"].sum()
             sell_amount = sell["amount"].sum()
 
