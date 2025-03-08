@@ -11,7 +11,7 @@ import sys
 import pandas as pd
 from PyQt6 import QtCore, QtWidgets
 
-from avin import Cfg, Tics, TimeFrame, logger
+from avin import Cfg, Cmd, DataType, Tics, logger
 from gui.chart.gchart import GChart
 from gui.custom import Css, Icon, Label, Theme, ToolButton
 from gui.indicator.item import Indicator, IndicatorItem
@@ -78,7 +78,7 @@ class HistIndicator:  # {{{
 class _HistGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
     WIDTH = Cfg.Chart.BAR_WIDTH
     INDENT = Cfg.Chart.BAR_INDENT
-    HEIGHT = 300
+    HEIGHT = 200
 
     def __init__(self, gchart: GChart, parent=None):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
@@ -99,17 +99,35 @@ class _HistGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
         0   2025-03-06 06:59:34    8421750.0    5790060.0
         """
 
-        file_path = "/home/alex/AVIN/usr/data/MOEX/SHARE/GAZP/TIC/2025-03-07 tic.parquet"
+        # XXX: говнокод, график должен все таки ссылаться на Asset
+        # а не на Instrument, и через Asset надо загружать тики
+        # но пока похую, и не раскидывать тут детали в духе .parquet
+        # мало ли как еще переименую файлы...
+        last_date = self.gchart.chart.now.dt.date()
+        file_name = f"{last_date} tic.parquet"
+        file_path = Cmd.path(
+            self.gchart.chart.instrument.path,
+            DataType.TIC.name,
+            file_name,
+        )
+        if not Cmd.isExist(file_path):
+            self.tics = None
+            self.hist = None
+            logger.warning(f"Tic data not found: {file_path}")
+            return
 
         df = pd.read_parquet(file_path)
         self.tics = Tics(self.gchart.chart.instrument, df)
-        self.hist = self.tics.hist(TimeFrame("1M"))
 
-        logger.warning("DEBUG MODE - USING GAZP TICS FROM 2025-03-07")
+        tf = self.gchart.chart.timeframe
+        self.hist = self.tics.hist(tf)
 
     # }}}
     def __calcMaxAmount(self) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.__calcCoordinates()")
+
+        if self.hist is None:
+            return
 
         max_amount_buy = self.hist["buy"].max()
         max_amount_sell = self.hist["sell"].max()
@@ -129,6 +147,9 @@ class _HistGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
 
     # }}}
     def __createHist(self) -> None:  # {{{
+        if self.hist is None:
+            return
+
         for i, row in self.hist.iterrows():
             self.__createHistBar(row)
 

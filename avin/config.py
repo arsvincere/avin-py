@@ -98,10 +98,12 @@ class Cfg:  # {{{
         SHADOW_WIDTH = 1
 
         BAR_WIDTH = 8  # px
+        BAR_HEIGHT_M = 2  # px на 1% цены
+        BAR_HEIGHT_W = 5  # px на 1% цены
         BAR_HEIGHT_D = 10  # px на 1% цены
-        BAR_HEIGHT_1H = 30  # px на 1% цены
-        BAR_HEIGHT_5M = 60  # px на 1% цены
-        BAR_HEIGHT_1M = 90  # px на 1% цены
+        BAR_HEIGHT_1H = 50  # px на 1% цены
+        BAR_HEIGHT_5M = 100  # px на 1% цены
+        BAR_HEIGHT_1M = 200  # px на 1% цены
         BAR_INDENT = 1  # px
         CUNDLE_INDENT = 2  # px
 

@@ -10,6 +10,7 @@ from PyQt6 import QtCore, QtWidgets
 
 from avin.utils import logger
 from gui.chart.gchart import GChart
+from gui.chart.gcross import GCross
 from gui.chart.glabels import BarInfo, ChartLabels, VolumeInfo
 from gui.chart.gtest import GTradeList
 from gui.custom import Theme
@@ -122,9 +123,16 @@ class ChartScene(QtWidgets.QGraphicsScene):
 
         self.removeGChart()
         self.setSceneRect(gchart.rect)
-        self.addItem(gchart)
+
         self.gchart = gchart
         self.volumes = gchart.gvols
+        self.cross = GCross(gchart)
+
+        self.addItem(self.gchart)
+        self.addItem(self.cross)
+        # XXX: когда вынесешь volumes в отдельный индикатор
+        # self.addItem(self.volumes)
+
         self.__has_chart = True
 
         for lable in self.labels:
@@ -136,6 +144,7 @@ class ChartScene(QtWidgets.QGraphicsScene):
 
         if self.__has_chart:
             self.removeItem(self.gchart)
+            self.removeItem(self.cross)
             self.__has_chart = False
 
     # }}}
@@ -233,6 +242,7 @@ class ChartScene(QtWidgets.QGraphicsScene):
 
         self.__has_chart = False
         self.gchart = None
+        self.cross = QtWidgets.QGraphicsItemGroup()
         self.volumes = QtWidgets.QGraphicsItemGroup()
         self.footer = QtWidgets.QGraphicsItemGroup()
 

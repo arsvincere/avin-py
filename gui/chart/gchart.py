@@ -33,6 +33,8 @@ class ViewType(enum.Enum):  # {{{
 # }}}
 class GBar(QtWidgets.QGraphicsItemGroup):  # {{{
     WIDTH = Cfg.Chart.BAR_WIDTH
+    HEIGHT_M = Cfg.Chart.BAR_HEIGHT_M
+    HEIGHT_W = Cfg.Chart.BAR_HEIGHT_W
     HEIGHT_D = Cfg.Chart.BAR_HEIGHT_D
     HEIGHT_1H = Cfg.Chart.BAR_HEIGHT_1H
     HEIGHT_5M = Cfg.Chart.BAR_HEIGHT_5M
@@ -491,9 +493,9 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
         last_price = self.chart.last.close
         match str(self.chart.timeframe):
             case "M":
-                self.SCALE_Y = GBar.HEIGHT_D / last_price * 100
+                self.SCALE_Y = GBar.HEIGHT_M / last_price * 100
             case "W":
-                self.SCALE_Y = GBar.HEIGHT_D / last_price * 100
+                self.SCALE_Y = GBar.HEIGHT_W / last_price * 100
             case "D":
                 self.SCALE_Y = GBar.HEIGHT_D / last_price * 100
             case "1H":

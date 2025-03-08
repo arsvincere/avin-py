@@ -11,10 +11,11 @@ from __future__ import annotations
 import enum
 import json
 
+from avin.config import Usr
 from avin.data.data_source import DataSource
 from avin.data.exchange import Exchange
 from avin.keeper import Keeper
-from avin.utils import logger
+from avin.utils import Cmd, logger
 
 
 class Instrument:
@@ -87,46 +88,57 @@ class Instrument:
 
     # }}}
 
-    @property  # info# {{{
+    @property  # info  # {{{
     def info(self):
         return self.__info
 
     # }}}
-    @property  # exchange# {{{
+    @property  # exchange  # {{{
     def exchange(self):
         exchange = Exchange.fromStr(self.__info["exchange"])
         return exchange
 
     # }}}
-    @property  # type# {{{
+    @property  # type  # {{{
     def type(self):
         t = Instrument.Type.fromStr(self.__info["type"])
         return t
 
     # }}}
-    @property  # ticker# {{{
+    @property  # ticker  # {{{
     def ticker(self):
         return self.__info["ticker"]
 
     # }}}
-    @property  # figi# {{{
+    @property  # figi  # {{{
     def figi(self):
         return self.__info["figi"]
 
     # }}}
-    @property  # name# {{{
+    @property  # name  # {{{
     def name(self):
         return self.__info["name"]
 
     # }}}
-    @property  # lot# {{{
+    @property  # lot  # {{{
     def lot(self):
         return int(self.__info["lot"])
 
     # }}}
-    @property  # min_price_step# {{{
+    @property  # min_price_step  # {{{
     def min_price_step(self):
         return float(self.info["min_price_step"])
+
+    # }}}
+    @property  # path  # {{{
+    def path(self) -> str:
+        path = Cmd.path(
+            Usr.DATA,
+            self.exchange.name,
+            self.type.name,
+            self.ticker,
+        )
+        return path
 
     # }}}
 
@@ -180,7 +192,7 @@ class Instrument:
         return instrument
 
     # }}}
-    @classmethod  # fromTicker# {{{
+    @classmethod  # fromTicker  # {{{
     async def fromTicker(
         cls, exchange: Exchange, itype: Instrument.Type, ticker: str
     ) -> Instrument:
@@ -201,7 +213,7 @@ class Instrument:
         return instrument
 
     # }}}
-    @classmethod  # fromUid# {{{
+    @classmethod  # fromUid  # {{{
     async def fromUid(cls, uid: str) -> Instrument:
         logger.debug(f"{cls.__name__}.fromUid()")
 
@@ -216,7 +228,7 @@ class Instrument:
         return instrument
 
     # }}}
-    @classmethod  # __checkArgs{{{
+    @classmethod  # __checkArgs  # {{{
     def __checkArgs(
         cls,
         itype=None,

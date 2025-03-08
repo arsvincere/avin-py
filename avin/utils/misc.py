@@ -200,6 +200,9 @@ def next_dt(dt: DateTime, tf: TimeFrame) -> DateTime:  # {{{
         case "1H":
             next = dt.replace(minute=0, second=0, microsecond=0)
             next += TimeDelta(hours=1)
+        case "D":
+            next = dt.replace(hour=0, minute=0, second=0, microsecond=0)
+            next += TimeDelta(days=1)
         case _:
             assert False, "TODO_ME"
 

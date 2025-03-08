@@ -76,20 +76,24 @@ class ChartView(QtWidgets.QGraphicsView):
         logger.debug(f"{self.__class__.__name__}.mouseMoveEvent()")
         super().mouseMoveEvent(e)
 
-        # move labels
         scene = self.scene()
         assert scene is not None
-        labels_pos = self.mapToScene(0, 0)
-        scene.labels.setPos(labels_pos)
+        height = self.size().height()
+        pos_0x0 = self.mapToScene(0, 0)
+
+        # move cross
+        cur_pos = e.pos()
+        scene.cross.setPos(self.mapToScene(cur_pos.x(), cur_pos.y()))
+
+        # move labels
+        scene.labels.setPos(pos_0x0)
 
         # move volumes
-        height = self.size().height()
-        pos = QtCore.QPointF(0, labels_pos.y() + height - 20)  # -20 scroll
+        pos = QtCore.QPointF(0, pos_0x0.y() + height - 20)  # -20 scroll
         scene.volumes.setPos(pos)
 
         # move footer
-        height = self.size().height()
-        pos = QtCore.QPointF(0, labels_pos.y() + height - 20)  # -20 scroll
+        pos = QtCore.QPointF(0, pos_0x0.y() + height - 20)  # -20 scroll
         scene.footer.setPos(pos)
 
         return e.ignore()
