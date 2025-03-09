@@ -146,49 +146,87 @@ class Tics:  # {{{
         ]
 
     # }}}
-    def level(self) -> pd.DataFrame:  # {{{
-        """Return DataFrame like:
+
+    def split(self, tf: TimeFrame) -> list[pd.DataFrame]:  # {{{
+        """Return list[DataFrame] = parts by bar of TimeFrame"""
+
+        # alias
+        df = self.__df
+
+        # check empty
+        if df.empty:
+            return list()
+
+        all_parts = list()
+
+        # first part
+        begin = df.at[0, "dt"]
+        end = next_dt(begin, tf)
+        condition = (begin <= df["dt"]) & (df["dt"] < end)
+        selected = df.loc[condition]
+        all_parts.append(selected)
+
+        # other parts
+        next_day = next_dt(begin, TimeFrame("D"))
+        while end < next_day:
+            begin = end
+            end = next_dt(begin, tf)
+            condition = (begin <= df["dt"]) & (df["dt"] < end)
+            selected = df.loc[condition]
+            all_parts.append(selected)
+
+        return all_parts
+
+    # }}}
+    def quant(self, tf: TimeFrame) -> pd.Series:  # {{{
+        """Return Series of DataFrame like:
 
            price    buy   sell
         0  320.5  32050      0
         1  321.0      0  96300
 
-        Возвращает датафрейм:
+        Возвращает pd.Series из датафреймов:
             - цена
             - сумма активных покупок
             - сумма активных продаж
+        Ключи Series - dt кванта
         """
 
-        df = self.__df
-        levels = list()
-        buy_values = list()
-        sell_values = list()
-        prices = df.loc[~df["price"].duplicated()]["price"]
+        quants = pd.Series()
+        parts = self.split(tf)
+        for part in parts:
+            if part.empty:
+                continue
 
-        for price in prices:
-            selected = df[df["price"] == price]
-            buy = selected[selected["direction"] == Direction.BUY]
-            buy_value = buy["amount"].sum()
-            sell = selected[selected["direction"] == Direction.SELL]
-            sell_value = sell["amount"].sum()
+            levels = list()
+            buy_values = list()
+            sell_values = list()
 
-            levels.append(price)
-            buy_values.append(buy_value)
-            sell_values.append(sell_value)
+            prices = part.loc[~part["price"].duplicated()]["price"]
+            for price in prices:
+                selected = part.loc[part["price"] == price]
+                buy = selected[selected["direction"] == "B"]["amount"].sum()
+                sell = selected[selected["direction"] == "S"]["amount"].sum()
 
-        df_level = pd.DataFrame(
-            {
-                "price": levels,
-                "buy": buy_values,
-                "sell": sell_values,
-            }
-        )
+                levels.append(price)
+                buy_values.append(buy)
+                sell_values.append(sell)
 
-        return df_level
+            k = part.iloc[0]["dt"].replace(second=0)
+            q = pd.DataFrame(
+                {
+                    "price": levels,
+                    "buy": buy_values,
+                    "sell": sell_values,
+                }
+            )
+            quants[k] = q
+
+        return quants
 
     # }}}
     def hist(self, tf: TimeFrame) -> pd.DataFrame:  # {{{
-        """Return DataFrame like:
+        """Return DataFrame like: # {{{
 
                              dt          buy         sell
         0   2025-03-06 06:59:34    8421750.0    5790060.0
@@ -201,44 +239,24 @@ class Tics:  # {{{
             - dt начала бара
             - сумма активных покупок
             - сумма активных продаж
-        """
+        """  # }}}
 
-        df = self.__df
         dts = list()
         buys = list()
         sells = list()
 
-        # first part
-        begin = df.at[0, "dt"]
-        end = next_dt(begin, tf)
-        condition = (begin <= df["dt"]) & (df["dt"] < end)
-        selected = df.loc[condition]
+        parts = self.split(tf)
+        for part in parts:
+            if part.empty:
+                continue
 
-        buy = selected.loc[selected["direction"] == "B"]
-        sell = selected.loc[selected["direction"] == "S"]
-        buy_amount = buy["amount"].sum()
-        sell_amount = sell["amount"].sum()
+            dt = part.iloc[0]["dt"]
+            buy = part.loc[part["direction"] == "B"]["amount"].sum()
+            sell = part.loc[part["direction"] == "S"]["amount"].sum()
 
-        dts.append(begin)
-        buys.append(buy_amount)
-        sells.append(sell_amount)
-
-        # other parts
-        next_day = next_dt(begin, TimeFrame("D"))
-        while end < next_day:
-            begin = end
-            end = next_dt(begin, tf)
-            condition = (begin <= df["dt"]) & (df["dt"] < end)
-            selected = df.loc[condition]
-
-            buy = selected.loc[selected["direction"] == "B"]
-            sell = selected.loc[selected["direction"] == "S"]
-            buy_amount = buy["amount"].sum()
-            sell_amount = sell["amount"].sum()
-
-            dts.append(begin)
-            buys.append(buy_amount)
-            sells.append(sell_amount)
+            dts.append(dt)
+            buys.append(buy)
+            sells.append(sell)
 
         # create df histogram
         df_hist = pd.DataFrame(
@@ -250,8 +268,6 @@ class Tics:  # {{{
         )
 
         return df_hist
-
-    # }}}
 
 
 # }}}

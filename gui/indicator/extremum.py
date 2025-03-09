@@ -761,9 +761,9 @@ class _ExtremumLabel(QtWidgets.QWidget):  # {{{
         logger.debug(f"{self.__class__.__name__}.__createWidgets()")
 
         self.label_name = QtWidgets.QLabel("Extremum")
-        self.btn_hide = ToolButton(Icon.HIDE)
-        self.btn_settings = ToolButton(Icon.CONFIG)
-        self.btn_delete = ToolButton(Icon.DELETE)
+        self.btn_hide = ToolButton(Icon.HIDE, width=16, height=16)
+        self.btn_settings = ToolButton(Icon.CONFIG, width=16, height=16)
+        self.btn_delete = ToolButton(Icon.DELETE, width=16, height=16)
 
         self.info_5m = Label("5M")
         self.info_1h = Label("1H")

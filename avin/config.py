@@ -116,6 +116,8 @@ class Cfg:  # {{{
         VOL_HEIGHT = 200  # px
         VOL_INDENT = 3  # px
 
+        QUANT_INDENT = 1  # px
+
     # }}}
     class ShapeSize:  # {{{
         VERY_SMALL = 4  # px

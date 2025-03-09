@@ -16,15 +16,19 @@ from avin.utils import logger
 """Abstract base class for user indicators"""
 
 
-class Indicator:
-    class Position:
+class Indicator:  # {{{
+    class Position:  # {{{
         CHART = 0
-        FOOTER = 1
-        TOP = 2
+        TOP = 1
+        FOOTER = 2
         LEFT = 3
         RIGHT = 4
 
 
+# }}}
+
+
+# }}}
 class IndicatorItem(QtWidgets.QTreeWidgetItem):  # {{{
     class Column(enum.IntEnum):  # {{{
         Name = 0

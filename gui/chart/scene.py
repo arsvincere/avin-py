@@ -55,7 +55,7 @@ class ChartScene(QtWidgets.QGraphicsScene):
 
         x = e.scenePos().x()
 
-        for label in self.labels:
+        for label in self.top:
             label.update(x)
 
         return e.ignore()
@@ -135,7 +135,7 @@ class ChartScene(QtWidgets.QGraphicsScene):
 
         self.__has_chart = True
 
-        for lable in self.labels:
+        for lable in self.top:
             lable.setGChart(gchart)
 
     # }}}
@@ -185,7 +185,7 @@ class ChartScene(QtWidgets.QGraphicsScene):
         # add labels
         for i in ind_list:
             label = i.label()
-            self.labels.add(label)
+            self.top.add(label)
 
         # add footer...
         # XXX: это пока говнорешение, пока только один
@@ -193,13 +193,15 @@ class ChartScene(QtWidgets.QGraphicsScene):
         for i in ind_list:
             if i.position == Indicator.Position.FOOTER:
                 self.footer = i.gitem
+            if i.position == Indicator.Position.LEFT:
+                self.left = i.gitem
 
     # }}}
     def removeIndicators(self) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.removeIndicators()")
 
         # пересоздаем график виджеты в левом верхнем углу
-        self.labels.clear()
+        self.top.clear()
         self.__createGraphicsWidgets()
 
     # }}}
@@ -230,11 +232,16 @@ class ChartScene(QtWidgets.QGraphicsScene):
         self.vol_info = VolumeInfo()
 
         # create QtWidgets.QGraphicsProxyWidget
-        self.labels = ChartLabels()
-        self.labels.add(self.bar_info)
-        self.labels.add(self.vol_info)
+        self.top = ChartLabels()
+        self.top.add(self.bar_info)
+        self.top.add(self.vol_info)
 
-        self.addItem(self.labels)
+        # QGraphicsItem::ItemIgnoresTransformations
+        flags = QtWidgets.QGraphicsItem.GraphicsItemFlag
+        ignore = flags.ItemIgnoresTransformations
+        self.top.setFlag(ignore)
+
+        self.addItem(self.top)
 
     # }}}
     def __createChartGroup(self):  # {{{
@@ -245,6 +252,8 @@ class ChartScene(QtWidgets.QGraphicsScene):
         self.cross = QtWidgets.QGraphicsItemGroup()
         self.volumes = QtWidgets.QGraphicsItemGroup()
         self.footer = QtWidgets.QGraphicsItemGroup()
+        self.left = QtWidgets.QGraphicsItemGroup()
+        self.right = QtWidgets.QGraphicsItemGroup()
 
     # }}}
     def __createTListGroup(self):  # {{{

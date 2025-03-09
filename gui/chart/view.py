@@ -18,9 +18,7 @@ class ChartView(QtWidgets.QGraphicsView):
         logger.debug(f"{self.__class__.__name__}.__init__()")
         QtWidgets.QGraphicsView.__init__(self, parent)
 
-        # включает режим перетаскивания сцены внутри QGraphicsView
-        # мышкой с зажатой левой кнопкой
-        self.setDragMode(QtWidgets.QGraphicsView.DragMode.ScrollHandDrag)
+        self.__config()
 
         self.current_gtrade = None
 
@@ -79,22 +77,25 @@ class ChartView(QtWidgets.QGraphicsView):
         scene = self.scene()
         assert scene is not None
         height = self.size().height()
-        pos_0x0 = self.mapToScene(0, 0)
+
+        # move labels
+        pos_0x0 = self.mapToScene(150, 0)
+        scene.top.setPos(pos_0x0)
+        # move volumes
+        pos = QtCore.QPointF(0, pos_0x0.y() + height)
+        scene.volumes.setPos(pos)
+
+        # move footer
+        pos = QtCore.QPointF(0, pos_0x0.y() + height)
+        scene.footer.setPos(pos)
+
+        # move left
+        pos = self.mapToScene(0, 0)
+        scene.left.setPos(pos.x(), 0)
 
         # move cross
         cur_pos = e.pos()
         scene.cross.setPos(self.mapToScene(cur_pos.x(), cur_pos.y()))
-
-        # move labels
-        scene.labels.setPos(pos_0x0)
-
-        # move volumes
-        pos = QtCore.QPointF(0, pos_0x0.y() + height - 20)  # -20 scroll
-        scene.volumes.setPos(pos)
-
-        # move footer
-        pos = QtCore.QPointF(0, pos_0x0.y() + height - 20)  # -20 scroll
-        scene.footer.setPos(pos)
 
         return e.ignore()
 
@@ -147,15 +148,25 @@ class ChartView(QtWidgets.QGraphicsView):
 
     # }}}
 
+    def __config(self):  # {{{
+        # включает режим перетаскивания сцены внутри QGraphicsView
+        # мышкой с зажатой левой кнопкой
+        self.setDragMode(QtWidgets.QGraphicsView.DragMode.ScrollHandDrag)
+
+        scroll_off = Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        self.setHorizontalScrollBarPolicy(scroll_off)
+        self.setVerticalScrollBarPolicy(scroll_off)
+
+    # }}}
     def __resetTranformation(self):  # {{{
         logger.debug(f"{self.__class__.__name__}.__resetTranformation()")
 
         trans = self.transform().inverted()[0]
 
         # chart labels: bar info, vol info, indicators
-        labels = self.scene().labels
-        labels.setTransform(trans)
-        labels.setPos(self.mapToScene(0, 0))
+        # labels = self.scene().top
+        # labels.setTransform(trans)
+        # labels.setPos(self.mapToScene(0, 0))
 
         # current gtrade
         if self.current_gtrade:

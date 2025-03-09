@@ -27,7 +27,7 @@ from avin.utils import (
 
 
 class Chart:
-    DEFAULT_BARS_COUNT = 10000
+    DEFAULT_BARS_COUNT = 5000
     MAX_BARS_COUNT = None  # used in tester
 
     def __init__(  # {{{
