@@ -482,6 +482,11 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
 
     # }}}
 
+    def receive(self, bar: Bar) -> None:
+        logger.critical(f"{bar}")
+        self.chart.receive(bar)  # FIX: await тут нужен... или как то еще....
+        pass
+
     def __createSceneRect(self):  # {{{
         logger.debug(f"{self.__class__.__name__}.__createSceneRect()")
 
@@ -510,7 +515,7 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
         x1 = len(self.chart) * GBar.WIDTH
         y1 = int(self.chart.highestHigh() * self.SCALE_Y)
 
-        self.x_indent = (x1 - x0) * 0.2  # доп.отступ 20%
+        self.x_indent = GBar.WIDTH * 1000  # доп.отступ на 1000 баров
         self.y_indent = (y1 - y0) * 0.2  # доп.отступ 20%
 
         height = y1 - y0 + self.y_indent

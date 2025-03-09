@@ -12,12 +12,10 @@ from PyQt6.QtCore import Qt
 
 from avin import (
     Asset,
-    Tic,
     TicEvent,
     logger,
 )
 from gui.custom import Css
-from gui.tic.thread import TTic
 from gui.tic.tree import TicTree
 
 
@@ -55,9 +53,11 @@ class TicWidget(QtWidgets.QWidget):  # {{{
         self.__createLayots()
         self.__connect()
 
+        self.__main_window = parent
         self.__asset = None
-        self.__client = None
+        self.__client = None  # TODO: dead code?
         self.__data_stream = None
+        self.__data_thread = None
         self.__thread = None
 
     # }}}
@@ -70,7 +70,6 @@ class TicWidget(QtWidgets.QWidget):  # {{{
             return
 
         if self.__asset is not None:
-            print("try unsubscribe")
             tic_subscription = ti.TradeInstrument(figi=self.__asset.figi)
             self.__data_stream.trades.unsubscribe([tic_subscription])
 
@@ -78,15 +77,20 @@ class TicWidget(QtWidgets.QWidget):  # {{{
         tic_subscription = ti.TradeInstrument(figi=self.__asset.figi)
         self.__data_stream.trades.subscribe([tic_subscription])
         self.__tic_tree.clear()
-        self.__start()
 
     # }}}
     def setClient(self, client) -> None:  # {{{
+        # TODO: dead code?
         self.__client = client
 
     # }}}
     def setStream(self, data_stream) -> None:  # {{{
         self.__data_stream = data_stream
+
+    # }}}
+    def setDataThread(self, thread) -> None:  # {{{
+        self.__data_thread = thread
+        self.__data_thread.new_tic.connect(self.__onNewTic)
 
     # }}}
     def clearAll(self) -> None:  # {{{
@@ -124,17 +128,12 @@ class TicWidget(QtWidgets.QWidget):  # {{{
         logger.debug(f"{self.__class__.__name__}.__connect()")
 
     # }}}
-    def __start(self):  # {{{
-        if self.__thread is None:
-            self.__thread = TTic(self.__data_stream)
-            self.__thread.new_tic.connect(self.__onNewTic)
-            self.__thread.start()
-
-    # }}}
     @QtCore.pyqtSlot(TicEvent)  # __onNewTic  # {{{
-    def __onNewTic(self, tic: Tic) -> None:
+    def __onNewTic(self, tic_event: TicEvent) -> None:
         logger.debug(f"{self.__class__.__name__}.__onNewTic()")
+        assert self.__asset.figi == tic_event.figi
 
+        tic = tic_event.tic
         tic.setAsset(self.__asset)
         self.__tic_tree.addTic(tic)
 

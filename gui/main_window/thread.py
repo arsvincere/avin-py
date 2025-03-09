@@ -10,13 +10,15 @@ import tinkoff.invest as ti
 from PyQt6 import QtCore
 
 from avin import (
-    Tic,
+    BarEvent,
+    TicEvent,
     Tinkoff,
 )
 
 
-class TTic(QtCore.QThread):  # {{{
-    new_tic = QtCore.pyqtSignal(Tic)
+class TDataStream(QtCore.QThread):  # {{{
+    new_tic = QtCore.pyqtSignal(TicEvent)
+    new_bar = QtCore.pyqtSignal(BarEvent)
 
     def __init__(  # {{{
         self,
@@ -25,15 +27,23 @@ class TTic(QtCore.QThread):  # {{{
     ):
         QtCore.QThread.__init__(self, parent)
 
-        self.__data_stream = data_stream
+        self.stream = data_stream
 
     # }}}
     def run(self):  # {{{
-        for response in self.__data_stream:
+        for response in self.stream:
             if response.trade:
                 figi = response.trade.figi
                 tic = Tinkoff.ti_to_av(response.trade)
-                self.new_tic.emit(tic)
+                event = TicEvent(figi, tic)
+                self.new_tic.emit(event)
+
+            if response.candle:
+                figi = response.candle.figi
+                timeframe = Tinkoff.ti_to_av(response.candle.interval)
+                bar = Tinkoff.ti_to_av(response.candle)
+                event = BarEvent(figi, timeframe, bar)
+                self.new_bar.emit(event)
 
     # }}}
 

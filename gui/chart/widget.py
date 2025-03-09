@@ -8,11 +8,23 @@
 
 import sys
 
+import tinkoff.invest as ti
 from PyQt6 import QtCore, QtWidgets
 
-from avin.core import Asset, Chart, TimeFrame, Trade, TradeList
-from avin.tester import Test
-from avin.utils import DateTime, logger, now
+from avin import (
+    Asset,
+    Bar,
+    BarEvent,
+    Chart,
+    DateTime,
+    Test,
+    TimeFrame,
+    Tinkoff,
+    Trade,
+    TradeList,
+    logger,
+    now,
+)
 from gui.chart.gchart import GChart, ViewType
 from gui.chart.gtest import GTradeList
 from gui.chart.scene import ChartScene
@@ -33,6 +45,9 @@ class ChartWidget(QtWidgets.QWidget):
         self.__createLayots()
         self.__connect()
 
+        self.__client = None
+        self.__data_thread = None
+
         self.__asset = None
         self.__trade_list = None
         self.__mark_list = None
@@ -40,13 +55,43 @@ class ChartWidget(QtWidgets.QWidget):
 
     # }}}
 
+    def setClient(self, client: ti.services.Services) -> None:  # {{{
+        self.__client = client
+
+    # }}}
+    def setDataThread(self, thread: QtCore.QThread) -> None:  # {{{
+        self.__data_thread = thread
+        self.__data_thread.new_bar.connect(self.__onNewBar)
+
+    # }}}
     def setAsset(self, asset: Asset) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.setAsset()")
 
+        if self.__data_thread is None:
+            return
+
+        # try unsubscribe
+        if self.__asset is not None:
+            figi = self.__asset.figi
+            tf = self.toolbar.firstTimeFrame()
+            interval = Tinkoff.av_to_ti(tf, ti.SubscriptionInterval)
+            subscription = ti.CandleInstrument(figi, interval)
+            stream = self.__data_thread.stream
+            stream.candles.unsubscribe([subscription])
+
+        # clear all & draw chart
         self.clearAll()
         self.__asset = asset
         self.toolbar.setAsset(asset)
         self.__drawChart()
+
+        # subscribe candles
+        figi = self.__asset.figi
+        tf = self.toolbar.firstTimeFrame()
+        interval = Tinkoff.av_to_ti(tf, ti.SubscriptionInterval)
+        subscription = ti.CandleInstrument(figi, interval)
+        stream = self.__data_thread.stream
+        stream.candles.subscribe([subscription])
 
     # }}}
     def setTradeList(self, trade_list: TradeList) -> None:  # {{{
@@ -125,7 +170,10 @@ class ChartWidget(QtWidgets.QWidget):
         timeframe = self.toolbar.firstTimeFrame()
         end = now()
         begin = now() - timeframe * Chart.DEFAULT_BARS_COUNT
-        chart = Thread.loadChart(self.__asset, timeframe, begin, end)
+        bars = Thread.loadBars(self.__asset, timeframe, begin, end)
+        bars = self.__getNewBarsFromBroker(bars)
+
+        chart = Chart(self.__asset, timeframe, bars)
         gchart = GChart(chart)
 
         self.scene.setGChart(gchart)
@@ -148,6 +196,33 @@ class ChartWidget(QtWidgets.QWidget):
         self.view.centerOnFirst()
 
         self.__asset = asset
+
+    # }}}
+    def __getNewBarsFromBroker(self, bars: list[Bar]) -> list[Bar]:  # {{{
+        assert len(bars) != 0
+
+        last_dt = bars[-1].dt
+        timeframe = self.toolbar.firstTimeFrame()
+        begin = last_dt + timeframe
+        end = now()
+
+        new_bars = list()
+        try:
+            candles = self.__client.get_all_candles(
+                figi=self.__asset.figi,
+                from_=begin,
+                to=end,
+                interval=Tinkoff.av_to_ti(timeframe, ti.CandleInterval),
+            )
+            for candle in candles:
+                if candle.is_complete:
+                    bar = Tinkoff.ti_to_av(candle)
+                    new_bars.append(bar)
+
+        except ti.exceptions.AioRequestError as err:
+            logger.exception(err)
+
+        return bars + new_bars
 
     # }}}
 
@@ -254,6 +329,16 @@ class ChartWidget(QtWidgets.QWidget):
 
         self.scene.setGChart(gchart)
         self.view.centerOnLast()
+
+    # }}}
+    @QtCore.pyqtSlot(BarEvent)  # __onNewBar  # {{{
+    def __onNewBar(self, e: BarEvent):
+        logger.debug(f"{self.__class__.__name__}.__onNewBar()")
+        assert self.__asset.figi == e.figi
+
+        bar = e.bar
+        gchart = self.scene.currentGChart()
+        gchart.receive(bar)
 
     # }}}
 

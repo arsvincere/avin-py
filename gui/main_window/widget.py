@@ -23,6 +23,7 @@ from gui.console import ConsoleDockWidget
 from gui.custom import Css
 from gui.data import DataDockWidget
 from gui.filter import FilterDockWidget
+from gui.main_window.thread import TDataStream
 from gui.main_window.toolbar import LeftToolBar, RightToolBar
 from gui.strategy import StrategyDockWidget
 from gui.summary import SummaryDockWidget
@@ -36,31 +37,19 @@ class MainWindow(QtWidgets.QMainWindow):
         logger.debug(f"{self.__class__.__name__}.__init__()")
         QtWidgets.QMainWindow.__init__(self, parent)
 
+        # save client, create data_stream, create & start thread data stream
         self.client = client
         self.data_stream = client.create_market_data_stream()
-
-        # HACK: хз че за херня, но если тут тоже не вызвать заставку
-        # то в hyprland она не отображается. Ее нужно в 2 местах
-        # вызвать здесь и в main.py
-        # Причем настройки тянутся именно из main.py и заставка
-        # от сюда по факту не отображается, но без этого вызова .show()
-        # никак. Наверное дело в цикле событий. Нужно как то
-        # принудительно сначала вывести заставку а потом грузить дальше
-        # но пример из доков Qt с вызовом app.processEvents() не
-        # срабатывает.
-        # Возможно баг в hyprland, в xfce4 вроде работало из main.py
-        # без проблем
-        splash = QtWidgets.QSplashScreen()
-        splash.show()
+        self.data_thread = TDataStream(self.data_stream)
+        self.data_thread.start()
 
         # create main window
+        self.__splash()
         self.__config()
         # self.__createMdiArea()
         # self.__configMdiArea()
         self.__createToolBars()
         self.__createWidgets()
-        # self.__createSplitter()
-        # self.__setWidgetSize()
         self.__connect()
         self.__initUI()
 
@@ -90,6 +79,22 @@ class MainWindow(QtWidgets.QMainWindow):
     #     self.area.setTabsClosable(False)
     #     self.area.setActiveSubWindow(self.tab1)
     #
+    # }}}
+    def __splash(self):  # {{{
+        # HACK: хз че за херня, но если тут тоже не вызвать заставку
+        # то в hyprland она не отображается. Ее нужно в 2 местах
+        # вызвать здесь и в main.py
+        # Причем настройки тянутся именно из main.py и заставка
+        # от сюда по факту не отображается, но без этого вызова .show()
+        # никак. Наверное дело в цикле событий. Нужно как то
+        # принудительно сначала вывести заставку а потом грузить дальше
+        # но пример из доков Qt с вызовом app.processEvents() не
+        # срабатывает.
+        # Возможно баг в hyprland, в xfce4 вроде работало из main.py
+        # без проблем
+        splash = QtWidgets.QSplashScreen()
+        splash.show()
+
     # }}}
     def __config(self):  # {{{
         logger.debug(f"{self.__class__.__name__}.__config()")
@@ -429,6 +434,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if self.chart_widget is None:
             self.chart_widget = ChartWidget(self)
+            self.chart_widget.setClient(self.client)
+            self.chart_widget.setDataThread(self.data_thread)
             self.setCentralWidget(self.chart_widget)
 
         state = self.chart_widget.isVisible()
@@ -444,6 +451,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tic_widget = TicDockWidget(self)
             self.tic_widget.widget.setClient(self.client)
             self.tic_widget.widget.setStream(self.data_stream)
+            self.tic_widget.widget.setDataThread(self.data_thread)
 
             area = Qt.DockWidgetArea.RightDockWidgetArea
             self.addDockWidget(area, self.tic_widget)

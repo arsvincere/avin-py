@@ -14,8 +14,8 @@ from datetime import datetime
 from PyQt6 import QtCore
 
 from avin.analytic import VolumeAnalytic
-from avin.core import Chart, TimeFrame
-from avin.data import Instrument
+from avin.core import Bar, Chart, TimeFrame
+from avin.data import Data, Instrument
 from avin.utils import logger
 from gui.custom import awaitQThread
 
@@ -23,6 +23,17 @@ from gui.custom import awaitQThread
 class Thread:  # {{{
     """Fasade class"""
 
+    @classmethod  # loadBars  # {{{
+    def loadBars(cls, instrument, timeframe, begin, end) -> list[Bar]:
+        logger.debug(f"{cls.__name__}.loadChart()")
+
+        thread = _TLoadBars(instrument, timeframe, begin, end)
+        thread.start()
+        awaitQThread(thread)
+
+        return thread.result
+
+    # }}}
     @classmethod  # loadChart  # {{{
     def loadChart(cls, instrument, timeframe, begin, end) -> Chart:
         logger.debug(f"{cls.__name__}.loadChart()")
@@ -63,6 +74,51 @@ class Thread:  # {{{
         awaitQThread(thread)
 
         return thread.result
+
+    # }}}
+
+
+# }}}
+class _TLoadBars(QtCore.QThread):  # {{{
+    def __init__(
+        self,
+        instrument: Instrument,
+        timeframe: TimeFrame,
+        begin: datetime,
+        end: datetime,
+        parent=None,
+    ):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__init__()")
+        QtCore.QThread.__init__(self, parent)
+
+        self.__instrument = instrument
+        self.__timeframe = timeframe
+        self.__begin = begin
+        self.__end = end
+
+        self.result = None
+
+    # }}}
+    def run(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.run()")
+
+        asyncio.run(self.__arun())
+
+    # }}}
+    async def __arun(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__arun()")
+
+        records = await Data.request(
+            instrument=self.__instrument,
+            data_type=self.__timeframe.toDataType(),
+            begin=self.__begin,
+            end=self.__end,
+        )
+
+        self.result = list()
+        for r in records:
+            bar = Bar.fromRecord(r)
+            self.result.append(bar)
 
     # }}}
 
