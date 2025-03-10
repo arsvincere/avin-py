@@ -20,7 +20,7 @@ from avin.core.timeframe import TimeFrame
 from avin.data import Data, DataType, Exchange, Instrument
 from avin.exceptions import AssetError
 from avin.keeper import Keeper
-from avin.utils import AsyncSignal, DateTime, logger, now
+from avin.utils import DateTime, Signal, logger, now
 
 
 class Asset(Instrument, ABC):  # {{{
@@ -41,8 +41,8 @@ class Asset(Instrument, ABC):  # {{{
         # self.newBarD = AsyncSignal(Asset, Chart)
         # self.newBarW = AsyncSignal(Asset, Chart)
         # self.newBarM = AsyncSignal(Asset, Chart)
-        self.updated = AsyncSignal(Asset, Chart)
-        self.new_tic = AsyncSignal(Asset)
+        self.chart_updated = Signal(Asset, Chart)
+        self.tics_updated = Signal(Asset)
 
     # }}}
 
@@ -141,14 +141,15 @@ class Asset(Instrument, ABC):  # {{{
         return df
 
     # }}}
-    async def receive(self, event: Event) -> None:  # {{{
+
+    def receive(self, event: Event) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.receive({event})")
 
         match event.type:
             case Event.Type.BAR:
-                await self.__receiveBar(event)
+                self.__receiveBar(event)
             case Event.Type.TIC:
-                await self.__receiveTic(event)
+                self.__receiveTic(event)
 
     # }}}
 
@@ -245,24 +246,24 @@ class Asset(Instrument, ABC):  # {{{
 
     # }}}
 
-    async def __receiveBar(self, event: BarEvent) -> None:  # {{{
+    def __receiveBar(self, event: BarEvent) -> None:  # {{{
         # select chart
         timeframe = event.timeframe
         chart = self.chart(timeframe)
 
         # send bar to chart
-        await chart.receive(event.bar)
+        chart.receive(event.bar)
 
         # emit signal
-        await self.updated.aemit(self, chart)
+        self.chart_updated.emit(self, chart)
 
     # }}}
-    async def __receiveTic(self, event: TicEvent) -> None:  # {{{
+    def __receiveTic(self, event: TicEvent) -> None:  # {{{
         assert event.type == Event.Type.TIC
         assert event.figi == self.figi
 
         self.__tics.add(event.tic)
-        await self.new_tic.aemit(self)
+        self.tics_updated.emit(self)
 
     # }}}
 

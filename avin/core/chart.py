@@ -13,13 +13,14 @@ from typing import Optional
 
 from avin.const import ONE_DAY
 from avin.core.bar import Bar
+from avin.core.event import BarEvent, Event
 from avin.core.timeframe import TimeFrame
 from avin.data import Data, Instrument
 from avin.data.bar import _VoidBar
 from avin.utils import (
     UTC,
-    AsyncSignal,
     DateTime,
+    Signal,
     binary_search,
     find_left,
     logger,
@@ -60,8 +61,8 @@ class Chart:
         self.__head = len(self.__bars)  # index of HEAD bar
 
         # signals
-        self.new_historical_bar = AsyncSignal(Chart, Bar)
-        self.upd_realtime_bar = AsyncSignal(Chart, Bar)
+        self.new_historical_bar = Signal(Chart, Bar)
+        self.upd_realtime_bar = Signal(Chart, Bar)
 
     # }}}
     def __getitem__(self, index: int):  # {{{
@@ -145,15 +146,17 @@ class Chart:
 
     # }}}
 
-    async def receive(self, new_bar: Bar) -> None:  # {{{
+    def receive(self, e: BarEvent) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.receive()")
+        assert e.type == Event.Type.BAR
 
+        new_bar = e.bar
         new_bar.setChart(self)
 
         # only update now bar
         if self.__now.dt == new_bar.dt:
             self.__now = new_bar
-            await self.upd_realtime_bar.aemit(self, new_bar)
+            self.upd_realtime_bar.emit(self, new_bar)
             return
 
         # new historical bar and update now bar
@@ -173,10 +176,11 @@ class Chart:
             self.__head = len(self.__bars)
 
             # emit signals
-            await self.new_historical_bar.aemit(self, self.__bars[-1])
-            await self.upd_realtime_bar.aemit(self, self.__now)
+            self.new_historical_bar.emit(self, self.__bars[-1])
+            self.upd_realtime_bar.emit(self, self.__now)
             return
 
+        logger.critical(f"{e}")
         assert False, "WTF???"
 
     # }}}

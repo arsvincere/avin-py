@@ -139,7 +139,7 @@ class Tics:  # {{{
 
         self.__df.loc[len(self.__df)] = [
             tic.dt,
-            tic.direction,
+            tic.direction.short_name,
             tic.price,
             tic.lots,
             tic.amount(),
@@ -254,7 +254,7 @@ class Tics:  # {{{
             buy = part.loc[part["direction"] == "B"]["amount"].sum()
             sell = part.loc[part["direction"] == "S"]["amount"].sum()
 
-            dts.append(dt)
+            dts.append(dt.replace(second=0, microsecond=0))
             buys.append(buy)
             sells.append(sell)
 

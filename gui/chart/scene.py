@@ -187,14 +187,12 @@ class ChartScene(QtWidgets.QGraphicsScene):
             label = i.label()
             self.top.add(label)
 
-        # add footer...
-        # XXX: это пока говнорешение, пока только один
-        # индикатор в футере может быть - тупо туда его присваиваю
+        # add pinned indicators
         for i in ind_list:
             if i.position == Indicator.Position.FOOTER:
-                self.footer = i.gitem
+                self.footer.append(i)
             if i.position == Indicator.Position.LEFT:
-                self.left = i.gitem
+                self.left.append(i)
 
     # }}}
     def removeIndicators(self) -> None:  # {{{
@@ -251,9 +249,9 @@ class ChartScene(QtWidgets.QGraphicsScene):
         self.gchart = None
         self.cross = QtWidgets.QGraphicsItemGroup()
         self.volumes = QtWidgets.QGraphicsItemGroup()
-        self.footer = QtWidgets.QGraphicsItemGroup()
-        self.left = QtWidgets.QGraphicsItemGroup()
-        self.right = QtWidgets.QGraphicsItemGroup()
+        self.footer = list()
+        self.left = list()
+        self.right = list()
 
     # }}}
     def __createTListGroup(self):  # {{{

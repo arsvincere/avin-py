@@ -16,6 +16,7 @@ from avin.config import Cfg
 from avin.const import ONE_DAY, ONE_HOUR, ONE_WEEK
 from avin.core import (
     Bar,
+    BarEvent,
     Chart,
     TimeFrame,
 )
@@ -326,6 +327,7 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
         self.behind_W = list()
         self.behind_M = list()
 
+        self.__connect()
         self.__createSceneRect()
         self.__createGBars()
 
@@ -412,18 +414,29 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
             gbar.clearGShapes()
 
     # }}}
-    def addIndicator(self, indicator) -> None:  # {{{
+    def addIndicator(self, indicator: Indicator) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.addIndicator()")
 
         gitem = indicator.graphics(self)
-        self.__indicators.append(gitem)
+        self.__indicators.append(indicator)
         self.addToGroup(gitem)
+
+    # }}}
+    def removeIndicator(self, indicator) -> None:  # {{{
+        for i in self.__indicators:
+            if i.name == indicator.name:
+                gitem = indicator.gitem
+                gitem.setVisible(False)
+                self.removeFromGroup(gitem)
+                self.__indicators.remove(i)
+                break
 
     # }}}
     def clearIndicators(self) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.clearIndicators()")
 
-        for gitem in self.__indicators:
+        for indicator in self.__indicators:
+            gitem = indicator.gitem
             gitem.setVisible(False)
             self.removeFromGroup(gitem)
 
@@ -438,8 +451,11 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
         return n
 
     # }}}
-    def barFromDatetime(self, dt) -> GBar:  # {{{
-        logger.debug(f"{self.__class__.__name__}.barFromDatetime()")
+    def gbarFromDatetime(self, dt) -> GBar:  # {{{
+        logger.debug(f"{self.__class__.__name__}.gbarFromDatetime()")
+
+        if self.gnow.bar.dt == dt:
+            return self.gnow
 
         index = find_left(self.gbars, dt, key=lambda x: x.bar.dt)
         assert index is not None
@@ -457,6 +473,8 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
         n = self.nFromX(x)
         if n < len(self.gbars):
             return self.gbars[n]
+        elif n == len(self.gbars):
+            return self.gnow
         else:
             return None
 
@@ -470,7 +488,7 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
     def xFromDatetime(self, dt) -> float:  # {{{
         logger.debug(f"{self.__class__.__name__}.xFromDatetime()")
 
-        gbar = self.barFromDatetime(dt)
+        gbar = self.gbarFromDatetime(dt)
         return gbar.X0
 
     # }}}
@@ -482,11 +500,16 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
 
     # }}}
 
-    def receive(self, bar: Bar) -> None:
-        logger.critical(f"{bar}")
-        self.chart.receive(bar)  # FIX: await тут нужен... или как то еще....
-        pass
+    def receive(self, e: BarEvent) -> None:  # {{{
+        self.chart.receive(e)
 
+    # }}}
+
+    def __connect(self) -> None:  # {{{
+        self.chart.upd_realtime_bar.connect(self.__onRealTimeBar)
+        self.chart.new_historical_bar.connect(self.__onHistoricalBar)
+
+    # }}}
     def __createSceneRect(self):  # {{{
         logger.debug(f"{self.__class__.__name__}.__createSceneRect()")
 
@@ -531,6 +554,13 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
             gbar = GBar(bar, n, self)
             self.gbars.append(gbar)
             self.addToGroup(gbar)
+
+        now_bar = self.chart.now
+        if now_bar is None:
+            self.gnow = None
+        else:
+            self.gnow = GBar(now_bar, n=len(self.gbars), gchart=self)
+            self.addToGroup(self.gnow)
 
     # }}}
     def __createGVols(self):  # {{{
@@ -690,8 +720,38 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
 
     # }}}
 
+    def __onRealTimeBar(self, chart: Chart, new_bar: Bar) -> None:  # {{{
+        # remove old real time bar
+        if self.gnow is not None:
+            self.gnow.hide()
+            self.removeFromGroup(self.gnow)
 
-# }}}
+        # add new real time bar
+        n = len(self.gbars)
+        gbar = GBar(new_bar, n, self)
+        self.gnow = gbar
+        self.addToGroup(gbar)
+
+    # }}}
+    def __onHistoricalBar(self, chart: Chart, new_bar: Bar) -> None:  # {{{
+        n = len(self.gbars)
+        gbar = GBar(new_bar, n, self)
+        self.gbars.append(gbar)
+        self.addToGroup(gbar)
+
+        # update indicators
+        print("on historical, upd i")
+        for i in self.__indicators:
+            print(i.name)
+            gitem = i.gitem
+            gitem.setVisible(False)
+            self.removeFromGroup(gitem)
+
+            updated = i.graphics(self)
+            self.addToGroup(updated)
+            print("-- ok")
+
+    # }}}
 
 
 if __name__ == "__main__":

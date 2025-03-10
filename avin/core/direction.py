@@ -16,7 +16,8 @@ class Direction(enum.Enum):  # {{{
     BUY = 1
     SELL = 2
 
-    def short(self) -> str:
+    @property
+    def short_name(self) -> str:
         return self.name[0]
 
     @classmethod  # fromStr

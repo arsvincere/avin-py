@@ -193,7 +193,7 @@ class _TAddMarker(QtCore.QThread):  # {{{
 
             if result:
                 dt = chart.now.dt
-                gbar = gchart.barFromDatetime(dt)
+                gbar = gchart.gbarFromDatetime(dt)
                 gbar.addGShape(mark.shape)
 
     # }}}

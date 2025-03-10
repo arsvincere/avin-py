@@ -18,6 +18,7 @@ from avin import (
     Chart,
     DateTime,
     Test,
+    TicEvent,
     TimeFrame,
     Tinkoff,
     Trade,
@@ -49,6 +50,7 @@ class ChartWidget(QtWidgets.QWidget):
         self.__data_thread = None
 
         self.__asset = None
+        self.__timeframe_1 = self.toolbar.firstTimeFrame()
         self.__trade_list = None
         self.__mark_list = None
         self.__ind_list = None
@@ -62,36 +64,18 @@ class ChartWidget(QtWidgets.QWidget):
     def setDataThread(self, thread: QtCore.QThread) -> None:  # {{{
         self.__data_thread = thread
         self.__data_thread.new_bar.connect(self.__onNewBar)
+        self.__data_thread.new_tic.connect(self.__onNewTic)
 
     # }}}
     def setAsset(self, asset: Asset) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.setAsset()")
-
-        if self.__data_thread is None:
-            return
-
-        # try unsubscribe
-        if self.__asset is not None:
-            figi = self.__asset.figi
-            tf = self.toolbar.firstTimeFrame()
-            interval = Tinkoff.av_to_ti(tf, ti.SubscriptionInterval)
-            subscription = ti.CandleInstrument(figi, interval)
-            stream = self.__data_thread.stream
-            stream.candles.unsubscribe([subscription])
 
         # clear all & draw chart
         self.clearAll()
         self.__asset = asset
         self.toolbar.setAsset(asset)
         self.__drawChart()
-
-        # subscribe candles
-        figi = self.__asset.figi
-        tf = self.toolbar.firstTimeFrame()
-        interval = Tinkoff.av_to_ti(tf, ti.SubscriptionInterval)
-        subscription = ti.CandleInstrument(figi, interval)
-        stream = self.__data_thread.stream
-        stream.candles.subscribe([subscription])
+        self.__subscribeDataStream()
 
     # }}}
     def setTradeList(self, trade_list: TradeList) -> None:  # {{{
@@ -111,6 +95,7 @@ class ChartWidget(QtWidgets.QWidget):
     def clearAll(self) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.clearAll()")
 
+        self.__tryUnsubscribe()
         self.scene.removeGChart()
         self.scene.removeGTrades()
         self.scene.removeIndicators()
@@ -167,7 +152,7 @@ class ChartWidget(QtWidgets.QWidget):
     def __drawChart(self) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.__drawChart()")
 
-        timeframe = self.toolbar.firstTimeFrame()
+        timeframe = self.__timeframe_1
         end = now()
         begin = now() - timeframe * Chart.DEFAULT_BARS_COUNT
         bars = Thread.loadBars(self.__asset, timeframe, begin, end)
@@ -187,7 +172,7 @@ class ChartWidget(QtWidgets.QWidget):
         test = trade_list.owner
         assert isinstance(test, Test)
         asset = test.asset
-        timeframe = self.toolbar.firstTimeFrame()
+        timeframe = self.__timeframe_1
         gtrade_list = GTradeList.fromSelected(test, trade_list, timeframe)
 
         self.toolbar.resetSecondTimeFrames()
@@ -198,11 +183,12 @@ class ChartWidget(QtWidgets.QWidget):
         self.__asset = asset
 
     # }}}
+
     def __getNewBarsFromBroker(self, bars: list[Bar]) -> list[Bar]:  # {{{
         assert len(bars) != 0
 
         last_dt = bars[-1].dt
-        timeframe = self.toolbar.firstTimeFrame()
+        timeframe = self.__timeframe_1
         begin = last_dt + timeframe
         end = now()
 
@@ -225,12 +211,44 @@ class ChartWidget(QtWidgets.QWidget):
         return bars + new_bars
 
     # }}}
+    def __tryUnsubscribe(self):  # {{{
+        if self.__data_thread is None:
+            return
+
+        if self.__asset is not None:
+            stream = self.__data_thread.stream
+            figi = self.__asset.figi
+            tf = self.__timeframe_1
+            interval = Tinkoff.av_to_ti(tf, ti.SubscriptionInterval)
+
+            subscription = ti.CandleInstrument(figi, interval)
+            stream.candles.unsubscribe([subscription])
+
+            subscription = ti.TradeInstrument(figi)
+            stream.trades.unsubscribe([subscription])
+
+    # }}}
+    def __subscribeDataStream(self):  # {{{
+        # subscribe candles & tics
+        stream = self.__data_thread.stream
+        figi = self.__asset.figi
+        tf = self.__timeframe_1
+        interval = Tinkoff.av_to_ti(tf, ti.SubscriptionInterval)
+
+        subscription = ti.CandleInstrument(figi, interval)
+        stream.candles.subscribe([subscription])
+
+        subscription = ti.TradeInstrument(figi)
+        stream.trades.subscribe([subscription])
+
+    # }}}
 
     @QtCore.pyqtSlot(TimeFrame)  # __onTimeframe1  # {{{
     def __onTimeframe1(self, timeframe: TimeFrame):
         logger.debug(f"{self.__class__.__name__}.__onTimeframe1()")
 
         self.clearAll()
+        self.__timeframe_1 = timeframe
 
         if self.__trade_list is not None:
             self.__drawTradeList()
@@ -238,6 +256,7 @@ class ChartWidget(QtWidgets.QWidget):
 
         if self.__asset is not None:
             self.__drawChart()
+            self.__subscribeDataStream()
             return
 
     # }}}
@@ -323,7 +342,7 @@ class ChartWidget(QtWidgets.QWidget):
         if self.__asset is None:
             return
 
-        timeframe = self.toolbar.firstTimeFrame()
+        timeframe = self.__timeframe_1
         chart = Thread.loadChart(self.__asset, timeframe, begin, end)
         gchart = GChart(chart)
 
@@ -331,14 +350,30 @@ class ChartWidget(QtWidgets.QWidget):
         self.view.centerOnLast()
 
     # }}}
+
     @QtCore.pyqtSlot(BarEvent)  # __onNewBar  # {{{
     def __onNewBar(self, e: BarEvent):
         logger.debug(f"{self.__class__.__name__}.__onNewBar()")
+
+        # INFO:
+        # подписка отписка от Т срабатывает с задержкой, может
+        # прилететь бар от прошлого графика в момент переключения
+        # поэтому проверяем figi и TimeFrame
+        if self.__asset.figi != e.figi:
+            return
+        gchart = self.scene.currentGChart()
+        if gchart.chart.timeframe != e.timeframe:
+            return
+
+        gchart.receive(e)
+
+    # }}}
+    @QtCore.pyqtSlot(BarEvent)  # __onNewTic  # {{{
+    def __onNewTic(self, e: TicEvent):
+        logger.debug(f"{self.__class__.__name__}.__onNewBar()")
         assert self.__asset.figi == e.figi
 
-        bar = e.bar
-        gchart = self.scene.currentGChart()
-        gchart.receive(bar)
+        self.__asset.receive(e)
 
     # }}}
 

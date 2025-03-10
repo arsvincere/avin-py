@@ -71,7 +71,7 @@ class GTrade(QtWidgets.QGraphicsItemGroup):  # {{{
                 self.x_init = gchart.xFromDatetime(trade.dt)
                 self.x_opn = gchart.xFromDatetime(trade.openDateTime())
                 self.x_cls = gchart.xFromDatetime(trade.closeDateTime())
-                gbar = gchart.barFromDatetime(trade.openDateTime())
+                gbar = gchart.gbarFromDatetime(trade.openDateTime())
                 y_hgh = gbar.high_pos.y()
                 self.y0 = y_hgh - 50
                 self.trade_pos = QtCore.QPointF(self.x_opn, self.y0)
@@ -79,7 +79,7 @@ class GTrade(QtWidgets.QGraphicsItemGroup):  # {{{
                 self.x_init = gchart.xFromDatetime(trade.dt)
                 self.x_opn = self.x_init
                 self.x_cls = self.x_init
-                gbar = gchart.barFromDatetime(trade.dt)
+                gbar = gchart.gbarFromDatetime(trade.dt)
                 y_hgh = gbar.high_pos.y()
                 self.y0 = y_hgh - 50
                 self.trade_pos = QtCore.QPointF(self.x_opn, self.y0)

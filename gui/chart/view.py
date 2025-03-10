@@ -21,6 +21,8 @@ class ChartView(QtWidgets.QGraphicsView):
         self.__config()
 
         self.current_gtrade = None
+        self.left_pressed = False
+        self.right_pressed = False
 
     # }}}
 
@@ -58,6 +60,11 @@ class ChartView(QtWidgets.QGraphicsView):
         logger.debug(f"{self.__class__.__name__}.mousePressEvent()")
         super().mousePressEvent(e)
 
+        if e.button() == Qt.MouseButton.LeftButton:
+            self.left_pressed = True
+        elif e.button() == Qt.MouseButton.RightButton:
+            self.right_pressed = True
+
         self.__setCrossCursor()
         return e.ignore()
 
@@ -65,6 +72,11 @@ class ChartView(QtWidgets.QGraphicsView):
     def mouseReleaseEvent(self, e: QtGui.QMouseEvent | None):  # {{{
         logger.debug(f"{self.__class__.__name__}.mouseReleaseEvent()")
         super().mouseReleaseEvent(e)
+
+        if e.button() == Qt.MouseButton.LeftButton:
+            self.left_pressed = False
+        elif e.button() == Qt.MouseButton.RightButton:
+            self.right_pressed = False
 
         self.__setCrossCursor()
         return e.ignore()
@@ -76,26 +88,14 @@ class ChartView(QtWidgets.QGraphicsView):
 
         scene = self.scene()
         assert scene is not None
-        height = self.size().height()
-
-        # move labels
-        pos_0x0 = self.mapToScene(150, 0)
-        scene.top.setPos(pos_0x0)
-        # move volumes
-        pos = QtCore.QPointF(0, pos_0x0.y() + height)
-        scene.volumes.setPos(pos)
-
-        # move footer
-        pos = QtCore.QPointF(0, pos_0x0.y() + height)
-        scene.footer.setPos(pos)
-
-        # move left
-        pos = self.mapToScene(0, 0)
-        scene.left.setPos(pos.x(), 0)
 
         # move cross
         cur_pos = e.pos()
         scene.cross.setPos(self.mapToScene(cur_pos.x(), cur_pos.y()))
+
+        # move panels
+        if self.left_pressed:
+            self.__movePinnedPanels()
 
         return e.ignore()
 
@@ -185,6 +185,30 @@ class ChartView(QtWidgets.QGraphicsView):
         port.setCursor(Qt.CursorShape.CrossCursor)
 
     # }}}
+    def __movePinnedPanels(self):  # {{{
+        scene = self.scene()
+        assert scene is not None
+        height = self.size().height()
+
+        # move labels
+        pos_0x0 = self.mapToScene(150, 0)
+        scene.top.setPos(pos_0x0)
+        # move volumes
+        pos = QtCore.QPointF(0, pos_0x0.y() + height)
+        scene.volumes.setPos(pos)
+
+        # move footer
+        pos = QtCore.QPointF(0, pos_0x0.y() + height)
+        for i in scene.footer:
+            i.gitem.setPos(pos)
+
+        # move left
+        pos = self.mapToScene(0, 0)
+        for i in scene.left:
+            i.gitem.setPos(pos)
+
+
+# }}}
 
 
 if __name__ == "__main__":

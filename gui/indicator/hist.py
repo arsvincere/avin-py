@@ -11,13 +11,13 @@ import sys
 import pandas as pd
 from PyQt6 import QtCore, QtWidgets
 
-from avin import Cfg, Cmd, DataType, Tics, logger
+from avin import Cfg, Signal, logger
 from gui.chart.gchart import GChart
 from gui.custom import Css, Icon, Label, Theme, ToolButton
 from gui.indicator.item import Indicator, IndicatorItem
 
 
-class HistIndicator:  # {{{
+class HistIndicator(Indicator):  # {{{
     name = "Hist"
     position = Indicator.Position.FOOTER
 
@@ -52,12 +52,13 @@ class HistIndicator:  # {{{
     def graphics(self, gchart: GChart):  # {{{
         logger.debug(f"{self.__class__.__name__}.graphics()")
 
-        self.gitem = _HistGraphics(gchart)
+        self.gchart = gchart
+        self.gitem = _HistGraphics(self)
 
         if self.__settings is None:
             self.__settings = _HistSettings(self)
-
         self.__settings.configureSilent(self.gitem)
+
         return self.gitem
 
     # }}}
@@ -80,47 +81,30 @@ class _HistGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
     INDENT = Cfg.Chart.BAR_INDENT
     WIDTH = Cfg.Chart.BAR_WIDTH
 
-    def __init__(self, gchart: GChart, parent=None):  # {{{
+    def __init__(self, indicator: HistIndicator, parent=None):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
         QtWidgets.QGraphicsItemGroup.__init__(self, parent)
 
-        self.gchart = gchart
+        self.indicator = indicator
+        self.gchart = indicator.gchart
 
-        self.__loadHist()
+        self.__getTics()
         self.__calcMaxAmount()
         self.__createFrame()
         self.__createHist()
 
     # }}}
 
-    def __loadHist(self) -> None:  # {{{
-        """self.hist = DataFrame
-                             dt          buy         sell
-        0   2025-03-06 06:59:34    8421750.0    5790060.0
-        """
+    def __clearAll(self) -> None:  # {{{
+        gitems = self.childItems()
+        for i in gitems:
+            i.hide()
+            self.removeFromGroup(i)
 
-        # XXX: говнокод, график должен все таки ссылаться на Asset
-        # а не на Instrument, и через Asset надо загружать тики
-        # но пока похую, и не раскидывать тут детали в духе .parquet
-        # мало ли как еще переименую файлы...
-        last_date = self.gchart.chart.now.dt.date()
-        file_name = f"{last_date} tic.parquet"
-        file_path = Cmd.path(
-            self.gchart.chart.instrument.path,
-            DataType.TIC.name,
-            file_name,
-        )
-        if not Cmd.isExist(file_path):
-            self.tics = None
-            self.hist = None
-            logger.warning(f"Tic data not found: {file_path}")
-            return
-
-        df = pd.read_parquet(file_path)
-        self.tics = Tics(self.gchart.chart.instrument, df)
-
-        tf = self.gchart.chart.timeframe
-        self.hist = self.tics.hist(tf)
+    # }}}
+    def __getTics(self) -> None:  # {{{
+        asset = self.gchart.chart.instrument
+        self.hist = asset.tics.hist(self.gchart.chart.timeframe)
 
     # }}}
     def __calcMaxAmount(self) -> None:  # {{{
@@ -140,17 +124,18 @@ class _HistGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
         width = self.gchart.rect.width()
         height = self.HEIGHT
 
-        frame = QtWidgets.QGraphicsRectItem(x0, y0, width, height)
-        frame.setPen(Theme.Chart.BG_FOOTER)
-        frame.setBrush(Theme.Chart.BG_FOOTER)
-        self.addToGroup(frame)
+        self.frame = QtWidgets.QGraphicsRectItem(x0, y0, width, height)
+        self.frame.setPen(Theme.Chart.BG_FOOTER)
+        self.frame.setBrush(Theme.Chart.BG_FOOTER)
+        self.addToGroup(self.frame)
 
     # }}}
     def __createHist(self) -> None:  # {{{
-        if self.hist is None:
+        hist = self.hist
+        if hist is None:
             return
 
-        for i, row in self.hist.iterrows():
+        for i, row in hist.iterrows():
             self.__createHistBar(row)
 
     # }}}
@@ -162,7 +147,7 @@ class _HistGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
         sell = hist_bar["sell"]
 
         # coordinate
-        gbar = gchart.barFromDatetime(dt)
+        gbar = gchart.gbarFromDatetime(dt)
         x0 = gbar.x0_cundle
         x1 = gbar.x1_cundle
         width = x1 - x0
@@ -186,6 +171,35 @@ class _HistGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
         self.addToGroup(sell_body)
 
     # }}}
+
+    # def __loadHist(self) -> None:  # {{{
+    #     """self.hist = DataFrame
+    #                          dt          buy         sell
+    #     0   2025-03-06 06:59:34    8421750.0    5790060.0
+    #     """
+    #
+    #     # XXX: говнокод, график должен все таки ссылаться на Asset
+    #     # а не на Instrument, и через Asset надо загружать тики
+    #     # но пока похую, и не раскидывать тут детали в духе .parquet
+    #     # мало ли как еще переименую файлы...
+    #     last_date = self.gchart.chart.now.dt.date()
+    #     file_name = f"{last_date} tic.parquet"
+    #     file_path = Cmd.path(
+    #         self.gchart.chart.instrument.path,
+    #         DataType.TIC.name,
+    #         file_name,
+    #     )
+    #     if not Cmd.isExist(file_path):
+    #         self.hist = None
+    #         logger.warning(f"Tic data not found: {file_path}")
+    #         return
+    #
+    #     df = pd.read_parquet(file_path)
+    #     tics = Tics(self.gchart.chart.instrument, df)
+    #     tf = self.gchart.chart.timeframe
+    #     self.hist = tics.hist(tf)
+    #
+    # # }}}
 
 
 # }}}
