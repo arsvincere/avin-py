@@ -138,6 +138,8 @@ class ChartScene(QtWidgets.QGraphicsScene):
         for lable in self.top:
             lable.setGChart(gchart)
 
+        self.gchart.indicators_updated.connect(self.__onIndicatorsUpdated)
+
     # }}}
     def removeGChart(self) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.removeGChart()")
@@ -270,6 +272,17 @@ class ChartScene(QtWidgets.QGraphicsScene):
         self.ignore_scale = list()
 
     # }}}
+    def __onIndicatorsUpdated(self):
+        # XXX: говнокод...
+        # суть. График после получения нового исторического бара
+        # обновляет индикаторы, они создают новые график итемы.
+        # Обновить старые не получется... сцена их не видит...
+        # Новые график итемы панельных индикаторов будут иметь
+        # дефолтные координаты. Поэтому дергаем view порт, чтобы
+        # он их разместил правильно.
+        view = self.views()[0]
+        view._movePinnedPanels()
+        print("moved_pinned_panels")
 
 
 if __name__ == "__main__":

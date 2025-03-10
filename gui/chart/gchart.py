@@ -20,7 +20,7 @@ from avin.core import (
     Chart,
     TimeFrame,
 )
-from avin.utils import find_left, logger, next_month
+from avin.utils import Signal, find_left, logger, next_month
 from gui.chart.thread import Thread
 from gui.custom import Theme
 from gui.marker import Mark
@@ -316,6 +316,7 @@ class GVol(QtWidgets.QGraphicsItemGroup):  # {{{
 # }}}
 class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
     __VIEW_TYPE = ViewType.BAR
+    indicators_updated = Signal()
 
     def __init__(self, chart: Chart, parent=None):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
@@ -740,16 +741,14 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
         self.addToGroup(gbar)
 
         # update indicators
-        print("on historical, upd i")
         for i in self.__indicators:
-            print(i.name)
             gitem = i.gitem
             gitem.setVisible(False)
             self.removeFromGroup(gitem)
 
             updated = i.graphics(self)
             self.addToGroup(updated)
-            print("-- ok")
+            self.indicators_updated.emit()
 
     # }}}
 

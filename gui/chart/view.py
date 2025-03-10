@@ -95,7 +95,7 @@ class ChartView(QtWidgets.QGraphicsView):
 
         # move panels
         if self.left_pressed:
-            self.__movePinnedPanels()
+            self._movePinnedPanels()
 
         return e.ignore()
 
@@ -185,7 +185,8 @@ class ChartView(QtWidgets.QGraphicsView):
         port.setCursor(Qt.CursorShape.CrossCursor)
 
     # }}}
-    def __movePinnedPanels(self):  # {{{
+
+    def _movePinnedPanels(self):  # {{{
         scene = self.scene()
         assert scene is not None
         height = self.size().height()
