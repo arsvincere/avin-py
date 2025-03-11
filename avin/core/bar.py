@@ -11,18 +11,18 @@ from __future__ import annotations
 import enum
 from typing import Optional, TypeVar
 
+from avin.config import Usr
 from avin.core.range import Range
-from avin.data.bar import _Bar
 from avin.utils import DateTime
 
 Chart = TypeVar("Chart")
 
 
-class Bar(_Bar):
+class Bar:
     class Type(enum.Flag):  # {{{
         UNDEFINE = 0
-        BEAR = 1
-        BULL = 2
+        # BEAR = 1
+        # BULL = 2
         INSIDE = 4
         OVERFLOW = 8
         OUTSIDE = 16
@@ -30,23 +30,71 @@ class Bar(_Bar):
 
     # }}}
 
-    def __init__(  # {{{
-        self,
-        dt: DateTime,
-        open: float,
-        high: float,
-        low: float,
-        close: float,
-        vol: int,
-        chart: Optional[Chart] = None,
-    ):
-        _Bar.__init__(self, dt, open, high, low, close, vol)
+    def __init__(self, data: dict, chart=None):  # {{{
+        # def __init__(
+        #     self,
+        #     dt: DateTime,
+        #     open: float,
+        #     high: float,
+        #     low: float,
+        #     close: float,
+        #     vol: int,
+        #     chart: Optional[Chart] = None,
+        # ):
+        # _Bar.__init__(self, dt, open, high, low, close, vol)
+        self.__data = data
         self.__chart = chart
-        self.__analyse()
+        # self.__analyse()
+
+    # }}}
+    def __str__(self):  # {{{
+        usr_dt = self.dt + Usr.TIME_DIF
+        str_dt = usr_dt.strftime("%Y-%m-%d %H:%M")
+        string = (
+            f"Bar {str_dt} O={self.open} H={self.high} "
+            f"L={self.low} C={self.close} V={self.volume} "
+        )
+        return string
 
     # }}}
     def __contains__(self, price: float) -> bool:  # {{{
         return self.low <= price <= self.high
+
+    # }}}
+
+    @property  # dt  # {{{
+    def dt(self) -> DateTime:
+        return self.__data["dt"]
+
+    # }}}
+    @property  # open  # {{{
+    def open(self) -> float:
+        return self.__data["open"]
+
+    # }}}
+    @property  # high  # {{{
+    def high(self) -> float:
+        return self.__data["high"]
+
+    # }}}
+    @property  # low  # {{{
+    def low(self) -> float:
+        return self.__data["low"]
+
+    # }}}
+    @property  # close  # {{{
+    def close(self) -> float:
+        return self.__data["close"]
+
+    # }}}
+    @property  # volume  # {{{
+    def volume(self) -> int:
+        return self.__data["volume"]
+
+    # }}}
+    @property  # data  # {{{
+    def data(self) -> dict:
+        return self.__data
 
     # }}}
 
@@ -102,11 +150,13 @@ class Bar(_Bar):
 
     # }}}
     def isBull(self) -> bool:  # {{{
-        return self.__flags & Bar.Type.BULL == Bar.Type.BULL
+        # return self.__flags & Bar.Type.BULL == Bar.Type.BULL
+        return self.open < self.close
 
     # }}}
     def isBear(self) -> bool:  # {{{
-        return self.__flags & Bar.Type.BEAR == Bar.Type.BEAR
+        # return self.__flags & Bar.Type.BEAR == Bar.Type.BEAR
+        return self.open > self.close
 
     # }}}
     def isInside(self) -> bool:  # {{{
@@ -126,28 +176,52 @@ class Bar(_Bar):
 
     # }}}
 
-    @classmethod  # fromRecord# {{{
+    @classmethod  # new  # {{{
+    def new(
+        cls,
+        dt: DateTime,
+        open: float,
+        high: float,
+        low: float,
+        close: float,
+        vol: int,
+        chart: Optional[Chart] = None,
+    ):
+        dct = {
+            "dt": dt,
+            "open": open,
+            "high": high,
+            "low": low,
+            "close": close,
+            "vol": vol,
+        }
+        bar = cls(dct, chart)
+        return bar
+
+    # }}}
+    @classmethod  # fromRecord  # {{{
     def fromRecord(cls, record: asyncpg.Record, chart=None):
-        bar = cls(
-            record["dt"],
-            record["open"],
-            record["high"],
-            record["low"],
-            record["close"],
-            record["volume"],
-            chart,
-        )
+        # bar = cls(
+        #     record["dt"],
+        #     record["open"],
+        #     record["high"],
+        #     record["low"],
+        #     record["close"],
+        #     record["volume"],
+        #     chart,
+        # )
+        bar = cls(dict(record), chart)
         return bar
 
     # }}}
 
-    def __analyse(self):  # {{{
-        if self.close - self.open > 0.0:
-            self.__flags = Bar.Type.BULL
-        elif self.close - self.open < 0.0:
-            self.__flags = Bar.Type.BEAR
-        else:
-            self.__flags = Bar.Type.UNDEFINE
+    # def __analyse(self):  # {{{
+    #     if self.close - self.open > 0.0:
+    #         self.__flags = Bar.Type.BULL
+    #     elif self.close - self.open < 0.0:
+    #         self.__flags = Bar.Type.BEAR
+    #     else:
+    #         self.__flags = Bar.Type.UNDEFINE
 
     # }}}
 
