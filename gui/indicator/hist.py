@@ -11,7 +11,7 @@ import sys
 import pandas as pd
 from PyQt6 import QtCore, QtWidgets
 
-from avin import Cfg, Signal, logger
+from avin import Cfg, logger
 from gui.chart.gchart import GChart
 from gui.custom import Css, Icon, Label, Theme, ToolButton
 from gui.indicator.item import Indicator, IndicatorItem
@@ -81,6 +81,9 @@ class _HistGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
     INDENT = Cfg.Chart.BAR_INDENT
     WIDTH = Cfg.Chart.BAR_WIDTH
 
+    flags = QtWidgets.QGraphicsItem.GraphicsItemFlag
+    ignore_transformation = flags.ItemIgnoresTransformations
+
     def __init__(self, indicator: HistIndicator, parent=None):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
         QtWidgets.QGraphicsItemGroup.__init__(self, parent)
@@ -93,15 +96,11 @@ class _HistGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
         self.__createFrame()
         self.__createHist()
 
-    # }}}
-
-    def __clearAll(self) -> None:  # {{{
-        gitems = self.childItems()
-        for i in gitems:
-            i.hide()
-            self.removeFromGroup(i)
+        # TODO: здесь надо только одну ось игнорить...
+        # self.setFlag(self.ignore_transformation)
 
     # }}}
+
     def __getTics(self) -> None:  # {{{
         asset = self.gchart.chart.instrument
         self.hist = asset.tics.hist(self.gchart.chart.timeframe)
@@ -152,11 +151,9 @@ class _HistGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
         x1 = gbar.x1_cundle
         width = x1 - x0
 
-        buy_percent = float(buy) / self.max_amount
-        sell_percent = float(sell) / self.max_amount
         y0 = -self.HEIGHT / 2
-        height_buy = buy_percent * self.HEIGHT / 2
-        height_sell = sell_percent * self.HEIGHT / 2
+        height_buy = float(buy) / self.max_amount * self.HEIGHT / 2
+        height_sell = float(sell) / self.max_amount * self.HEIGHT / 2
 
         # graphics item
         buy_body = QtWidgets.QGraphicsRectItem(x0, y0, width, -height_buy)

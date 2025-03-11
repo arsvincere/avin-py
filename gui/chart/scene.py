@@ -18,6 +18,10 @@ from gui.indicator.item import Indicator
 
 
 class ChartScene(QtWidgets.QGraphicsScene):
+    # QGraphicsItem::ItemIgnoresTransformations
+    flags = QtWidgets.QGraphicsItem.GraphicsItemFlag
+    ignore_transformation = flags.ItemIgnoresTransformations
+
     def __init__(self, parent=None):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
         QtWidgets.QGraphicsScene.__init__(self, parent)
@@ -27,7 +31,6 @@ class ChartScene(QtWidgets.QGraphicsScene):
         self.__createGraphicsWidgets()
         self.__createChartGroup()
         self.__createTListGroup()
-        self.__createIgnoreScaleList()
 
     # }}}
 
@@ -127,6 +130,7 @@ class ChartScene(QtWidgets.QGraphicsScene):
         self.gchart = gchart
         self.volumes = gchart.gvols
         self.cross = GCross(gchart)
+        self.cross.setFlag(self.ignore_transformation)
 
         self.addItem(self.gchart)
         self.addItem(self.cross)
@@ -235,11 +239,7 @@ class ChartScene(QtWidgets.QGraphicsScene):
         self.top = ChartLabels()
         self.top.add(self.bar_info)
         self.top.add(self.vol_info)
-
-        # QGraphicsItem::ItemIgnoresTransformations
-        flags = QtWidgets.QGraphicsItem.GraphicsItemFlag
-        ignore = flags.ItemIgnoresTransformations
-        self.top.setFlag(ignore)
+        self.top.setFlag(self.ignore_transformation)
 
         self.addItem(self.top)
 
@@ -263,16 +263,7 @@ class ChartScene(QtWidgets.QGraphicsScene):
         self.gtrades = None
 
     # }}}
-    def __createIgnoreScaleList(self):  # {{{
-        logger.debug(f"{self.__class__.__name__}.__createIgnoreScaleList()")
-
-        # TODO: Ахтунг! Оказывается есть специальный флаг для QGraphicsItem
-        # QGraphicsItem::ItemIgnoresTransformations
-        # почитай еще раз доку и переделай свой велосипед с трансформацией
-        self.ignore_scale = list()
-
-    # }}}
-    def __onIndicatorsUpdated(self):
+    def __onIndicatorsUpdated(self):  # {{{
         # XXX: говнокод...
         # суть. График после получения нового исторического бара
         # обновляет индикаторы, они создают новые график итемы.
@@ -283,6 +274,8 @@ class ChartScene(QtWidgets.QGraphicsScene):
         view = self.views()[0]
         view._movePinnedPanels()
         print("moved_pinned_panels")
+
+    # }}}
 
 
 if __name__ == "__main__":

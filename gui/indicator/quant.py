@@ -52,12 +52,13 @@ class QuantIndicator:  # {{{
     def graphics(self, gchart: GChart):  # {{{
         logger.debug(f"{self.__class__.__name__}.graphics()")
 
-        self.gitem = _QuantGraphics(gchart)
+        self.gchart = gchart
+        self.gitem = _QuantGraphics(self)
 
         if self.__settings is None:
             self.__settings = _QuantSettings(self)
+        self.__settings.configureSilent(self)
 
-        self.__settings.configureSilent(self.gitem)
         return self.gitem
 
     # }}}
@@ -75,80 +76,46 @@ class QuantIndicator:  # {{{
 # }}}
 
 
-class _GQuantLevel(QtWidgets.QGraphicsItemGroup):
-    def __init__(  # {{{
-        self, gchart: GChart, quant: pd.Series, parent=None
-    ):
-        logger.debug(f"{self.__class__.__name__}.__init__()")
-        QtWidgets.QGraphicsItemGroup.__init__(self, parent)
-
-        self.gchart = gchart
-        self.quant = quant
-
-        self.__createQuantLevel()
-
-    # }}}
-
-
 class _QuantGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
     WIDTH = 150
     INDENT = Cfg.Chart.QUANT_INDENT
 
-    def __init__(self, gchart: GChart, parent=None):  # {{{
+    flags = QtWidgets.QGraphicsItem.GraphicsItemFlag
+    ignore_transformation = flags.ItemIgnoresTransformations
+
+    def __init__(self, indicator: QuantIndicator, parent=None):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
         QtWidgets.QGraphicsItemGroup.__init__(self, parent)
 
-        self.gchart = gchart
+        self.indicator = indicator
+        self.gchart = indicator.gchart
 
-        self.__loadQuant()
+        # self.__loadQuant()
+        self.__getTics()
         self.__calcMaxAmount()
         self.__createFrame()
         self.__createQuant()
 
+        # TODO: здесь надо только одну ось игнорить...
+        # self.setFlag(self.ignore_transformation)
+
     # }}}
 
-    def __loadQuant(self) -> None:  # {{{
-        """quant = pd.Series of DataFrame like:
-           price    buy   sell
-        0  320.5  32050      0
-        1  321.0      0  96300
-
-        Series key = dt of bar of quant
-        """
-
-        # XXX: говнокод,
-        # Да еще и дубль из _HistGraphics, надо это все в ассет выносить
-        # и везде чтобы был один и тот же ассет в рантайме.
-        last_date = self.gchart.chart.now.dt.date()
-        file_name = f"{last_date} tic.parquet"
-        file_path = Cmd.path(
-            self.gchart.chart.instrument.path,
-            DataType.TIC.name,
-            file_name,
-        )
-        if not Cmd.isExist(file_path):
-            self.tics = None
-            self.quants = None
-            logger.warning(f"Tic data not found: {file_path}")
-            return
-
-        df = pd.read_parquet(file_path)
-        self.tics = Tics(self.gchart.chart.instrument, df)
-
-        # XXX: пока только один квант - дневной
-        # tf = self.gchart.chart.timeframe
-        self.quants = self.tics.quant(TimeFrame("D"))
+    def __getTics(self) -> None:  # {{{
+        asset = self.gchart.chart.instrument
+        # TODO: пока строю только дневной квант
+        self.quant = asset.tics.quant(TimeFrame("D"))
 
     # }}}
     def __calcMaxAmount(self) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.__calcCoordinates()")
 
-        if self.quants is None:
+        if self.quant is None:
             return
 
         # XXX: пока работаю только с одним дневным квантом
-        assert len(self.quants) == 1
-        q = self.quants.iloc[0]
+        assert len(self.quant) == 1
+        q = self.quant.iloc[0]
 
         max_amount_buy = q["buy"].max()
         max_amount_sell = q["sell"].max()
@@ -168,12 +135,12 @@ class _QuantGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
 
     # }}}
     def __createQuant(self) -> None:  # {{{
-        if self.quants is None:
+        if self.quant is None:
             return
 
         # XXX: пока работаю только с одним дневным квантом
-        assert len(self.quants) == 1
-        q = self.quants.iloc[0]
+        assert len(self.quant) == 1
+        q = self.quant.iloc[0]
 
         for i, row in q.iterrows():
             self.__createQuantLevel(row)
@@ -207,6 +174,40 @@ class _QuantGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
 
         self.addToGroup(buy_body)
         self.addToGroup(sell_body)
+
+    # }}}
+
+    def __loadQuant(self) -> None:  # {{{
+        """quant = pd.Series of DataFrame like:
+           price    buy   sell
+        0  320.5  32050      0
+        1  321.0      0  96300
+
+        Series key = dt of bar of quant
+        """
+
+        # XXX: говнокод,
+        # Да еще и дубль из _HistGraphics, надо это все в ассет выносить
+        # и везде чтобы был один и тот же ассет в рантайме.
+        last_date = self.gchart.chart.now.dt.date()
+        file_name = f"{last_date} tic.parquet"
+        file_path = Cmd.path(
+            self.gchart.chart.instrument.path,
+            DataType.TIC.name,
+            file_name,
+        )
+        if not Cmd.isExist(file_path):
+            self.tics = None
+            self.quant = None
+            logger.warning(f"Tic data not found: {file_path}")
+            return
+
+        df = pd.read_parquet(file_path)
+        self.tics = Tics(self.gchart.chart.instrument, df)
+
+        # XXX: пока только один квант - дневной
+        # tf = self.gchart.chart.timeframe
+        self.quant = self.tics.quant(TimeFrame("D"))
 
     # }}}
 
@@ -305,11 +306,11 @@ class _QuantSettings(QtWidgets.QDialog):  # {{{
 
     # }}}
 
-    def configureSilent(self, gextr: _QuantGraphics):  # {{{
+    def configureSilent(self, indicator: QuantIndicator):  # {{{
         logger.debug(f"{self.__class__.__name__}.configure")
 
     # }}}
-    def configure(self, gextr):  # {{{
+    def configure(self, indicator):  # {{{
         logger.debug(f"{self.__class__.__name__}.showSettings")
 
     # }}}

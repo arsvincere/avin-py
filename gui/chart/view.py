@@ -161,20 +161,17 @@ class ChartView(QtWidgets.QGraphicsView):
     def __resetTranformation(self):  # {{{
         logger.debug(f"{self.__class__.__name__}.__resetTranformation()")
 
+        scene = self.scene()
+        if scene is None:
+            return
+
         trans = self.transform().inverted()[0]
 
-        # chart labels: bar info, vol info, indicators
-        # labels = self.scene().top
-        # labels.setTransform(trans)
-        # labels.setPos(self.mapToScene(0, 0))
-
+        # TODO: запилить нормальный игнор scale через флаг на сцене
+        # а не здесь костылями, см ChartScene.ignore_transformation
         # current gtrade
         if self.current_gtrade:
             self.current_gtrade.annotation.setTransform(trans)
-
-        # other ignore scale items on scene
-        for item in self.scene().ignore_scale:
-            item.setTransform(trans)
 
     # }}}
     def __setCrossCursor(self):  # {{{
@@ -206,7 +203,7 @@ class ChartView(QtWidgets.QGraphicsView):
         # move left
         pos = self.mapToScene(0, 0)
         for i in scene.left:
-            i.gitem.setPos(pos)
+            i.gitem.setPos(pos.x(), 0)
 
 
 # }}}
