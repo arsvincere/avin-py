@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import enum
 
+from avin.utils import logger
+
 __all__ = (
     "Size",
     "SimpleSize",
@@ -61,6 +63,16 @@ class Size(enum.Enum):
     # }}}
 
     def toSimpleSize(self) -> SimpleSize:  # {{{
+        logger.warning("DEPRICATED: use Size.simple()")
+        for ssize in SimpleSize:
+            if self == ssize:
+                return ssize
+
+        assert False, "WTF???"
+        return None
+
+    # }}}
+    def simple(self) -> SimpleSize:  # {{{
         for ssize in SimpleSize:
             if self == ssize:
                 return ssize

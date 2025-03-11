@@ -6,346 +6,246 @@
 # LICENSE:      GNU GPLv3
 # ============================================================================
 
-import asyncio
-import collections
+from __future__ import annotations
 
-import pandas as pd
+import asyncio
+import enum
+
+import polars as pl
 
 from avin.analytic._analytic import Analytic
-from avin.core import Asset, Range, TimeFrame
+from avin.const import ONE_YEAR
+from avin.core import Asset, Chart, Range, TimeFrame
+from avin.data import Data
 from avin.extra.size import Size
-from avin.utils import Tree
+from avin.utils import Tree, configureLogger, logger, now
 
 __all__ = ("BarAnalytic",)
 
-# TODO: ???
-# сюда можно заебенить как раз стандартные фильтры, типо:
-# SizeAnalytic.filter(b1, body, BIG)
-# SizeAnalytic.filter(b1, body, [NORMAL, BIG, BIGGER])
-# SizeAnalytic.filter(b1.body, [NORMAL, BIG, BIGGER])
-
 
 class BarAnalytic(Analytic):
-    name = "bar"
+    name = "Bar"
     cache = Tree()
 
+    class Analyse(enum.Enum):  # {{{
+        SIZE = 1
+
+        def __str__(self):
+            return self.name.lower()
+
+    # }}}
+
     @classmethod  # getSizes  # {{{
-    async def getSizes(
-        cls, asset: Asset, tf: TimeFrame, typ: Range.Type
-    ) -> Size:
-        # try find sizes in cache
-        sizes_dict = cls.cache[asset][tf][typ]
-        if sizes_dict:
-            return sizes_dict
+    def getSizes(
+        cls, asset: Asset, tf: TimeFrame, element: Range.Type
+    ) -> pl.DataFrame | None:
+        # # try find sizes in cache
+        # sizes = cls.cache[asset][tf][typ]
+        # if sizes:
+        #     return sizes
 
         # load
-        analyse_name = f"{tf}-{typ}"
-        data = await AnalyticData.load(cls.name, analyse_name, asset)
-        sizes_dict = cls.decoderJson(data.json_str)
+        all_sizes = cls.load(asset, tf, cls.Analyse.SIZE)
+        sizes = all_sizes.filter(pl.col("element") == element.name.lower())
 
-        # save cache
-        cls.cache[asset][tf] = sizes_dict
-
-        return sizes_dict
+        return sizes
 
     # }}}
-    @classmethod  # rangeSize  # {{{
-    async def rangeSize(cls, r: Range) -> Size:
-        bar = r.bar
-        chart = bar.chart
-        instrument = chart.instrument
-        asset = Asset.fromInstrument(instrument)
-        typ = r.type.name.lower()
+    @classmethod  # size  # {{{
+    def size(cls, r: Range) -> Size:
+        assert isinstance(r, Range)
 
-        sizes_dict = await cls.getSizes(asset, tf, typ)
+        # get sizes
+        asset = r.bar.chart.asset
+        tf = r.bar.chart.timeframe
+        element = r.type
+        sizes = cls.getSizes(asset, tf, element)
 
-        # for example:
-        # sizes_dict = {
-        #     ...,
-        #     Size.SMALL: <class Range>,
-        #     Size.NORMAL: <class Range>,
-        #     Size.BIG: <class Range>,
-        #     ...,
-        #     }
+        # try find size
+        value = r.percent()
+        result = sizes.filter(
+            (value >= pl.col("begin")),
+            (value < pl.col("end")),
+        )
 
-        percent = r.percent()
-        size = cls.__identifySize(percent, sizes_dict)
-        return size
+        # ok - return size
+        if len(result) == 1:
+            size = Size.fromStr(result.item(0, "size"))
+            return size
+
+        # else - BLACKSWAN
+        if value < sizes.item(0, "begin"):
+            return Size.BLACKSWAN_SMALL
+        if value > sizes.item(-1, "begin"):
+            return Size.BLACKSWAN_BIG
 
     # }}}
 
-    @classmethod  # update  # {{{
-    async def update(cls):
-        logger.info(":: Analytic=range start update")
+    @classmethod  # analyse  #  {{{
+    async def analyse(
+        cls, asset: Asset, tf: TimeFrame, analyse: BarAnalytic.Analyse
+    ) -> None:
+        logger.info(f":: {cls.name} analyse {asset.ticker}-{tf}")
 
-        await Analytic.save(cls)
+        chart = await cls.__loadChart(asset, tf)
+        cls.__analyseBar(chart)
+
+    # }}}
+    @classmethod  # analyseAll  #  {{{
+    async def analyseAll(cls) -> None:
+        logger.info(f":: Analytic-{cls.name} analyse all")
 
         assets = await Asset.requestAll()
-        for asset in assets:
-            logger.info(f"   Analyse bar ranges {asset.ticker}")
-            await cls.__analyseBar(asset)
-
-        logger.info(f"Analytic={cls.name} update complete!")
-
-    # }}}
-
-    @classmethod  # __analyseBar  # {{{
-    async def __analyseBar(cls, asset):
         timeframes = [
+            TimeFrame("W"),
             TimeFrame("D"),
             TimeFrame("1H"),
             TimeFrame("5M"),
             TimeFrame("1M"),
         ]
 
-        for timeframe in timeframes:
-            logger.info(f"   - {timeframe}")
-
-            datainfo_list = await Data.info(instrument=asset)
-            info = datainfo_list.info(asset, timeframe.toDataType())
-            chart = await asset.loadChart(timeframe, info.first_dt, now())
-
-            await cls.__analyseBarTimeFrame(chart)
+        for asset in assets:
+            for tf in timeframes:
+                for a in cls.Analyse:
+                    await cls.analyse(asset, tf, a)
 
     # }}}
-    @classmethod  # __analyseBarTimeFrame  # {{{
-    async def __analyseBarTimeFrame(cls, chart):
-        # elements - части бара: весь диапазон, тело, нижняя/верхняя тень
-        for element in Range.Type:
-            logger.info(f"   -- {element.name}")
-            await cls.__researchElement(chart, element)
+    @classmethod  # load  # {{{
+    def load(
+        cls,
+        asset: Asset,
+        tf: TimeFrame,
+        analyse: BarAnalytic.Analyse,
+    ) -> pl.DataFrame | None:
+        logger.debug(f"{cls.__name__}.load()")
+
+        name = f"{cls.name} {tf} {analyse}"
+        df = super().load(asset, name)
+
+        return df
 
     # }}}
-    @classmethod  # __researchElement  # {{{
-    async def __researchElement(cls, chart, element: Range.Type):
+
+    @classmethod  # __loadChart  # {{{
+    async def __loadChart(cls, asset: Asset, tf: TimeFrame) -> Chart:
+        logger.info("   loading chart")
+        match str(tf):
+            case "1M":
+                begin = now() - ONE_YEAR * 5
+            case "5M":
+                begin = now() - ONE_YEAR * 5
+            case "1H":
+                info = await Data.info(asset, tf.toDataType())
+                begin = info.first_dt
+            case "D":
+                info = await Data.info(asset, tf.toDataType())
+                begin = info.first_dt
+            case "W":
+                info = await Data.info(asset, tf.toDataType())
+                begin = info.first_dt
+            case _:
+                logger.critical(f"Not supported timeframe={tf}")
+                assert False, "TODO_ME"
+
+        chart = await asset.loadChart(tf, begin, end=now())
+        return chart
+
+    # }}}
+    @classmethod  # __analyseBar  # {{{
+    def __analyseBar(cls, chart: Chart):
+        # skip if not enought bars
+        min_bars = 200
+        n = len(chart)
+        if n < min_bars:
+            logger.warning(
+                f"Skip {chart} - not enought bars [{n}/{min_bars}]"
+            )
+            return
+
+        # collect elements
+        logger.info("   collect elements")
+        body = cls.__collectBarElement(chart, Range.Type.BODY)
+        full = cls.__collectBarElement(chart, Range.Type.FULL)
+        uppr = cls.__collectBarElement(chart, Range.Type.UPPER)
+        lowr = cls.__collectBarElement(chart, Range.Type.LOWER)
+
+        # classify
+        logger.info("   classify sizes")
+        body_sizes = super()._classifySizes(body)
+        full_sizes = super()._classifySizes(full)
+        uppr_sizes = super()._classifySizes(uppr)
+        lowr_sizes = super()._classifySizes(lowr)
+
+        # insert column with element name
+        b = pl.Series("element", ["body"] * len(body_sizes))
+        f = pl.Series("element", ["full"] * len(full_sizes))
+        u = pl.Series("element", ["upper"] * len(uppr_sizes))
+        l = pl.Series("element", ["lower"] * len(lowr_sizes))
+        body_sizes.insert_column(0, b)
+        full_sizes.insert_column(0, f)
+        uppr_sizes.insert_column(0, u)
+        lowr_sizes.insert_column(0, l)
+
+        # create total df
+        sizes = pl.DataFrame(
+            schema=[
+                ("element", pl.String),
+                ("size", pl.String),
+                ("begin", pl.Float64),
+                ("end", pl.Float64),
+            ]
+        )
+        sizes.extend(body_sizes)
+        sizes.extend(full_sizes)
+        sizes.extend(uppr_sizes)
+        sizes.extend(lowr_sizes)
+
+        # save
+        logger.info("   save analyse")
+        name = f"{cls.name} {chart.timeframe} {cls.Analyse.SIZE}"
+        super().save(chart.asset, name, sizes)
+
+    # }}}
+    @classmethod  # __collectBarElement  # {{{
+    def __collectBarElement(cls, chart, element: Range.Type):
         ranges_list = list()
         for bar in chart:
             # command looks like:  bar.body.percent()
             command = f"bar.{element.name.lower()}.percent()"
-            r = eval(command)
-            r = round(r, 2)
-            ranges_list.append(r)
+            value = eval(command)
+            value = round(value, 2)
+            ranges_list.append(value)
 
-        if len(ranges_list) < 200:
-            return
-
-        classify = cls.__classifySizes(ranges_list)
-        await cls.__saveAnalyticData(chart, element, classify)
-
-    # }}}
-    @classmethod  # __classifySizes  # {{{
-    def __classifySizes(cls, ranges_list: list) -> dict:
-        # create DataFrame
-        days_count = len(ranges_list)
-        counter = collections.Counter(ranges_list)
-        sorted_rlist = list()
-        count_list = list()
-        for i in sorted(counter):
-            sorted_rlist.append(i)
-            count_list.append(counter[i])
-        df = pd.DataFrame(
-            {
-                "range": sorted_rlist,
-                "count": count_list,
-            }
-        )
-        df["percent"] = df["count"] / days_count * 100
-
-        # create classify
-        classify = dict()
-        percent = df["percent"]
-        minimum = df.iloc[0]["range"]
-        last = 1
-        for size in Size:
-            if size in (
-                Size.BLACKSWAN_SMALL,  # не существующие еще черные лебеди
-                Size.BLACKSWAN_BIG,  # не существующие еще черные лебеди
-                Size.GREATEST_BIG,  # last range set up after cycle
-            ):
-                continue
-
-            while percent[0:last].sum() < size.value:
-                last += 1
-            maximum = df.iloc[last]["range"]
-            classify[size] = Range(minimum, maximum)
-            minimum = maximum
-
-        # set last range GREATEST_BIG
-        maximum = df["range"].max()
-        classify[Size.GREATEST_BIG] = Range(minimum, maximum)
-
-        return classify
-
-        # # create classify
-        # percent = df["percent"]
-        # i = 1
-        # while percent[0:i].sum() < 1:
-        #     i += 1
-        # greatest_small = Range(df.iloc[0]["range"], df.iloc[i]["range"])
-        # while percent[0:i].sum() < 3:
-        #     i += 1
-        # anomal_small = Range(greatest_small.max, df.iloc[i]["range"])
-        # while percent[0:i].sum() < 5:
-        #     i += 1
-        # extra_small = Range(anomal_small.max, df.iloc[i]["range"])
-        # while percent[0:i].sum() < 10:
-        #     i += 1
-        # very_small = Range(extra_small.max, df.iloc[i]["range"])
-        # while percent[0:i].sum() < 20:
-        #     i += 1
-        # smallest = Range(very_small.max, df.iloc[i]["range"])
-        # while percent[0:i].sum() < 30:
-        #     i += 1
-        # smaller = Range(smallest.max, df.iloc[i]["range"])
-        # while percent[0:i].sum() < 40:
-        #     i += 1
-        # small = Range(smaller.max, df.iloc[i]["range"])
-        # # while percent[0:i].sum() < 50:
-        # #     i += 1
-        # # center = df.iloc[i]["range"]
-        # while percent[0:i].sum() < 60:
-        #     i += 1
-        # normal = Range(small.max, df.iloc[i]["range"])
-        # while percent[0:i].sum() < 70:
-        #     i += 1
-        # big = Range(normal.max, df.iloc[i]["range"])
-        # while percent[0:i].sum() < 80:
-        #     i += 1
-        # bigger = Range(big.max, df.iloc[i]["range"])
-        # while percent[0:i].sum() < 90:
-        #     i += 1
-        # biggest = Range(bigger.max, df.iloc[i]["range"])
-        # while percent[0:i].sum() < 95:
-        #     i += 1
-        # very_big = Range(biggest.max, df.iloc[i]["range"])
-        # while percent[0:i].sum() < 97:
-        #     i += 1
-        # extra_big = Range(very_big.max, df.iloc[i]["range"])
-        # while percent[0:i].sum() < 99:
-        #     i += 1
-        # anomal_big = Range(extra_big.max, df.iloc[i]["range"])
-        # greatest_big = Range(anomal_big.max, df["range"].max())
-        #
-        # # save classify
-        # classify[Size.GREATEST_SMALL] = greatest_small
-        # classify[Size.ANOMAL_SMALL] = anomal_small
-        # classify[Size.EXTRA_SMALL] = extra_small
-        # classify[Size.VERY_SMALL] = very_small
-        # classify[Size.SMALLEST] = smallest
-        # classify[Size.SMALLER] = smaller
-        # classify[Size.SMALL] = small
-        # classify[Size.NORMAL] = normal
-        # classify[Size.BIG] = big
-        # classify[Size.BIGGER] = bigger
-        # classify[Size.BIGGEST] = biggest
-        # classify[Size.VERY_BIG] = very_big
-        # classify[Size.EXTRA_BIG] = extra_big
-        # classify[Size.ANOMAL_BIG] = anomal_big
-        # classify[Size.GREATEST_BIG] = greatest_big
-        #
-        # return classify
-
-    # }}}
-    @classmethod  # __saveAnalyticData  # {{{
-    async def __saveAnalyticData(cls, chart, element, classify):
-        asset = chart.instrument
-        tf = chart.timeframe
-        analyse_name = f"{tf}-{element}"
-
-        analytic_data = AnalyticData(
-            analytic_name=cls.name,
-            analyse_name=analyse_name,
-            asset=asset,
-            json_str=cls.encoderJson(classify),
-        )
-        await AnalyticData.save(analytic_data)
-
-    # }}}
-    @classmethod  # __identifySize  #{{{
-    def __identifySize(cls, value, sizes_dict):
-        # смотрим диапазоны, если value в нем, возвращаем этот размер
-        for size, range_ in sizes_dict.items():
-            if value in range_:
-                return size
-
-        # если значение < чем существующий GREATEST_SMALL ->  BLACKSWAN_SMALL
-        range_ = sizes_dict[Size.GREATEST_SMALL]
-        if value < range_.min:
-            return Size.BLACKSWAN_SMALL
-
-        # если значение > чем существующий GREATEST_BIG ->  BLACKSWAN_BIG
-        range_ = sizes_dict[Size.GREATEST_BIG]
-        if value > range_.max:
-            return Size.BLACKSWAN_BIG
-
-    # }}}
-
-    @staticmethod  # encoderJson  # {{{
-    def encoderJson(data) -> str:
-        logger.debug("UAnalytic=range: encoderJson")
-
-        # from data = {Size.NORMAL: <class Range>, ...}
-        # to obj = {"NORMAL": "Range(1.1, 1.5), ..."}
-        obj = dict()
-        for size, range_ in data.items():
-            obj[size.name] = repr(range_)
-
-        # from obj = {"NORMAL": "Range(1.1, 1.5)", ...}
-        # to str = '{"NORMAL": "Range(1.1, 1.5)", ...}'
-        json_string = Cmd.toJson(obj)
-
-        return json_string
-
-    # }}}
-    @staticmethod  # decoderJson  # {{{
-    def decoderJson(pg_json_str) -> dict:
-        logger.debug("UAnalytic=range: decoderJson")
-
-        # from str = '{"NORMAL": "Range(1.1, 1.5)", ...}'
-        # to obj = {"NORMAL": "Range(1.1, 1.5)", ...}
-        obj = Cmd.fromJson(pg_json_str)
-
-        # from obj = {"NORMAL": "Range(1.1, 1.5)", ...}
-        # to sizes_dict = {Size.NORMAL: <class Range>, ...}
-        sizes_dict = dict()
-        for size_str, range_repr in obj.items():
-            size = Size.fromStr(size_str)
-            r = eval(range_repr)
-            sizes_dict[size] = r
-
-        return sizes_dict
+        return ranges_list
 
     # }}}
 
 
-#     def printSortedAverageRanges():  # {{{
-#         ALL = Cmd.loadJSON("/home/alex/AVIN/research/range.json")
-#         AVG = dict()
-#         for ticker in ALL:
-#             ranges = ALL[ticker]
-#             avg = dict()
-#             for type_ in ranges:
-#                 avg[type_] = ranges[type_]["avg"]
-#             AVG[ticker] = avg
-#         df = pd.DataFrame(AVG)
-#         data = pd.DataFrame()
-#         data["range"] = df.loc["range"]
-#         data["body"] = df.loc["body"]
-#         data["upper_shadow"] = df.loc["upper_shadow"]
-#         data["lower_shadow"] = df.loc["lower_shadow"]
-#         data = data.sort_values("lower_shadow")
-#         print()
-#         print("Average values sorted by 'lower_shadow':")
-#         print("-------------------------------------------")
-#         print(data)
-#         print()
-#
-#
-# # }}}
+async def main():  # {{{
+    await BarAnalytic.analyseAll()
+    return
+
+    asset = await Asset.fromStr("MOEX SHARE AFKS")
+    tf = TimeFrame("D")
+    analyse = BarAnalytic.Analyse.SIZE
+
+    # await BarAnalytic.analyse(asset, tf, analyse)
+
+    # df = BarAnalytic.load(asset, tf, analyse)
+    # print(df)
+
+    # sizes = BarAnalytic.getSizes(asset, tf, Range.Type.FULL)
+    # print(sizes)
+
+    # chart = await asset.loadChart(tf)
+    # bar = chart.last
+    # size = BarAnalytic.size(bar.full)
+    # print(size)
+
+
+# }}}
 
 
 if __name__ == "__main__":
-    assert False, "ну это ничайно второй раз запустил, чтобы не затерло БД..."
-    exit(100500)
     configureLogger(debug=True, info=True)
-    asyncio.run(BarAnalytic.update())
+    asyncio.run(main())

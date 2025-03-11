@@ -11,7 +11,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Optional, Union
 
-import pandas as pd
+import polars as pl
 
 from avin.core.chart import Chart
 from avin.core.event import BarEvent, Event, TicEvent
@@ -121,7 +121,7 @@ class Asset(Instrument, ABC):  # {{{
         timeframe: Union[TimeFrame, str],
         begin: DateTime,
         end: DateTime,
-    ) -> pd.DataFrame:
+    ) -> pl.DataFrame:
         logger.debug(f"{self.__class__.__name__}.loadData()")
 
         # check and convert args
@@ -137,7 +137,7 @@ class Asset(Instrument, ABC):  # {{{
         records = await Data.request(self, data_type, begin, end)
 
         # create & return DataFrame
-        df = pd.DataFrame([dict(r) for r in records])
+        df = pl.DataFrame([dict(r) for r in records])
         return df
 
     # }}}

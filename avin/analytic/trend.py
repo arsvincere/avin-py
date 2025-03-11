@@ -22,7 +22,7 @@ from avin.utils import configureLogger, logger, now
 __all__ = ("TrendAnalytic",)
 
 
-class TrendAnalytic(Analytic):  # {{{
+class TrendAnalytic(Analytic):
     name = "Trend"
 
     class Analyse(enum.Enum):  # {{{
@@ -38,48 +38,6 @@ class TrendAnalytic(Analytic):  # {{{
         DELTA = 2
         SPEED = 3
         VOLUME = 4
-
-    # }}}
-
-    @classmethod  # load  # {{{
-    def load(
-        cls,
-        asset: Asset,
-        tf: TimeFrame,
-        term: Term,
-        analyse: TrendAnalytic.Analyse,
-    ) -> pd.DataFrame | None:
-        name = f"{cls.name} {tf} {term} {analyse}"
-        df = super().load(asset, name)
-        return df
-
-    # }}}
-    @classmethod  # analyse  #  {{{
-    async def analyse(cls, asset: Asset, tf: TimeFrame, term: Term):
-        logger.info(f":: {cls.name} analyse {asset.ticker}-{tf} {term}")
-
-        await cls.__collectTrends(asset, tf, term)
-        cls.__defineTrendSizes(asset, tf, term)
-        cls.__identifyTrendSizes(asset, tf, term)
-
-    # }}}
-    @classmethod  # updateAll  #  {{{
-    async def updateAll(cls):
-        logger.info(f":: {cls.name} update all")
-
-        assets = await Asset.requestAll()
-        timeframes = [
-            TimeFrame("W"),
-            TimeFrame("D"),
-            TimeFrame("1H"),
-            TimeFrame("5M"),
-            TimeFrame("1M"),
-        ]
-
-        for asset in assets:
-            for tf in timeframes:
-                for term in Term:
-                    await TrendAnalytic.analyse(asset, tf, term)
 
     # }}}
 
@@ -108,6 +66,72 @@ class TrendAnalytic(Analytic):  # {{{
 
     # }}}
 
+    @classmethod  # analyse  #  {{{
+    async def analyse(cls, asset: Asset, tf: TimeFrame, term: Term) -> None:
+        logger.info(f":: {cls.name} analyse {asset.ticker}-{tf} {term}")
+
+        await cls.__collectTrends(asset, tf, term)
+        cls.__defineTrendSizes(asset, tf, term)
+        cls.__identifyTrendSizes(asset, tf, term)
+
+    # }}}
+    @classmethod  # analyseAll  #  {{{
+    async def analyseAll(cls) -> None:
+        logger.info(f":: Analytic-{cls.name} analyse all")
+
+        assets = await Asset.requestAll()
+        timeframes = [
+            TimeFrame("W"),
+            TimeFrame("D"),
+            TimeFrame("1H"),
+            TimeFrame("5M"),
+            TimeFrame("1M"),
+        ]
+
+        for asset in assets:
+            for tf in timeframes:
+                for term in Term:
+                    await TrendAnalytic.analyse(asset, tf, term)
+
+    # }}}
+    @classmethod  # load  # {{{
+    def load(
+        cls,
+        asset: Asset,
+        tf: TimeFrame,
+        term: Term,
+        analyse: TrendAnalytic.Analyse,
+    ) -> pd.DataFrame | None:
+        logger.debug(f"{cls.__name__}.load()")
+
+        name = f"{cls.name} {tf} {term} {analyse}"
+        df = super().load(asset, name)
+
+        return df
+
+    # }}}
+
+    @classmethod  # __loadChart  # {{{
+    async def __loadChart(cls, asset, tf):
+        match str(tf):
+            case "1M":
+                begin = now() - ONE_YEAR * 1
+            case "5M":
+                begin = now() - ONE_YEAR * 5
+            case "1H":
+                info = await Data.info(asset, tf.toDataType())
+                begin = info.first_dt
+            case "D":
+                info = await Data.info(asset, tf.toDataType())
+                begin = info.first_dt
+            case "W":
+                info = await Data.info(asset, tf.toDataType())
+                begin = info.first_dt
+
+        chart = await asset.loadChart(tf, begin, end=now())
+        return chart
+
+    # }}}
     @classmethod  # __collectTrends  # {{{
     async def __collectTrends(
         cls,
@@ -128,27 +152,6 @@ class TrendAnalytic(Analytic):  # {{{
             analyse_name=name,
             data_frame=df,
         )
-
-    # }}}
-    @classmethod  # __loadChart  # {{{
-    async def __loadChart(cls, asset, tf):
-        match str(tf):
-            case "1M":
-                begin = now() - ONE_YEAR * 1
-            case "5M":
-                begin = now() - ONE_YEAR * 5
-            case "1H":
-                info = await Data.info(asset, tf.toDataType())
-                begin = info.first_dt
-            case "D":
-                info = await Data.info(asset, tf.toDataType())
-                begin = info.first_dt
-            case "W":
-                info = await Data.info(asset, tf.toDataType())
-                begin = info.first_dt
-
-        chart = await asset.loadChart(tf, begin, end=now())
-        return chart
 
     # }}}
     @classmethod  # __createDataFrame  # {{{
@@ -278,11 +281,8 @@ class TrendAnalytic(Analytic):  # {{{
     # }}}
 
 
-# }}}
-
-
 async def main():  # {{{
-    await TrendAnalytic.updateAll()
+    await TrendAnalytic.analyseAll()
     return
 
     asset = await Asset.fromStr("MOEX SHARE AFKS")
