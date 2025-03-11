@@ -7,6 +7,7 @@
 # ============================================================================
 
 from avin.extra.elist import ExtremumList
+from avin.extra.extremum import Extremum
 from avin.extra.move import Move
 from avin.extra.size import SimpleSize, Size
 from avin.extra.term import Term
@@ -15,6 +16,7 @@ from avin.extra.vawe import Vawe
 
 __all__ = (
     "ExtremumList",
+    "Extremum",
     "Move",
     "SimpleSize",
     "Size",

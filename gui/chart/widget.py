@@ -8,12 +8,12 @@
 
 import sys
 
+import polars as pl
 import tinkoff.invest as ti
 from PyQt6 import QtCore, QtWidgets
 
 from avin import (
     Asset,
-    Bar,
     BarEvent,
     Chart,
     DateTime,
@@ -184,15 +184,16 @@ class ChartWidget(QtWidgets.QWidget):
 
     # }}}
 
-    def __getNewBarsFromBroker(self, bars: list[Bar]) -> list[Bar]:  # {{{
+    def __getNewBarsFromBroker(  # {{{
+        self, bars: pl.DataFrame
+    ) -> pl.DataFrame:
         assert len(bars) != 0
 
-        last_dt = bars[-1].dt
+        last_dt = bars.item(-1, "dt")
         timeframe = self.__timeframe_1
         begin = last_dt + timeframe
         end = now()
 
-        new_bars = list()
         try:
             candles = self.__client.get_all_candles(
                 figi=self.__asset.figi,
@@ -203,12 +204,13 @@ class ChartWidget(QtWidgets.QWidget):
             for candle in candles:
                 if candle.is_complete:
                     bar = Tinkoff.ti_to_av(candle)
-                    new_bars.append(bar)
+                    bars.extend(bar.to_df())
+            bars.rechunk()
 
         except ti.exceptions.AioRequestError as err:
             logger.exception(err)
 
-        return bars + new_bars
+        return bars
 
     # }}}
     def __tryUnsubscribe(self):  # {{{

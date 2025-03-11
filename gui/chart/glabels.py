@@ -97,7 +97,7 @@ class VolumeInfo(QtWidgets.QWidget):  # {{{
         if gbar is None:
             return
 
-        vol = gbar.bar.vol
+        vol = gbar.bar.volume
         if vol > 1_000_000:
             m_vol = vol / 1_000_000
             value = f"{m_vol:.2f}m"

@@ -102,7 +102,7 @@ class _HistGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
     # }}}
 
     def __getTics(self) -> None:  # {{{
-        asset = self.gchart.chart.instrument
+        asset = self.gchart.chart.asset
         self.hist = asset.tics.hist(self.gchart.chart.timeframe)
 
     # }}}
@@ -182,7 +182,7 @@ class _HistGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
     #     last_date = self.gchart.chart.now.dt.date()
     #     file_name = f"{last_date} tic.parquet"
     #     file_path = Cmd.path(
-    #         self.gchart.chart.instrument.path,
+    #         self.gchart.chart.asset.path,
     #         DataType.TIC.name,
     #         file_name,
     #     )
@@ -192,7 +192,7 @@ class _HistGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
     #         return
     #
     #     df = pd.read_parquet(file_path)
-    #     tics = Tics(self.gchart.chart.instrument, df)
+    #     tics = Tics(self.gchart.chart.asset, df)
     #     tf = self.gchart.chart.timeframe
     #     self.hist = tics.hist(tf)
     #

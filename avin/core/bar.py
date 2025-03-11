@@ -11,6 +11,8 @@ from __future__ import annotations
 import enum
 from typing import Optional, TypeVar
 
+import polars as pl
+
 from avin.config import Usr
 from avin.core.range import Range
 from avin.utils import DateTime
@@ -176,6 +178,11 @@ class Bar:
 
     # }}}
 
+    def to_df(self):  # {{{
+        return pl.DataFrame(self.__data)
+
+    # }}}
+
     @classmethod  # new  # {{{
     def new(
         cls,
@@ -193,7 +200,7 @@ class Bar:
             "high": high,
             "low": low,
             "close": close,
-            "vol": vol,
+            "volume": vol,
         }
         bar = cls(dct, chart)
         return bar

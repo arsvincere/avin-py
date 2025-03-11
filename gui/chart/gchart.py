@@ -507,8 +507,8 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
     # }}}
 
     def __connect(self) -> None:  # {{{
-        self.chart.upd_realtime_bar.connect(self.__onRealTimeBar)
-        self.chart.new_historical_bar.connect(self.__onHistoricalBar)
+        self.chart.upd_bar.connect(self.__onRealTimeBar)
+        self.chart.new_bar.connect(self.__onHistoricalBar)
 
     # }}}
     def __createSceneRect(self):  # {{{

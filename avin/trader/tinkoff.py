@@ -1567,7 +1567,7 @@ class Tinkoff(Broker):
         vol = candle.volume
         dt = candle.time
 
-        bar = Bar(dt, open, high, low, close, vol)
+        bar = Bar.new(dt, open, high, low, close, vol)
         return bar
 
     # }}}

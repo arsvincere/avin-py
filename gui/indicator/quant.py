@@ -102,7 +102,7 @@ class _QuantGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
     # }}}
 
     def __getTics(self) -> None:  # {{{
-        asset = self.gchart.chart.instrument
+        asset = self.gchart.chart.asset
         # TODO: пока строю только дневной квант
         self.quant = asset.tics.quant(TimeFrame("D"))
 
@@ -149,7 +149,7 @@ class _QuantGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
     def __createQuantLevel(self, quant_level: pd.Series) -> None:  # {{{
         # alias
         gchart = self.gchart
-        min_price_step = gchart.chart.instrument.min_price_step
+        min_price_step = gchart.chart.asset.min_price_step
         price = quant_level["price"]
         buy = quant_level["buy"]
         sell = quant_level["sell"]
@@ -192,7 +192,7 @@ class _QuantGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
         last_date = self.gchart.chart.now.dt.date()
         file_name = f"{last_date} tic.parquet"
         file_path = Cmd.path(
-            self.gchart.chart.instrument.path,
+            self.gchart.chart.asset.path,
             DataType.TIC.name,
             file_name,
         )
@@ -203,7 +203,7 @@ class _QuantGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
             return
 
         df = pd.read_parquet(file_path)
-        self.tics = Tics(self.gchart.chart.instrument, df)
+        self.tics = Tics(self.gchart.chart.asset, df)
 
         # XXX: пока только один квант - дневной
         # tf = self.gchart.chart.timeframe

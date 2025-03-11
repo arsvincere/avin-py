@@ -11,10 +11,11 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime
 
+import polars as pl
 from PyQt6 import QtCore
 
 from avin.analytic import VolumeAnalytic
-from avin.core import Bar, Chart, TimeFrame
+from avin.core import Chart, TimeFrame
 from avin.data import Data, Instrument
 from avin.utils import logger
 from gui.custom import awaitQThread
@@ -24,7 +25,7 @@ class Thread:  # {{{
     """Fasade class"""
 
     @classmethod  # loadBars  # {{{
-    def loadBars(cls, instrument, timeframe, begin, end) -> list[Bar]:
+    def loadBars(cls, instrument, timeframe, begin, end) -> pl.DataFrame:
         logger.debug(f"{cls.__name__}.loadChart()")
 
         thread = _TLoadBars(instrument, timeframe, begin, end)
@@ -114,11 +115,7 @@ class _TLoadBars(QtCore.QThread):  # {{{
             begin=self.__begin,
             end=self.__end,
         )
-
-        self.result = list()
-        for r in records:
-            bar = Bar.fromRecord(r)
-            self.result.append(bar)
+        self.result = pl.DataFrame([dict(r) for r in records])
 
     # }}}
 

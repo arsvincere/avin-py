@@ -27,6 +27,7 @@ class Event(ABC):  # {{{
         TRANSACTION = 3
 
     # }}}
+
     @abstractmethod
     def __init__(self): ...
 
