@@ -19,6 +19,7 @@ from avin.config import *
 from avin.const import *
 from avin.core import *
 from avin.data import *
+from avin.extra import *
 from avin.keeper import *
 from avin.tester import *
 from avin.trader import *

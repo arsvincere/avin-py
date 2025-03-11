@@ -14,9 +14,9 @@ import enum
 import pandas as pd
 
 from avin.analytic._analytic import Analytic
-from avin.analytic.size import Size
 from avin.core import Asset, TimeFrame
 from avin.data import Data
+from avin.extra.size import Size
 from avin.utils import configureLogger, logger, now
 
 __all__ = ("TrendAnalytic",)

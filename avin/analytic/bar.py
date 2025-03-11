@@ -12,8 +12,8 @@ import collections
 import pandas as pd
 
 from avin.analytic._analytic import Analytic
-from avin.analytic.size import Size
 from avin.core import Asset, Range, TimeFrame
+from avin.extra.size import Size
 from avin.utils import Tree
 
 __all__ = ("BarAnalytic",)

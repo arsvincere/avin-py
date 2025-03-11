@@ -13,9 +13,9 @@ from abc import ABC
 
 import pandas as pd
 
-from avin.analytic.size import Size
 from avin.config import Usr
 from avin.core.asset import Asset
+from avin.extra.size import Size
 from avin.utils import Cmd, logger
 
 

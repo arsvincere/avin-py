@@ -8,13 +8,13 @@
 
 from __future__ import annotations
 
-from avin.core._extremum import Extremum
 from avin.core.bar import Bar
 from avin.core.chart import Chart
-from avin.core.move import Move
-from avin.core.term import Term
-from avin.core.trend import Trend
-from avin.core.vawe import Vawe
+from avin.extra.extremum import Extremum
+from avin.extra.move import Move
+from avin.extra.term import Term
+from avin.extra.trend import Trend
+from avin.extra.vawe import Vawe
 
 
 class ExtremumList:

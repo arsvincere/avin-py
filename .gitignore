@@ -3,10 +3,13 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .venv/
-build/
+dev/
 log/
 tmp/
-usr/
+usr/.mypy_cache
+usr/cache/*
+usr/connect/*
+usr/data/*
 0.py
 1.py
 2.py

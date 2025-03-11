@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import asyncio
 
-from avin.core._extremum import Extremum
-from avin.core.trend import Trend
+from avin.extra.extremum import Extremum
+from avin.extra.trend import Trend
 from avin.utils import logger
 
 
