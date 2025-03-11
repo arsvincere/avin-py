@@ -14,8 +14,8 @@ import pandas as pd
 # import plotly
 # import plotly.graph_objs as go
 from avin.analytic._analytic import Analytic
-from avin.analytic.size import Size
 from avin.core import Asset, Bar, TimeFrame
+from avin.extra.size import Size
 from avin.utils import Tree, logger
 
 __all__ = ("VolumeAnalytic",)
