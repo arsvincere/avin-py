@@ -33,20 +33,8 @@ class Bar:
     # }}}
 
     def __init__(self, data: dict, chart=None):  # {{{
-        # def __init__(
-        #     self,
-        #     dt: DateTime,
-        #     open: float,
-        #     high: float,
-        #     low: float,
-        #     close: float,
-        #     vol: int,
-        #     chart: Optional[Chart] = None,
-        # ):
-        # _Bar.__init__(self, dt, open, high, low, close, vol)
         self.__data = data
         self.__chart = chart
-        # self.__analyse()
 
     # }}}
     def __str__(self):  # {{{
@@ -152,12 +140,10 @@ class Bar:
 
     # }}}
     def isBull(self) -> bool:  # {{{
-        # return self.__flags & Bar.Type.BULL == Bar.Type.BULL
         return self.open < self.close
 
     # }}}
     def isBear(self) -> bool:  # {{{
-        # return self.__flags & Bar.Type.BEAR == Bar.Type.BEAR
         return self.open > self.close
 
     # }}}
@@ -208,27 +194,8 @@ class Bar:
     # }}}
     @classmethod  # fromRecord  # {{{
     def fromRecord(cls, record: asyncpg.Record, chart=None):
-        # bar = cls(
-        #     record["dt"],
-        #     record["open"],
-        #     record["high"],
-        #     record["low"],
-        #     record["close"],
-        #     record["volume"],
-        #     chart,
-        # )
         bar = cls(dict(record), chart)
         return bar
-
-    # }}}
-
-    # def __analyse(self):  # {{{
-    #     if self.close - self.open > 0.0:
-    #         self.__flags = Bar.Type.BULL
-    #     elif self.close - self.open < 0.0:
-    #         self.__flags = Bar.Type.BEAR
-    #     else:
-    #         self.__flags = Bar.Type.UNDEFINE
 
     # }}}
 
