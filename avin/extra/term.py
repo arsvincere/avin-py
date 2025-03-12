@@ -12,12 +12,14 @@ import enum
 
 
 class Term(enum.Enum):  # {{{
-    STERM = 1
-    MTERM = 2
-    LTERM = 3
+    T1 = 1
+    T2 = 2
+    T3 = 3
+    T4 = 4
+    T5 = 5
 
     def __str__(self):
-        return self.name[0:2]
+        return self.name
 
 
 # }}}

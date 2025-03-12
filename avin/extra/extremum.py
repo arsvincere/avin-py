@@ -12,37 +12,34 @@ import enum
 
 from avin.config import Usr
 from avin.core.bar import Bar
+from avin.extra.term import Term
 
 
-class Extremum:  # {{{
-    class Type(enum.Flag):  # {{{
-        UNDEFINE = 0b00000000
-        MIN = 0b00000010
-        MAX = 0b00000100
-        SHORTTERM = 0b00001000
-        MIDTERM = 0b00011000
-        LONGTERM = 0b00111000
+class Extremum:
+    class Type(enum.Enum):  # {{{
+        MIN = 0
+        MAX = 1
 
     # }}}
-    def __init__(self, TYPE, bar: Bar):  # {{{
+    def __init__(self, typ: Extremum.Type, term: Term, bar: Bar):  # {{{
         self.__bar = bar  # сохраняем исходный бар
         self.__bar.addFlag(Bar.Type.EXTREMUM)  # вешаем бару флаг экстремум
-        self.__flags = TYPE  # сохраняем флаги определяющие тип
+        self.__term = term
+        self.__type = typ
 
         # определяем и сохраняем цену в зависимости от типа (MIN/MAX)
-        if self.__flags & Extremum.Type.MAX:
+        if typ == Extremum.Type.MAX:
             self.__price = bar.high
-        elif self.__flags & Extremum.Type.MIN:
+        elif typ == Extremum.Type.MIN:
             self.__price = bar.low
 
     # }}}
     def __str__(self):  # {{{
         dt = Usr.localTime(self.__bar.dt)
-        ticker = self.__bar.chart.instrument.ticker
+        ticker = self.__bar.chart.asset.ticker
         s = f"{ticker} {dt} {self.price}"
         s += " MAX" if self.isMax() else " MIN"
-        s += " MIDTERM" if self.isMidterm() else ""
-        s += " LONGTERM" if self.isLongterm() else ""
+        s += f"{self.__term}"
         return s
 
     # }}}
@@ -50,7 +47,6 @@ class Extremum:  # {{{
         assert isinstance(other, Extremum)
 
         # TODO: а с float ведь тоже можно делать сравнения...
-
         return self.__price < other.__price
 
     # }}}
@@ -97,56 +93,46 @@ class Extremum:  # {{{
     # }}}
     @property  # type  # {{{
     def type(self):
-        if self.isLongterm():
-            return Extremum.Type.LONGTERM
-        elif self.isMidterm():
-            return Extremum.Type.MIDTERM
-        elif self.isShortterm():
-            return Extremum.Type.SHORTTERM
-        else:
-            assert False, "WTF???"
+        self.__type
+
+    # }}}
+    @property  # term  # {{{
+    def type(self):
+        self.__term
 
     # }}}
     @property  # asset   # {{{
     def asset(self) -> Asset:
-        return self.__bar.chart.instrument
+        return self.__bar.chart.asset
 
     # }}}
 
-    def addFlag(self, flag: Extremum.Type) -> None:  # {{{
-        assert isinstance(flag, Extremum.Type)
-        self.__flags |= flag
-
-    # }}}
-    def delFlag(self, flag: Extremum.Type) -> None:  # {{{
-        assert isinstance(flag, Extremum.Type)
-        self.__flags &= ~flag
-
-    # }}}
     def isMin(self) -> bool:  # {{{
-        return self.__flags & Extremum.Type.MIN == Extremum.Type.MIN
+        return self.__type == Extremum.Type.MIN
 
     # }}}
     def isMax(self) -> bool:  # {{{
-        return self.__flags & Extremum.Type.MAX == Extremum.Type.MAX
+        return self.__type == Extremum.Type.MAX
 
     # }}}
-    def isShortterm(self) -> bool:  # {{{
-        r = self.__flags & Extremum.Type.SHORTTERM == Extremum.Type.SHORTTERM
-        return r
+    def isT1(self) -> bool:  # {{{
+        return self.__term == Term.T1
 
     # }}}
-    def isMidterm(self) -> bool:  # {{{
-        return self.__flags & Extremum.Type.MIDTERM == Extremum.Type.MIDTERM
+    def isT2(self) -> bool:  # {{{
+        return self.__term == Term.T2
 
     # }}}
-    def isLongterm(self) -> bool:  # {{{
-        return self.__flags & Extremum.Type.LONGTERM == Extremum.Type.LONGTERM
+    def isT3(self) -> bool:  # {{{
+        return self.__term == Term.T3
 
     # }}}
 
     @classmethod  # period  # {{{
     def period(cls, e1: Extremum, e2: Extremum) -> int:
+        assert False, "TODO_ME"
+        ### old code
+
         assert e1.dt < e2.dt
 
         chart = e1.bar.chart
@@ -159,6 +145,8 @@ class Extremum:  # {{{
     # }}}
     @classmethod  # deltaPrice  # {{{
     def deltaPrice(cls, e1: Extremum, e2: Extremum) -> float:
+        assert False, "TODO_ME"
+        ### old code
         assert e1.dt < e2.dt
 
         delta = abs(e2.price - e1.price)
@@ -168,6 +156,8 @@ class Extremum:  # {{{
     # }}}
     @classmethod  # deltaPercent  # {{{
     def deltaPercent(cls, e1: Extremum, e2: Extremum) -> float:
+        assert False, "TODO_ME"
+        ### old code
         assert e1.dt < e2.dt
 
         delta = abs(e2.price - e1.price)
@@ -178,6 +168,8 @@ class Extremum:  # {{{
     # }}}
     @classmethod  # speedPrice  # {{{
     def speedPrice(cls, e1: Extremum, e2: Extremum) -> float:
+        assert False, "TODO_ME"
+        ### old code
         assert e1.dt < e2.dt
 
         delta = abs(e2.price - e1.price)
@@ -189,6 +181,8 @@ class Extremum:  # {{{
     # }}}
     @classmethod  # speedPercent  # {{{
     def speedPercent(cls, e1: Extremum, e2: Extremum) -> float:
+        assert False, "TODO_ME"
+        ### old code
         assert e1.dt < e2.dt
 
         delta = abs(e2.price - e1.price)
@@ -201,6 +195,8 @@ class Extremum:  # {{{
     # }}}
     @classmethod  # volume  # {{{
     def volume(cls, e1: Extremum, e2: Extremum) -> int:
+        assert False, "TODO_ME"
+        ### old code
         assert e1.dt < e2.dt
 
         chart = e1.bar.chart
@@ -218,9 +214,6 @@ class Extremum:  # {{{
         return all_volume
 
     # }}}
-
-
-# }}}
 
 
 if __name__ == "__main__":
