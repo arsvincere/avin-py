@@ -24,7 +24,7 @@ __all__ = ("BarAnalytic",)
 
 
 class BarAnalytic(Analytic):
-    name = "Bar"
+    name = "bar"
     cache = Tree()
 
     class Analyse(enum.Enum):  # {{{
@@ -61,23 +61,10 @@ class BarAnalytic(Analytic):
         element = r.type
         sizes = cls.getSizes(asset, tf, element)
 
-        # try find size
         value = r.percent()
-        result = sizes.filter(
-            (value >= pl.col("begin")),
-            (value < pl.col("end")),
-        )
+        size = super()._identifySize(value, sizes)
 
-        # ok - return size
-        if len(result) == 1:
-            size = Size.fromStr(result.item(0, "size"))
-            return size
-
-        # else - BLACKSWAN
-        if value < sizes.item(0, "begin"):
-            return Size.BLACKSWAN_SMALL
-        if value > sizes.item(-1, "begin"):
-            return Size.BLACKSWAN_BIG
+        return size
 
     # }}}
 
@@ -162,12 +149,15 @@ class BarAnalytic(Analytic):
             )
             return
 
+        body = cls.__collectBody(chart)
+        ####
+
         # collect elements
         logger.info("   collect elements")
-        body = cls.__collectBarElement(chart, Range.Type.BODY)
-        full = cls.__collectBarElement(chart, Range.Type.FULL)
-        uppr = cls.__collectBarElement(chart, Range.Type.UPPER)
-        lowr = cls.__collectBarElement(chart, Range.Type.LOWER)
+        body = cls.__collectBody(chart)
+        full = cls.__collectFull(chart)
+        uppr = cls.__collectUpper(chart)
+        lowr = cls.__collectLower(chart)
 
         # classify
         logger.info("   classify sizes")
@@ -177,8 +167,8 @@ class BarAnalytic(Analytic):
         lowr_sizes = super()._classifySizes(lowr)
 
         # insert column with element name
-        b = pl.Series("element", ["body"] * len(body_sizes))
         f = pl.Series("element", ["full"] * len(full_sizes))
+        b = pl.Series("element", ["body"] * len(body_sizes))
         u = pl.Series("element", ["upper"] * len(uppr_sizes))
         l = pl.Series("element", ["lower"] * len(lowr_sizes))
         body_sizes.insert_column(0, b)
@@ -195,8 +185,8 @@ class BarAnalytic(Analytic):
                 ("end", pl.Float64),
             ]
         )
-        sizes.extend(body_sizes)
         sizes.extend(full_sizes)
+        sizes.extend(body_sizes)
         sizes.extend(uppr_sizes)
         sizes.extend(lowr_sizes)
 
@@ -206,17 +196,117 @@ class BarAnalytic(Analytic):
         super().save(chart.asset, name, sizes)
 
     # }}}
-    @classmethod  # __collectBarElement  # {{{
-    def __collectBarElement(cls, chart, element: Range.Type):
-        ranges_list = list()
-        for bar in chart:
-            # command looks like:  bar.body.percent()
-            command = f"bar.{element.name.lower()}.percent()"
-            value = eval(command)
-            value = round(value, 2)
-            ranges_list.append(value)
+    # @classmethod  # __collectBarElement  # {{{
+    # def __collectBarElement(cls, chart, element: Range.Type):
+    #     ranges_list = list()
+    #     for bar in chart:
+    #         # command looks like:  bar.body.percent()
+    #         command = f"bar.{element.name.lower()}.percent()"
+    #         value = eval(command)
+    #         value = round(value, 2)
+    #         ranges_list.append(value)
+    #
+    #     return ranges_list
+    #
+    # # }}}
+    @classmethod  # __collectFull  # {{{
+    def __collectFull(cls, chart: Chart) -> pl.Series:
+        logger.info("   - collect full")
 
-        return ranges_list
+        df = chart.data_frame
+        df = df.with_columns((pl.col("high") - pl.col("low")).alias("delta"))
+
+        # bull bars
+        df = df.with_columns(
+            (pl.col("delta") / pl.col("high") * 100).alias("percent")
+        )
+
+        total = df["percent"]
+        return total
+
+    # }}}
+    @classmethod  # __collectBody  # {{{
+    def __collectBody(cls, chart: Chart) -> pl.Series:
+        logger.info("   - collect body")
+
+        df = chart.data_frame
+        df = df.with_columns(
+            (pl.col("open") - pl.col("close")).alias("delta")
+        )
+
+        # bull bars
+        bull = df.filter(pl.col("delta") > 0).with_columns(
+            (pl.col("delta") / pl.col("close") * 100).alias("percent")
+        )
+        # bear bars
+        bear = df.filter(pl.col("delta") < 0).with_columns(
+            (-pl.col("delta") / pl.col("open") * 100).alias("percent")
+        )
+
+        total = bull["percent"].extend(bear["percent"])
+        return total
+
+    # }}}
+    @classmethod  # __collectUpper  # {{{
+    def __collectUpper(cls, chart: Chart) -> pl.Series:
+        logger.info("   - collect upper")
+
+        df = chart.data_frame
+        df = df.with_columns(
+            (pl.col("open") - pl.col("close")).alias("delta")
+        )
+
+        # bull bars
+        bull = df.filter(pl.col("delta") > 0)
+        bull = bull.with_columns(
+            (pl.col("high") - pl.col("close")).alias("upper")
+        )
+        bull = bull.with_columns(
+            (pl.col("upper") / pl.col("high") * 100).alias("percent")
+        )
+
+        # bear bars
+        bear = df.filter(pl.col("delta") < 0)
+        bear = bear.with_columns(
+            (pl.col("high") - pl.col("open")).alias("upper")
+        )
+        bear = bear.with_columns(
+            (pl.col("upper") / pl.col("high") * 100).alias("percent")
+        )
+
+        total = bull["percent"].extend(bear["percent"])
+        return total
+
+    # }}}
+    @classmethod  # __collectLower  # {{{
+    def __collectLower(cls, chart: Chart) -> pl.Series:
+        logger.info("   - collect lower")
+
+        df = chart.data_frame
+        df = df.with_columns(
+            (pl.col("open") - pl.col("close")).alias("delta")
+        )
+
+        # bull bars
+        bull = df.filter(pl.col("delta") > 0)
+        bull = bull.with_columns(
+            (pl.col("open") - pl.col("low")).alias("lower")
+        )
+        bull = bull.with_columns(
+            (pl.col("lower") / pl.col("open") * 100).alias("percent")
+        )
+
+        # bear bars
+        bear = df.filter(pl.col("delta") < 0)
+        bear = bear.with_columns(
+            (pl.col("close") - pl.col("low")).alias("lower")
+        )
+        bear = bear.with_columns(
+            (pl.col("lower") / pl.col("close") * 100).alias("percent")
+        )
+
+        total = bull["percent"].extend(bear["percent"])
+        return total
 
     # }}}
 
@@ -225,11 +315,11 @@ async def main():  # {{{
     await BarAnalytic.analyseAll()
     return
 
-    asset = await Asset.fromStr("MOEX SHARE AFKS")
-    tf = TimeFrame("D")
+    asset = await Asset.fromStr("MOEX SHARE SBER")
+    tf = TimeFrame("1M")
     analyse = BarAnalytic.Analyse.SIZE
 
-    # await BarAnalytic.analyse(asset, tf, analyse)
+    await BarAnalytic.analyse(asset, tf, analyse)
 
     # df = BarAnalytic.load(asset, tf, analyse)
     # print(df)

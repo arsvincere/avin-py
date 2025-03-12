@@ -6,17 +6,19 @@
 # LICENSE:      GNU GPLv3
 # ============================================================================
 
+from __future__ import annotations
+
 import asyncio
-import collections
+import enum
 
-import pandas as pd
+import polars as pl
 
-# import plotly
-# import plotly.graph_objs as go
 from avin.analytic._analytic import Analytic
-from avin.core import Asset, Bar, TimeFrame
+from avin.const import ONE_YEAR
+from avin.core import Asset, Bar, Chart, TimeFrame
+from avin.data import Data
 from avin.extra.size import Size
-from avin.utils import Tree, logger
+from avin.utils import Tree, configureLogger, logger, now
 
 __all__ = ("VolumeAnalytic",)
 
@@ -25,260 +27,181 @@ class VolumeAnalytic(Analytic):
     name = "volume"
     cache = Tree()
 
-    @classmethod  # getSizes  # {{{
-    async def getSizes(cls, asset: Asset, tf: TimeFrame) -> Size:
-        # try find sizes in cache
-        sizes_dict = cls.cache[asset][tf]
-        if sizes_dict:
-            return sizes_dict
+    class Analyse(enum.Enum):  # {{{
+        SIZE = 1
 
-        # load
-        analyse_name = f"{tf}"
-        data = await AnalyticData.load(cls.name, analyse_name, asset)
-        sizes_dict = cls.decoderJson(data.json_str)
-
-        # save cache
-        cls.cache[asset][tf] = sizes_dict
-
-        return sizes_dict
+        def __str__(self):
+            return self.name.lower()
 
     # }}}
-    @classmethod  # volumeSize  # {{{
-    async def volumeSize(cls, bar: Bar) -> Size:
-        volume = bar.vol
-        chart = bar.chart
-        timeframe = chart.timeframe
-        instrument = chart.instrument
-        asset = Asset.fromInstrument(instrument)
 
-        sizes_dict = cls.getSizes(asset, timeframe)
+    @classmethod  # getSizes  # {{{
+    def getSizes(cls, asset: Asset, tf: TimeFrame) -> pl.DataFrame | None:
+        # # try find sizes in cache
+        # sizes = cls.cache[asset][tf][typ]
+        # if sizes:
+        #     return sizes
 
-        # for example:
-        # sizes_dict = {
-        #     ...,
-        #     Size.SMALL: <class Range>,
-        #     Size.NORMAL: <class Range>,
-        #     Size.BIG: <class Range>,
-        #     ...,
-        #     }
+        # load
+        sizes = cls.load(asset, tf, cls.Analyse.SIZE)
+        return sizes
 
-        size = cls.__identifySize(volume, sizes_dict)
+    # }}}
+    @classmethod  # size  # {{{
+    def size(cls, bar: Bar) -> Size:
+        assert isinstance(bar, Bar)
+
+        # get sizes
+        asset = bar.chart.asset
+        tf = bar.chart.timeframe
+        sizes = cls.getSizes(asset, tf)
+
+        value = bar.volume
+        size = super()._identifySize(value, sizes)
+
         return size
 
     # }}}
     @classmethod  # maxVol  # {{{
-    async def maxVol(cls, asset: Asset, timeframe: TimeFrame) -> int:
-        sizes_dict = await cls.getSizes(asset, timeframe)
+    def maxVol(cls, asset: Asset, tf: TimeFrame) -> int:
+        sizes = cls.getSizes(asset, tf)
+        vol = sizes.item(-1, "end")
 
-        # for example:
-        # sizes_dict = {
-        #     ...,
-        #     Size.SMALL: <class Range(float, float)>,
-        #     Size.NORMAL: <class Range(float, float)>,
-        #     Size.BIG: <class Range(float, float)>,
-        #     ...,
-        #     }
-
-        r = sizes_dict[Size.GREATEST_BIG]
-        max_vol = int(r.max)
-
-        return max_vol
+        return vol
 
     # }}}
     @classmethod  # minVol  # {{{
-    async def minVol(cls, asset: Asset, timeframe: TimeFrame) -> int:
-        sizes_dict = await cls.getSizes(asset, timeframe)
+    def minVol(cls, asset: Asset, tf: TimeFrame) -> int:
+        sizes = cls.getSizes(asset, tf)
+        vol = sizes.item(0, "begin")
 
-        # for example:
-        # sizes_dict = {
-        #     ...,
-        #     Size.SMALL: <class Range(float, float)>,
-        #     Size.NORMAL: <class Range(float, float)>,
-        #     Size.BIG: <class Range(float, float)>,
-        #     ...,
-        #     }
-
-        # BLACKSWAN_SMALL диапазон идет от минимального исторического объема
-        # до крошечных объемов которые встречаются в 1% случаев
-        # Range хранит min-max во float, поэтому преобразуем в int
-        r = sizes_dict[Size.BLACKSWAN_SMALL]
-        min_vol = int(r.min)
-
-        return min_vol
+        return vol
 
     # }}}
 
-    @classmethod  # update  # {{{
-    async def update(cls):
-        logger.info(f":: Analytic={cls.name}: start update")
+    @classmethod  # analyse  #  {{{
+    async def analyse(
+        cls, asset: Asset, tf: TimeFrame, analyse: VolumeAnalytic.Analyse
+    ) -> None:
+        logger.info(f":: {cls.name} analyse {asset.ticker}-{tf}")
 
-        await Analytic.save(cls)
+        chart = await cls.__loadChart(asset, tf)
+        cls.__analyseVolume(chart)
+
+    # }}}
+    @classmethod  # analyseAll  #  {{{
+    async def analyseAll(cls) -> None:
+        logger.info(f":: Analytic-{cls.name} analyse all")
 
         assets = await Asset.requestAll()
-        for asset in assets:
-            await cls.__analyseVolume(asset)
-
-        logger.info(f"Analytic={cls.name}: update complete!")
-
-    # }}}
-
-    @classmethod  # __analyseVolume  # {{{
-    async def __analyseVolume(cls, asset):
         timeframes = [
+            TimeFrame("W"),
             TimeFrame("D"),
             TimeFrame("1H"),
             TimeFrame("5M"),
             TimeFrame("1M"),
         ]
 
-        logger.info(f"   analyse volumes {asset}")
-        for timeframe in timeframes:
-            logger.info(f"   - {timeframe}")
-
-            info = await Data.info(asset, timeframe.toDataType())
-            chart = await asset.loadChart(timeframe, info.first_dt, now())
-
-            await cls.__analyseVolumeTimeFrame(chart)
+        for asset in assets:
+            for tf in timeframes:
+                for a in cls.Analyse:
+                    await cls.analyse(asset, tf, a)
 
     # }}}
-    @classmethod  # __analyseVolumeTimeFrame  # {{{
-    async def __analyseVolumeTimeFrame(cls, chart):
-        volumes_list = list()
-        for bar in chart:
-            v = bar.vol
-            volumes_list.append(v)
+    @classmethod  # load  # {{{
+    def load(
+        cls,
+        asset: Asset,
+        tf: TimeFrame,
+        analyse: VolumeAnalytic.Analyse,
+    ) -> pl.DataFrame | None:
+        logger.debug(f"{cls.__name__}.load()")
 
-        if len(volumes_list) < 200:
+        name = f"{cls.name} {tf} {analyse}"
+        df = super().load(asset, name)
+
+        return df
+
+    # }}}
+
+    @classmethod  # __loadChart  # {{{
+    async def __loadChart(cls, asset: Asset, tf: TimeFrame) -> Chart:
+        logger.info("   loading chart")
+
+        match str(tf):
+            case "1M":
+                begin = now() - ONE_YEAR * 5
+            case "5M":
+                begin = now() - ONE_YEAR * 5
+            case "1H":
+                info = await Data.info(asset, tf.toDataType())
+                begin = info.first_dt
+            case "D":
+                info = await Data.info(asset, tf.toDataType())
+                begin = info.first_dt
+            case "W":
+                info = await Data.info(asset, tf.toDataType())
+                begin = info.first_dt
+            case _:
+                logger.critical(f"Not supported timeframe={tf}")
+                assert False, "TODO_ME"
+
+        chart = await asset.loadChart(tf, begin, end=now())
+        return chart
+
+    # }}}
+    @classmethod  # __analyseVolume  # {{{
+    def __analyseVolume(cls, chart: Chart):
+        # skip if not enought bars
+        min_bars = 200
+        n = len(chart)
+        if n < min_bars:
+            logger.warning(
+                f"Skip {chart} - not enought bars [{n}/{min_bars}]"
+            )
             return
 
-        classify = cls.__classifySizes(volumes_list)
-        await cls.__saveAnalyticData(chart, classify)
+        logger.info("   collect elements")
+        df = chart.data_frame
+        volumes = df["volume"]
 
-    # }}}
-    @classmethod  # __classifySizes  # {{{
-    def __classifySizes(cls, volumes_list: list) -> dict:
-        # create DataFrame
-        classify = dict()
-        days_count = len(volumes_list)
-        counter = collections.Counter(volumes_list)
-        sorted_volumes_list = list()
-        count_list = list()
-        for i in sorted(counter):
-            sorted_volumes_list.append(i)
-            count_list.append(counter[i])
-        df = pd.DataFrame(
-            {
-                "value": sorted_volumes_list,
-                "count": count_list,
-            }
-        )
-        df["percent"] = df["count"] / days_count * 100
+        logger.info("   classify sizes")
+        sizes = super()._classifySizes(volumes)
 
-        ####
-        # df.to_csv("vcp", sep=";")
-        # fig = px.scatter(x=df["value"], y=df["percent"])
-        # fig.show()
-        # exit(0)
-        ####
-
-        # create classify
-        classify = dict()
-        percent = df["percent"]
-        minimum = df.iloc[0]["value"]
-        last = 1
-        for size in Size:
-            if size in (
-                Size.BLACKSWAN_SMALL,  # не существующие еще черные лебеди
-                Size.BLACKSWAN_BIG,  # не существующие еще черные лебеди
-                Size.GREATEST_BIG,  # last value set up after cycle
-            ):
-                continue
-
-            while percent[0:last].sum() < size.value:
-                last += 1
-            maximum = df.iloc[last]["value"]
-            classify[size] = Range(minimum, maximum)
-            minimum = maximum
-
-        # set last value GREATEST_BIG
-        maximum = df["value"].max()
-        classify[Size.GREATEST_BIG] = Range(minimum, maximum)
-
-        return classify
-
-    # }}}
-    @classmethod  # __saveAnalyticData  # {{{
-    async def __saveAnalyticData(cls, chart, classify):
-        asset = chart.instrument
-        tf = chart.timeframe
-        analyse_name = f"{tf}"
-
-        analytic_data = AnalyticData(
-            analytic_name=cls.name,
-            analyse_name=analyse_name,
-            asset=asset,
-            json_str=cls.encoderJson(classify),
-        )
-        await AnalyticData.save(analytic_data)
-
-    # }}}
-    @classmethod  # __identifySize  #{{{
-    def __identifySize(cls, value, sizes_dict):
-        # смотрим диапазоны, если value в нем, возвращаем этот размер
-        for size, range_ in sizes_dict.items():
-            if value in range_:
-                return size
-
-        # если значение < чем существующий черный лебедь ->  BLACKSWAN_SMALL
-        range_ = sizes_dict[Size.BLACKSWAN_SMALL]
-        if value < range_.min:
-            return Size.BLACKSWAN_SMALL
-
-        # если значение > чем существующий черный лебедь ->  BLACKSWAN_BIG
-        range_ = sizes_dict[Size.BLACKSWAN_BIG]
-        if value > range_.max:
-            return Size.BLACKSWAN_BIG
+        logger.info("   save analyse")
+        name = f"{cls.name} {chart.timeframe} {cls.Analyse.SIZE}"
+        super().save(chart.asset, name, sizes)
 
     # }}}
 
-    @staticmethod  # encoderJson  # {{{
-    def encoderJson(data) -> str:
-        logger.debug("UAnalytic=volume: encoderJson")
 
-        # from data = {Size.NORMAL: <class Range>, ...}
-        # to obj = {"NORMAL": "Range(1.1, 1.5), ..."}
-        obj = dict()
-        for size, range_ in data.items():
-            obj[size.name] = repr(range_)
+async def main():  # {{{
+    await VolumeAnalytic.analyseAll()
+    return
 
-        # from obj = {"NORMAL": "Range(1.1, 1.5)", ...}
-        # to str = '{"NORMAL": "Range(1.1, 1.5)", ...}'
-        json_string = Cmd.toJson(obj)
+    asset = await Asset.fromStr("MOEX SHARE AFKS")
+    tf = TimeFrame("1M")
+    analyse = VolumeAnalytic.Analyse.SIZE
 
-        return json_string
+    # await VolumeAnalytic.analyse(asset, tf, analyse)
 
-    # }}}
-    @staticmethod  # decoderJson  # {{{
-    def decoderJson(pg_json_str) -> dict:
-        logger.debug("UAnalytic=range: decoderJson")
+    # df = VolumeAnalytic.load(asset, tf, analyse)
+    # print(df)
 
-        # from str = '{"NORMAL": "Range(1.1, 1.5)", ...}'
-        # to obj = {"NORMAL": "Range(1.1, 1.5)", ...}
-        obj = Cmd.fromJson(pg_json_str)
+    # sizes = VolumeAnalytic.getSizes(asset, tf)
+    # print(sizes)
 
-        # from obj = {"NORMAL": "Range(1.1, 1.5)", ...}
-        # to sizes_dict = {Size.NORMAL: <class Range>, ...}
-        sizes_dict = dict()
-        for size_str, range_repr in obj.items():
-            size = Size.fromStr(size_str)
-            r = eval(range_repr)
-            sizes_dict[size] = r
+    # chart = await asset.loadChart(tf)
+    # bar = chart.last
+    # size = VolumeAnalytic.size(bar)
 
-        return sizes_dict
+    # min_vol = VolumeAnalytic.minVol(asset, tf)
+    # max_vol = VolumeAnalytic.maxVol(asset, tf)
+    # print(min_vol, max_vol)
 
-    # }}}
 
+# }}}
 
 if __name__ == "__main__":
     configureLogger(debug=True, info=True)
-    asyncio.run(VolumeAnalytic.update())
+    asyncio.run(main())
