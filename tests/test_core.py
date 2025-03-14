@@ -62,14 +62,14 @@ def test_Range():  # {{{
 # }}}
 def test_Size():  # {{{
     b = Size.BIG
-    n = Size.NORMAL
+    m = Size.M
     s = Size.SMALL
 
     assert s < b
-    assert n <= b
+    assert m <= b
     assert b > s
-    assert b >= n
-    assert n == Size.NORMAL
+    assert b >= m
+    assert m == Size.M
 
 
 # }}}
@@ -85,7 +85,7 @@ def test_SimpleSize():  # {{{
     assert Size.SMALLER == SimpleSize.S
 
     assert Size.SMALL == SimpleSize.M
-    assert Size.NORMAL == SimpleSize.M
+    assert Size.M == SimpleSize.M
     assert Size.BIG == SimpleSize.M
 
     assert Size.BIGGER == SimpleSize.L
