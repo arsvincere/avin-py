@@ -48,10 +48,11 @@ class Analytic(ABC):
     # }}}
 
     @classmethod  # _classifySizes  # {{{
-    def _classifySizes(cls, value_list: list) -> pl.DataFrame:
-        assert len(value_list) > 100
+    def _classifySizes(cls, values: pl.Series) -> pl.DataFrame:
+        assert isinstance(values, pl.Series)
+        assert len(values) > 100
 
-        cdf = cls.__createCDF(value_list)
+        cdf = cls.__createCDF(values)
         sizes_df = cls.__createSizesDataFrame(cdf)
         return sizes_df
 
@@ -133,7 +134,7 @@ class Analytic(ABC):
             ):
                 continue
 
-            f = cdf.filter(pl.col("cdf_percent") <= size.value)
+            f = cdf.filter(pl.col("cdf_percent") <= size.value.max)
             if f.is_empty():
                 end = begin
             else:
@@ -143,7 +144,6 @@ class Analytic(ABC):
                 {"size": str(size), "begin": begin, "end": end}
             )
             sizes_df.extend(row)
-
             begin = end
 
         return sizes_df

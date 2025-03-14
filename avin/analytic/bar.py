@@ -149,40 +149,33 @@ class BarAnalytic(Analytic):
             )
             return
 
-        body = cls.__collectBody(chart)
-        ####
-
         # collect elements
         logger.info("   collect elements")
-        body = cls.__collectBody(chart)
         full = cls.__collectFull(chart)
+        body = cls.__collectBody(chart)
         uppr = cls.__collectUpper(chart)
         lowr = cls.__collectLower(chart)
 
         # classify
         logger.info("   classify sizes")
-        body_sizes = super()._classifySizes(body)
         full_sizes = super()._classifySizes(full)
+        body_sizes = super()._classifySizes(body)
         uppr_sizes = super()._classifySizes(uppr)
         lowr_sizes = super()._classifySizes(lowr)
 
-        # insert column with element name
-        f = pl.Series("element", ["full"] * len(full_sizes))
-        b = pl.Series("element", ["body"] * len(body_sizes))
-        u = pl.Series("element", ["upper"] * len(uppr_sizes))
-        l = pl.Series("element", ["lower"] * len(lowr_sizes))
-        body_sizes.insert_column(0, b)
-        full_sizes.insert_column(0, f)
-        uppr_sizes.insert_column(0, u)
-        lowr_sizes.insert_column(0, l)
+        # add column with element name
+        full_sizes = full_sizes.with_columns(element=pl.lit("full"))
+        body_sizes = full_sizes.with_columns(element=pl.lit("body"))
+        uppr_sizes = full_sizes.with_columns(element=pl.lit("upper"))
+        lowr_sizes = full_sizes.with_columns(element=pl.lit("lower"))
 
         # create total df
         sizes = pl.DataFrame(
             schema=[
-                ("element", pl.String),
                 ("size", pl.String),
                 ("begin", pl.Float64),
                 ("end", pl.Float64),
+                ("element", pl.String),
             ]
         )
         sizes.extend(full_sizes)
@@ -196,19 +189,6 @@ class BarAnalytic(Analytic):
         super().save(chart.asset, name, sizes)
 
     # }}}
-    # @classmethod  # __collectBarElement  # {{{
-    # def __collectBarElement(cls, chart, element: Range.Type):
-    #     ranges_list = list()
-    #     for bar in chart:
-    #         # command looks like:  bar.body.percent()
-    #         command = f"bar.{element.name.lower()}.percent()"
-    #         value = eval(command)
-    #         value = round(value, 2)
-    #         ranges_list.append(value)
-    #
-    #     return ranges_list
-    #
-    # # }}}
     @classmethod  # __collectFull  # {{{
     def __collectFull(cls, chart: Chart) -> pl.Series:
         logger.info("   - collect full")
@@ -315,17 +295,20 @@ async def main():  # {{{
     await BarAnalytic.analyseAll()
     return
 
-    asset = await Asset.fromStr("MOEX SHARE SBER")
-    tf = TimeFrame("1M")
-    analyse = BarAnalytic.Analyse.SIZE
+    # pl.Config.set_tbl_rows(100)
+    # asset = await Asset.fromStr("MOEX SHARE SBER")
+    # tf = TimeFrame("D")
+    # analyse = BarAnalytic.Analyse.SIZE
 
-    await BarAnalytic.analyse(asset, tf, analyse)
+    # await BarAnalytic.analyse(asset, tf, analyse)
 
     # df = BarAnalytic.load(asset, tf, analyse)
     # print(df)
 
     # sizes = BarAnalytic.getSizes(asset, tf, Range.Type.FULL)
+    # pl.Config.set_tbl_rows(20)
     # print(sizes)
+    # with pl.Config():
 
     # chart = await asset.loadChart(tf)
     # bar = chart.last

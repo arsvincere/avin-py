@@ -176,6 +176,7 @@ class VolumeAnalytic(Analytic):
 
 
 async def main():  # {{{
+    pl.Config.set_tbl_rows(100)
     await VolumeAnalytic.analyseAll()
     return
 
@@ -183,7 +184,7 @@ async def main():  # {{{
     tf = TimeFrame("1M")
     analyse = VolumeAnalytic.Analyse.SIZE
 
-    # await VolumeAnalytic.analyse(asset, tf, analyse)
+    await VolumeAnalytic.analyse(asset, tf, analyse)
 
     # df = VolumeAnalytic.load(asset, tf, analyse)
     # print(df)
