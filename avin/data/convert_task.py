@@ -115,8 +115,7 @@ class ConvertTaskList:  # {{{
             self.__tasks.remove(task)
         except ValueError:
             logger.warning(
-                "ConvertTaskList.remove(task) failed: "
-                f"'{task}' not in list"
+                f"ConvertTaskList.remove(task) failed: '{task}' not in list"
             )
 
     # }}}
