@@ -132,6 +132,8 @@ class _TLoadChart(QtCore.QThread):  # {{{
     ):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
         QtCore.QThread.__init__(self, parent)
+        assert isinstance(asset, Asset)
+        assert isinstance(timeframe, TimeFrame)
 
         self.__asset = Asset
         self.__timeframe = timeframe

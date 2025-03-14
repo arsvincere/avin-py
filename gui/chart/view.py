@@ -191,9 +191,6 @@ class ChartView(QtWidgets.QGraphicsView):
         # move labels
         pos_0x0 = self.mapToScene(150, 0)
         scene.top.setPos(pos_0x0)
-        # move volumes
-        pos = QtCore.QPointF(0, pos_0x0.y() + height)
-        scene.volumes.setPos(pos)
 
         # move footer
         pos = QtCore.QPointF(0, pos_0x0.y() + height)

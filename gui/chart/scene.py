@@ -128,15 +128,14 @@ class ChartScene(QtWidgets.QGraphicsScene):
         self.setSceneRect(gchart.rect)
 
         self.gchart = gchart
-        self.volumes = gchart.gvols
         self.cross = GCross(gchart)
         self.cross.setFlag(self.ignore_transformation)
 
         self.addItem(self.gchart)
         self.addItem(self.cross)
-        # XXX: когда вынесешь volumes в отдельный индикатор
-        # self.addItem(self.volumes)
 
+        self.gchart.setVisible(True)
+        self.cross.setVisible(True)
         self.__has_chart = True
 
         for lable in self.top:
@@ -145,19 +144,21 @@ class ChartScene(QtWidgets.QGraphicsScene):
         self.gchart.indicators_updated.connect(self.__onIndicatorsUpdated)
 
     # }}}
-    def removeGChart(self) -> None:  # {{{
-        logger.debug(f"{self.__class__.__name__}.removeGChart()")
-
-        if self.__has_chart:
-            self.removeItem(self.gchart)
-            self.removeItem(self.cross)
-            self.__has_chart = False
-
-    # }}}
     def currentGChart(self) -> GChart:  # {{{
         logger.debug(f"{self.__class__.__name__}.currentChart()")
 
         return self.gchart
+
+    # }}}
+    def removeGChart(self) -> None:  # {{{
+        logger.debug(f"{self.__class__.__name__}.removeGChart()")
+
+        if self.__has_chart:
+            self.gchart.hide()
+            self.cross.hide()
+            self.removeItem(self.gchart)
+            self.removeItem(self.cross)
+            self.__has_chart = False
 
     # }}}
 
@@ -180,6 +181,7 @@ class ChartScene(QtWidgets.QGraphicsScene):
         logger.debug(f"{self.__class__.__name__}.removeGTrades()")
 
         if self.__has_gtrades:
+            self.gtrades.hide()
             self.removeItem(self.gtrades)
             self.__has_gtrades = False
 
@@ -204,8 +206,22 @@ class ChartScene(QtWidgets.QGraphicsScene):
     def removeIndicators(self) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.removeIndicators()")
 
-        # пересоздаем график виджеты в левом верхнем углу
+        # чистим панельные индикаторы
         self.top.clear()
+        self.footer.clear()
+        self.left.clear()
+        self.right.clear()
+
+    # }}}
+
+    def removeAll(self) -> None:  # {{{
+        self.removeGChart()
+        self.removeGTrades()
+        self.removeIndicators()
+        # self.clear()
+        # print("CLEAR BLYA")
+
+        # пересоздаем график виджеты в левом верхнем углу
         self.__createGraphicsWidgets()
 
     # }}}
@@ -250,7 +266,6 @@ class ChartScene(QtWidgets.QGraphicsScene):
         self.__has_chart = False
         self.gchart = None
         self.cross = QtWidgets.QGraphicsItemGroup()
-        self.volumes = QtWidgets.QGraphicsItemGroup()
         self.footer = list()
         self.left = list()
         self.right = list()
@@ -273,7 +288,6 @@ class ChartScene(QtWidgets.QGraphicsScene):
         # он их разместил правильно.
         view = self.views()[0]
         view._movePinnedPanels()
-        print("moved_pinned_panels")
 
     # }}}
 

@@ -8,24 +8,21 @@
 
 import sys
 
-import polars as pl
 import tinkoff.invest as ti
 from PyQt6 import QtCore, QtWidgets
 
 from avin import (
     Asset,
     BarEvent,
-    Chart,
     DateTime,
     Test,
     TicEvent,
     TimeFrame,
-    Tinkoff,
     Trade,
     TradeList,
     logger,
-    now,
 )
+from gui.chart.gasset import GAsset
 from gui.chart.gchart import GChart, ViewType
 from gui.chart.gtest import GTradeList
 from gui.chart.scene import ChartScene
@@ -49,11 +46,11 @@ class ChartWidget(QtWidgets.QWidget):
         self.__client = None
         self.__data_thread = None
 
-        self.__asset = None
-        self.__timeframe_1 = self.toolbar.firstTimeFrame()
+        self.__gasset = None
+        self.__timeframe_1 = self.__toolbar.firstTimeFrame()
         self.__trade_list = None
-        self.__mark_list = None
-        self.__ind_list = None
+        self.__mark_list = list()
+        self.__ind_list = list()
 
     # }}}
 
@@ -72,10 +69,12 @@ class ChartWidget(QtWidgets.QWidget):
 
         # clear all & draw chart
         self.clearAll()
-        self.__asset = asset
-        self.toolbar.setAsset(asset)
+        self.__toolbar.setAsset(asset)
+        self.__gasset = GAsset(asset)
+        self.__gasset.setClient(self.__client)
+        self.__gasset.setDataThread(self.__data_thread)
+
         self.__drawChart()
-        self.__subscribeDataStream()
 
     # }}}
     def setTradeList(self, trade_list: TradeList) -> None:  # {{{
@@ -89,21 +88,20 @@ class ChartWidget(QtWidgets.QWidget):
     def showTrade(self, trade: Trade) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.showTrade()")
 
-        self.view.centerOnTrade(trade)
+        self.__view.centerOnTrade(trade)
 
     # }}}
     def clearAll(self) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.clearAll()")
 
-        self.__tryUnsubscribe()
-        self.scene.removeGChart()
-        self.scene.removeGTrades()
-        self.scene.removeIndicators()
-        self.view.resetTransform()
-        self.toolbar.resetSecondTimeFrames()
+        gchart = self.__scene.currentGChart()
+        for i in self.__ind_list:
+            gchart.removeIndicator(i)
 
-        self.__mark_list = None
-        self.__ind_list = None
+        self.__mark_list.clear()
+        self.__scene.removeAll()
+        self.__view.resetTransform()
+        self.__toolbar.resetSecondTimeFrames()
 
     # }}}
 
@@ -118,19 +116,19 @@ class ChartWidget(QtWidgets.QWidget):
     def __createWidgets(self) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.__createWidgets()")
 
-        self.toolbar = ChartToolBar(self)
-        self.view = ChartView(self)
-        self.scene = ChartScene(self)
+        self.__toolbar = ChartToolBar(self)
+        self.__view = ChartView(self)
+        self.__scene = ChartScene(self)
 
-        self.view.setScene(self.scene)
+        self.__view.setScene(self.__scene)
 
     # }}}
     def __createLayots(self) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.__createLayots()")
 
         vbox = QtWidgets.QVBoxLayout()
-        vbox.addWidget(self.toolbar)
-        vbox.addWidget(self.view)
+        vbox.addWidget(self.__toolbar)
+        vbox.addWidget(self.__view)
         vbox.setContentsMargins(0, 0, 0, 0)
 
         self.setLayout(vbox)
@@ -139,29 +137,23 @@ class ChartWidget(QtWidgets.QWidget):
     def __connect(self) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.__connect()")
 
-        self.toolbar.firstTimeFrameChanged.connect(self.__onTimeframe1)
-        self.toolbar.secondTimeFrameChanged.connect(self.__onTimeframe2)
-        self.toolbar.barViewSelected.connect(self.__onBarView)
-        self.toolbar.cundleViewSelected.connect(self.__onCundleView)
-        self.toolbar.indListChanged.connect(self.__onIndicatorList)
-        self.toolbar.markListChanged.connect(self.__onMarkList)
-        self.toolbar.periodChanged.connect(self.__onPeriod)
+        self.__toolbar.firstTimeFrameChanged.connect(self.__onTimeframe1)
+        self.__toolbar.secondTimeFrameChanged.connect(self.__onTimeframe2)
+        self.__toolbar.barViewSelected.connect(self.__onBarView)
+        self.__toolbar.cundleViewSelected.connect(self.__onCundleView)
+        self.__toolbar.indListChanged.connect(self.__onIndicatorList)
+        self.__toolbar.markListChanged.connect(self.__onMarkList)
+        self.__toolbar.periodChanged.connect(self.__onPeriod)
 
     # }}}
     def __drawChart(self) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.__drawChart()")
 
         timeframe = self.__timeframe_1
-        end = now()
-        begin = now() - timeframe * Chart.DEFAULT_BARS_COUNT
-        bars = Thread.loadBars(self.__asset, timeframe, begin, end)
-        bars = self.__getNewBarsFromBroker(bars)
+        gchart = self.__gasset.gchart(timeframe)
 
-        chart = Chart(self.__asset, timeframe, bars)
-        gchart = GChart(chart)
-
-        self.scene.setGChart(gchart)
-        self.view.centerOnLast()
+        self.__scene.setGChart(gchart)
+        self.__view.centerOnLast()
 
     # }}}
     def __drawTradeList(self) -> None:  # {{{
@@ -174,73 +166,22 @@ class ChartWidget(QtWidgets.QWidget):
         timeframe = self.__timeframe_1
         gtrade_list = GTradeList.fromSelected(test, trade_list, timeframe)
 
-        self.toolbar.resetSecondTimeFrames()
-        self.toolbar.setAsset(asset)
-        self.scene.setGTradeList(gtrade_list)
-        self.view.centerOnFirst()
+        self.__toolbar.resetSecondTimeFrames()
+        self.__toolbar.setAsset(asset)
+        self.__scene.setGTradeList(gtrade_list)
+        self.__view.centerOnFirst()
 
         self.__asset = asset
 
     # }}}
+    def __drawIndicators(self) -> None:  # {{{
+        # добавляем графику индикатора на gchart
+        gchart = self.__scene.currentGChart()
+        for indicator in self.__ind_list:
+            gchart.addIndicator(indicator)
 
-    def __getNewBarsFromBroker(  # {{{
-        self, bars: pl.DataFrame
-    ) -> pl.DataFrame:
-        assert len(bars) != 0
-
-        last_dt = bars.item(-1, "dt")
-        timeframe = self.__timeframe_1
-        begin = last_dt + timeframe
-        end = now()
-
-        try:
-            candles = self.__client.get_all_candles(
-                figi=self.__asset.figi,
-                from_=begin,
-                to=end,
-                interval=Tinkoff.av_to_ti(timeframe, ti.CandleInterval),
-            )
-            for candle in candles:
-                if candle.is_complete:
-                    bar = Tinkoff.ti_to_av(candle)
-                    bars.extend(bar.to_df())
-            bars.rechunk()
-
-        except ti.exceptions.AioRequestError as err:
-            logger.exception(err)
-
-        return bars
-
-    # }}}
-    def __tryUnsubscribe(self):  # {{{
-        if self.__data_thread is None:
-            return
-
-        if self.__asset is not None:
-            stream = self.__data_thread.stream
-            figi = self.__asset.figi
-            tf = self.__timeframe_1
-            interval = Tinkoff.av_to_ti(tf, ti.SubscriptionInterval)
-
-            subscription = ti.CandleInstrument(figi, interval)
-            stream.candles.unsubscribe([subscription])
-
-            subscription = ti.TradeInstrument(figi)
-            stream.trades.unsubscribe([subscription])
-
-    # }}}
-    def __subscribeDataStream(self):  # {{{
-        # subscribe candles & tics
-        stream = self.__data_thread.stream
-        figi = self.__asset.figi
-        tf = self.__timeframe_1
-        interval = Tinkoff.av_to_ti(tf, ti.SubscriptionInterval)
-
-        subscription = ti.CandleInstrument(figi, interval)
-        stream.candles.subscribe([subscription])
-
-        subscription = ti.TradeInstrument(figi)
-        stream.trades.subscribe([subscription])
+        # добавляем график виджет лейблы на сцену в левый верхний угол
+        self.__scene.setIndList(self.__ind_list)
 
     # }}}
 
@@ -253,11 +194,12 @@ class ChartWidget(QtWidgets.QWidget):
 
         if self.__trade_list is not None:
             self.__drawTradeList()
+            self.__drawIndicators()
             return
 
-        if self.__asset is not None:
+        if self.__gasset is not None:
             self.__drawChart()
-            self.__subscribeDataStream()
+            self.__drawIndicators()
             return
 
     # }}}
@@ -265,7 +207,7 @@ class ChartWidget(QtWidgets.QWidget):
     def __onTimeframe2(self, timeframe: TimeFrame, endbled: bool):
         logger.debug(f"{self.__class__.__name__}.__onTimeframe2()")
 
-        gchart = self.scene.currentGChart()
+        gchart = self.__scene.currentGChart()
         if gchart is None:
             return
 
@@ -279,7 +221,7 @@ class ChartWidget(QtWidgets.QWidget):
     def __onBarView(self):
         logger.debug(f"{self.__class__.__name__}.__onBarView()")
 
-        gchart = self.scene.currentGChart()
+        gchart = self.__scene.currentGChart()
         if gchart is None:
             return
 
@@ -290,7 +232,7 @@ class ChartWidget(QtWidgets.QWidget):
     def __onCundleView(self):
         logger.debug(f"{self.__class__.__name__}.__onCundleView()")
 
-        gchart = self.scene.currentGChart()
+        gchart = self.__scene.currentGChart()
         if gchart is None:
             return
 
@@ -301,18 +243,13 @@ class ChartWidget(QtWidgets.QWidget):
     def __onIndicatorList(self, ind_list: MarkList):
         logger.debug(f"{self.__class__.__name__}.__onIndicatorList()")
 
-        if self.__asset is None:
-            return
-
+        self.clearAll()
         self.__ind_list = ind_list
 
-        # добавляем графику индикатора на gchart
-        gchart = self.scene.currentGChart()
-        for indicator in self.__ind_list:
-            gchart.addIndicator(indicator)
-
-        # добавляем график виджет лейблы на сцену в левый верхний угол
-        self.scene.setIndList(ind_list)
+        if self.__gasset is not None:
+            self.__drawChart()
+            self.__drawIndicators()
+            return
 
     # }}}
     @QtCore.pyqtSlot(MarkList)  # __onMarkList  # {{{
@@ -324,7 +261,7 @@ class ChartWidget(QtWidgets.QWidget):
 
         self.__mark_list = mark_list
 
-        gchart = self.scene.currentGChart()
+        gchart = self.__scene.currentGChart()
         for mark in mark_list:
             gchart.addMark(mark)
 
@@ -347,8 +284,8 @@ class ChartWidget(QtWidgets.QWidget):
         chart = Thread.loadChart(self.__asset, timeframe, begin, end)
         gchart = GChart(chart)
 
-        self.scene.setGChart(gchart)
-        self.view.centerOnLast()
+        self.__scene.setGChart(gchart)
+        self.__view.centerOnLast()
 
     # }}}
 
@@ -359,22 +296,25 @@ class ChartWidget(QtWidgets.QWidget):
         # INFO:
         # подписка отписка от Т срабатывает с задержкой, может
         # прилететь бар от прошлого графика в момент переключения
-        # поэтому проверяем figi и TimeFrame
-        if self.__asset.figi != e.figi:
-            return
-        gchart = self.scene.currentGChart()
-        if gchart.chart.timeframe != e.timeframe:
+        # поэтому проверяем figi
+        if self.__gasset.figi != e.figi:
             return
 
-        gchart.receive(e)
+        self.__gasset.receive(e)
 
     # }}}
     @QtCore.pyqtSlot(BarEvent)  # __onNewTic  # {{{
     def __onNewTic(self, e: TicEvent):
         logger.debug(f"{self.__class__.__name__}.__onNewBar()")
-        assert self.__asset.figi == e.figi
 
-        self.__asset.receive(e)
+        # INFO:
+        # подписка отписка от Т срабатывает с задержкой, может
+        # прилететь тик от прошлого ассета в момент переключения
+        # поэтому проверяем figi
+        if self.__gasset.figi != e.figi:
+            return
+
+        self.__gasset.receive(e)
 
     # }}}
 

@@ -13,7 +13,7 @@ import sys
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 from avin import ExtremumList, Move, Term, TimeFrame, Tree, Trend, logger
-from gui.chart.gchart import GBar, GChart, Thread
+from gui.chart.gchart import GBar, GChart
 from gui.chart.indicator_item import IndicatorItem
 from gui.custom import Css, Icon, Label, MonoLabel, Theme, ToolButton
 from gui.indicator._indicator import Indicator
@@ -82,9 +82,9 @@ class _ExtremumGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
         QtWidgets.QGraphicsItemGroup.__init__(self, parent)
 
-        self.gchart = gchart
-        self.chart = gchart.chart
-        self.asset = gchart.chart.asset
+        # self.gchart = gchart
+        # self.chart = gchart.chart
+        self.gasset = gchart.gasset
         self.cache = Tree()
 
     # }}}
@@ -133,9 +133,9 @@ class _ExtremumGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
             return gtrends
 
         # load chart & create elist -> create graphic trends
-        chart = Thread.loadChart(self.asset, tf)
-        elist = ExtremumList(chart)
-        gtrends = self.__createGTrends(chart, elist, term)
+        gchart = self.gasset.gchart(tf)
+        elist = ExtremumList(gchart.chart)
+        gtrends = self.__createGTrends(gchart, elist, term)
 
         # add to self, and save in cache
         self.addToGroup(gtrends)
@@ -148,8 +148,7 @@ class _ExtremumGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
         pass
 
     # }}}
-    def __createGTrends(self, chart, elist, term):  # {{{
-        gchart = GChart(chart)
+    def __createGTrends(self, gchart, elist, term):  # {{{
         trends = elist.getAllTrends(term)
 
         gtrends = QtWidgets.QGraphicsItemGroup()

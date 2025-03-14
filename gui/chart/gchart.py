@@ -318,11 +318,13 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
     __VIEW_TYPE = ViewType.BAR
     indicators_updated = Signal()
 
-    def __init__(self, chart: Chart, parent=None):  # {{{
+    def __init__(self, chart: Chart, gasset: GAsset, parent=None):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
         QtWidgets.QGraphicsItemGroup.__init__(self, parent)
 
         self.chart = chart
+        self.gasset = gasset
+
         self.behind_1H = list()
         self.behind_D = list()
         self.behind_W = list()
@@ -417,6 +419,10 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
     # }}}
     def addIndicator(self, indicator: Indicator) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.addIndicator()")
+
+        for i in self.__indicators:
+            if i.name == indicator.name:
+                return
 
         gitem = indicator.graphics(self)
         self.addToGroup(gitem)
