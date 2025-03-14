@@ -254,6 +254,13 @@ class Css:
         color: {Theme.fg_normal};
     """
     # }}}
+    # MONO_LABEL  # {{{
+    MONO_LABEL = f"""
+        font-family: Monospace;
+        background-color: {Theme.bg_normal};
+        color: {Theme.fg_normal};
+    """
+    # }}}
     # FRAMED_LABEL  # {{{
     FRAMED_LABEL = f"""
         font-family: Sans;

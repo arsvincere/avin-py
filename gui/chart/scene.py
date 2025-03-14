@@ -14,7 +14,7 @@ from gui.chart.gcross import GCross
 from gui.chart.glabels import BarInfo, ChartLabels, VolumeInfo
 from gui.chart.gtest import GTradeList
 from gui.custom import Theme
-from gui.indicator.item import Indicator
+from gui.indicator._indicator import Indicator
 
 
 class ChartScene(QtWidgets.QGraphicsScene):

@@ -419,8 +419,8 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
         logger.debug(f"{self.__class__.__name__}.addIndicator()")
 
         gitem = indicator.graphics(self)
-        self.__indicators.append(indicator)
         self.addToGroup(gitem)
+        self.__indicators.append(indicator)
 
     # }}}
     def removeIndicator(self, indicator) -> None:  # {{{
@@ -455,8 +455,9 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
     def gbarFromDatetime(self, dt) -> GBar:  # {{{
         logger.debug(f"{self.__class__.__name__}.gbarFromDatetime()")
 
-        if self.gnow.bar.dt == dt:
-            return self.gnow
+        if self.gnow is not None:
+            if self.gnow.bar.dt == dt:
+                return self.gnow
 
         index = find_left(self.gbars, dt, key=lambda x: x.bar.dt)
         assert index is not None

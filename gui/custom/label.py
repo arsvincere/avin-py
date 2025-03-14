@@ -42,5 +42,15 @@ class Label(QtWidgets.QLabel):
         self.setStyleSheet(Css.LABEL)
 
 
+class MonoLabel(QtWidgets.QLabel):
+    def __init__(self, string: str = "", parent=None):
+        QtWidgets.QLineEdit.__init__(self, parent)
+
+        if string:
+            self.setText(string)
+
+        self.setStyleSheet(Css.MONO_LABEL)
+
+
 if __name__ == "__main__":
     ...

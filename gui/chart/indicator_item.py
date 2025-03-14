@@ -7,28 +7,15 @@
 # ============================================================================
 
 import enum
+import sys
 
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import Qt
 
+from avin import logger
 from avin.utils import logger
 
-"""Abstract base class for user indicators"""
 
-
-class Indicator:  # {{{
-    class Position:  # {{{
-        CHART = 0
-        TOP = 1
-        FOOTER = 2
-        LEFT = 3
-        RIGHT = 4
-
-
-# }}}
-
-
-# }}}
 class IndicatorItem(QtWidgets.QTreeWidgetItem):  # {{{
     class Column(enum.IntEnum):  # {{{
         Name = 0
@@ -56,4 +43,7 @@ class IndicatorItem(QtWidgets.QTreeWidgetItem):  # {{{
 
 
 if __name__ == "__main__":
-    ...
+    app = QtWidgets.QApplication(sys.argv)
+    w = IndicatorSelectDialog()
+    w.show()
+    sys.exit(app.exec())

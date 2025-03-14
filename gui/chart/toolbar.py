@@ -13,6 +13,7 @@ from avin.core import Asset, TimeFrame, TimeFrameList
 from avin.utils import DateTime, logger
 from gui.chart.dialog_period import ChartPeriodDialog
 from gui.chart.gchart import ViewType
+from gui.chart.indicator_dialog import IndicatorSelectDialog
 from gui.custom import (
     Css,
     Icon,
@@ -21,7 +22,6 @@ from gui.custom import (
     ToolButton,
     VLine,
 )
-from gui.indicator import IndicatorSelectDialog
 from gui.marker import MarkerSelectDialog, MarkList
 
 

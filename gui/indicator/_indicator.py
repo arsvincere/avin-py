@@ -6,12 +6,24 @@
 # LICENSE:      GNU GPLv3
 # ============================================================================
 
-from gui.indicator.extr import ExtremumIndicator
-from gui.indicator.hist import HistIndicator
-from gui.indicator.quant import QuantIndicator
 
-__all__ = (
-    "ExtremumIndicator",
-    "HistIndicator",
-    "QuantIndicator",
-)
+"""Abstract base class for user indicators"""
+
+
+class Indicator:  # {{{
+    class Position:  # {{{
+        CHART = 0
+        TOP = 1
+        FOOTER = 2
+        LEFT = 3
+        RIGHT = 4
+
+
+# }}}
+
+
+# }}}
+
+
+if __name__ == "__main__":
+    ...

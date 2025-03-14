@@ -13,8 +13,9 @@ from PyQt6 import QtCore, QtWidgets
 
 from avin import Cfg, logger
 from gui.chart.gchart import GChart
+from gui.chart.indicator_item import IndicatorItem
 from gui.custom import Css, Icon, Label, Theme, ToolButton
-from gui.indicator.item import Indicator, IndicatorItem
+from gui.indicator._indicator import Indicator
 
 
 class HistIndicator(Indicator):  # {{{

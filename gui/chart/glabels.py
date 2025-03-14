@@ -38,7 +38,8 @@ class BarInfo(QtWidgets.QWidget):  # {{{
         bar = gbar.bar
         local_time = Usr.localTime(bar.dt)
         day = WeekDays(bar.dt.weekday()).name
-        percent = bar.body.percent()
+        full_pct = bar.full.deltaP()
+        body_pct = bar.body.deltaP()
 
         self.label_barinfo.setText(
             f"{local_time} {day} - "
@@ -46,7 +47,7 @@ class BarInfo(QtWidgets.QWidget):  # {{{
             f"High: {bar.high:<6} "
             f"Low: {bar.low:<6} "
             f"Close: {bar.close:<6} "
-            f"(Body: {percent:.2f}%)"
+            f"(Full: {full_pct:.2f}% Body: {body_pct:.2f}%)"
         )
 
     # }}}

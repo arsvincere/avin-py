@@ -13,6 +13,7 @@ from PyQt6 import QtCore, QtWidgets
 from PyQt6.QtCore import Qt
 
 from avin import logger
+from avin.utils import logger
 from gui.custom import (
     Css,
     Icon,
@@ -20,7 +21,7 @@ from gui.custom import (
     Spacer,
     ToolButton,
 )
-from gui.indicator.extremum import ExtremumIndicator
+from gui.indicator.extr import ExtremumIndicator
 from gui.indicator.hist import HistIndicator
 from gui.indicator.quant import QuantIndicator
 

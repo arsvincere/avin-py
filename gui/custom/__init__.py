@@ -12,7 +12,7 @@ from gui.custom.dialog import Dialog
 from gui.custom.dock_widget import DockWidget
 from gui.custom.font import Font
 from gui.custom.icon import Icon
-from gui.custom.label import Label, SubTitleLabel, TitleLabel
+from gui.custom.label import Label, MonoLabel, SubTitleLabel, TitleLabel
 from gui.custom.line_edit import LineEdit
 from gui.custom.logo import Logo
 from gui.custom.menu import Menu
@@ -33,6 +33,7 @@ __all__ = (
     "Font",
     "Icon",
     "Label",
+    "MonoLabel",
     "SubTitleLabel",
     "TitleLabel",
     "LineEdit",

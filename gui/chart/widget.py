@@ -100,11 +100,10 @@ class ChartWidget(QtWidgets.QWidget):
         self.scene.removeGTrades()
         self.scene.removeIndicators()
         self.view.resetTransform()
+        self.toolbar.resetSecondTimeFrames()
 
         self.__mark_list = None
         self.__ind_list = None
-
-        self.toolbar.resetSecondTimeFrames()
 
     # }}}
 

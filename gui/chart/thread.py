@@ -15,8 +15,8 @@ import polars as pl
 from PyQt6 import QtCore
 
 from avin.analytic import VolumeAnalytic
-from avin.core import Chart, TimeFrame
-from avin.data import Data, Instrument
+from avin.core import Asset, Chart, TimeFrame
+from avin.data import Data
 from avin.utils import logger
 from gui.custom import awaitQThread
 
@@ -25,10 +25,10 @@ class Thread:  # {{{
     """Fasade class"""
 
     @classmethod  # loadBars  # {{{
-    def loadBars(cls, instrument, timeframe, begin, end) -> pl.DataFrame:
+    def loadBars(cls, asset, timeframe, begin, end) -> pl.DataFrame:
         logger.debug(f"{cls.__name__}.loadChart()")
 
-        thread = _TLoadBars(instrument, timeframe, begin, end)
+        thread = _TLoadBars(asset, timeframe, begin, end)
         thread.start()
         awaitQThread(thread)
 
@@ -36,10 +36,10 @@ class Thread:  # {{{
 
     # }}}
     @classmethod  # loadChart  # {{{
-    def loadChart(cls, instrument, timeframe, begin, end) -> Chart:
+    def loadChart(cls, asset, timeframe, begin=None, end=None) -> Chart:
         logger.debug(f"{cls.__name__}.loadChart()")
 
-        thread = _TLoadChart(instrument, timeframe, begin, end)
+        thread = _TLoadChart(asset, timeframe, begin, end)
         thread.start()
         awaitQThread(thread)
 
@@ -56,10 +56,10 @@ class Thread:  # {{{
 
     # }}}
     @classmethod  # getMaxVol  # {{{
-    def getMaxVol(cls, instrument, timeframe) -> int:
+    def getMaxVol(cls, asset, timeframe) -> int:
         logger.debug(f"{cls.__name__}.getMaxVol()")
 
-        thread = _TGetMaxVol(instrument, timeframe)
+        thread = _TGetMaxVol(asset, timeframe)
         thread.start()
         awaitQThread(thread)
 
@@ -67,10 +67,10 @@ class Thread:  # {{{
 
     # }}}
     @classmethod  # getVolSizes  # {{{
-    def getVolSizes(cls, instrument, timeframe) -> int:
+    def getVolSizes(cls, asset, timeframe) -> int:
         logger.debug(f"{cls.__name__}.getVolSizes()")
 
-        thread = _TGetVolSizes(instrument, timeframe)
+        thread = _TGetVolSizes(asset, timeframe)
         thread.start()
         awaitQThread(thread)
 
@@ -83,7 +83,7 @@ class Thread:  # {{{
 class _TLoadBars(QtCore.QThread):  # {{{
     def __init__(
         self,
-        instrument: Instrument,
+        asset: Asset,
         timeframe: TimeFrame,
         begin: datetime,
         end: datetime,
@@ -92,7 +92,7 @@ class _TLoadBars(QtCore.QThread):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
         QtCore.QThread.__init__(self, parent)
 
-        self.__instrument = instrument
+        self.__asset = asset
         self.__timeframe = timeframe
         self.__begin = begin
         self.__end = end
@@ -110,7 +110,7 @@ class _TLoadBars(QtCore.QThread):  # {{{
         logger.debug(f"{self.__class__.__name__}.__arun()")
 
         records = await Data.request(
-            instrument=self.__instrument,
+            instrument=self.__asset,
             data_type=self.__timeframe.toDataType(),
             begin=self.__begin,
             end=self.__end,
@@ -124,7 +124,7 @@ class _TLoadBars(QtCore.QThread):  # {{{
 class _TLoadChart(QtCore.QThread):  # {{{
     def __init__(
         self,
-        instrument: Instrument,
+        asset: Asset,
         timeframe: TimeFrame,
         begin: datetime,
         end: datetime,
@@ -133,7 +133,7 @@ class _TLoadChart(QtCore.QThread):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
         QtCore.QThread.__init__(self, parent)
 
-        self.__instrument = instrument
+        self.__asset = Asset
         self.__timeframe = timeframe
         self.__begin = begin
         self.__end = end
@@ -150,8 +150,7 @@ class _TLoadChart(QtCore.QThread):  # {{{
     async def __arun(self):  # {{{
         logger.debug(f"{self.__class__.__name__}.__arun()")
 
-        self.result = await Chart.load(
-            self.__instrument,
+        self.result = await self.__asset.loadChart(
             self.__timeframe,
             self.__begin,
             self.__end,
@@ -200,14 +199,14 @@ class _TAddMarker(QtCore.QThread):  # {{{
 class _TGetMaxVol(QtCore.QThread):  # {{{
     def __init__(  # {{{
         self,
-        instrument: Instrument,
+        asset: Asset,
         timeframe: TimeFrame,
         parent=None,
     ):
         logger.debug(f"{self.__class__.__name__}.__init__()")
         QtCore.QThread.__init__(self, parent)
 
-        self.__instrument = instrument
+        self.__asset = Asset
         self.__timeframe = timeframe
 
         self.result = None
@@ -223,7 +222,7 @@ class _TGetMaxVol(QtCore.QThread):  # {{{
         logger.debug(f"{self.__class__.__name__}.__arun()")
 
         self.result = await VolumeAnalytic.maxVol(
-            self.__instrument, self.__timeframe
+            self.__asset, self.__timeframe
         )
 
     # }}}
@@ -233,14 +232,14 @@ class _TGetMaxVol(QtCore.QThread):  # {{{
 class _TGetVolSizes(QtCore.QThread):  # {{{
     def __init__(  # {{{
         self,
-        instrument: Instrument,
+        asset: Asset,
         timeframe: TimeFrame,
         parent=None,
     ):
         logger.debug(f"{self.__class__.__name__}.__init__()")
         QtCore.QThread.__init__(self, parent)
 
-        self.__instrument = instrument
+        self.__asset = Asset
         self.__timeframe = timeframe
 
         self.result = None
@@ -256,7 +255,7 @@ class _TGetVolSizes(QtCore.QThread):  # {{{
         logger.debug(f"{self.__class__.__name__}.__arun()")
 
         self.result = await VolumeAnalytic.sizes(
-            self.__instrument, self.__timeframe
+            self.__asset, self.__timeframe
         )
 
     # }}}

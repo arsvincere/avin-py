@@ -12,8 +12,9 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 
 from avin import Extremum, ExtremumList, Move, Term, TimeFrame, Trend, logger
 from gui.chart.gchart import GBar, GChart, Thread
+from gui.chart.indicator_item import IndicatorItem
 from gui.custom import Css, Icon, Label, Theme, ToolButton
-from gui.indicator.item import Indicator, IndicatorItem
+from gui.indicator._indicator import Indicator
 from gui.marker import GShape
 
 
