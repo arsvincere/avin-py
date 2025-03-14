@@ -324,6 +324,7 @@ class Chart:
     def receive(self, e: BarEvent) -> None:  # {{{
         assert e.type == Event.Type.BAR
         assert e.figi == self.__asset.figi
+        assert e.timeframe == self.__timeframe
 
         new_bar = e.bar
 
@@ -352,7 +353,15 @@ class Chart:
             self.upd_bar.emit(self, self.now)
             return
 
-        logger.critical(f"{e}")
+        # 4. Тинькоф иногда в поток докидывает старые бары исторические
+        # но исправленные, пересчитанные. В пизду их пока даже внимание
+        # не буду обращать, там не большое отличие
+        if self.__now.dt > new_bar.dt:
+            logger.warning(f"Receiving event={e}")
+            logger.warning(f"self.now={self.now}")
+            logger.warning(f"self.last={self.last}")
+            return
+
         assert False, "WTF???"
 
     # }}}
