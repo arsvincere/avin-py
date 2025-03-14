@@ -37,17 +37,19 @@ class Range:
     # }}}
 
     def __init__(  # {{{
-        self, min_: float, max_: float, type_=None, bar=None
+        self, begin: float, end: float, typ=None, bar=None
     ):
-        if min_ < max_:
-            self.__min = min_
-            self.__max = max_
-        else:
-            self.__min = max_
-            self.__max = min_
-
-        self.__type = type_
+        self.__begin = begin
+        self.__end = end
+        self.__type = typ
         self.__bar = bar
+
+        if begin <= end:
+            self.__min = begin
+            self.__max = end
+        else:
+            self.__min = end
+            self.__max = begin
 
     # }}}
     def __getitem__(self, slice_):  # {{{
@@ -93,23 +95,28 @@ class Range:
         return f"Range({self.min}, {self.max})"
 
     # }}}
+    def __eq__(self, other):  # {{{
+        assert isinstance(other, Range)
+        return self.min == other.min and self.max == other.max
 
-    @property  # min# {{{
+    # }}}
+
+    @property  # min  # {{{
     def min(self):
         return self.__min
 
     # }}}
-    @property  # max# {{{
+    @property  # max  # {{{
     def max(self):
         return self.__max
 
     # }}}
-    @property  # type# {{{
+    @property  # type  # {{{
     def type(self):
         return self.__type
 
     # }}}
-    @property  # bar# {{{
+    @property  # bar  # {{{
     def bar(self):
         """doc
         Return parent Bar
@@ -118,12 +125,12 @@ class Range:
 
     # }}}
 
-    def percent(self) -> float:  # {{{
+    def mid(self) -> float:  # {{{
         """doc
-        Return percent of range
+        Return middle of range
         """
-        percent = (self.__max - self.__min) / self.__max * 100
-        return round(percent, 2)
+        half = (self.__max - self.__min) / 2
+        return self.__min + half
 
     # }}}
     def abs(self) -> float:  # {{{
@@ -133,14 +140,58 @@ class Range:
         return self.__max - self.__min
 
     # }}}
-    def mid(self) -> float:  # {{{
+    def absN(self) -> float:  # {{{
         """doc
-        Return middle of range
+        Return percent of range
         """
-        half = (self.__max - self.__min) / 2
-        return self.__min + half
+        # percent = (self.__max - self.__min) / self.__max * 100
+        # return round(percent, 2)
+
+        pct = abs(self.__end - self.__begin) / self.__begin
+        return round(pct, 2)
 
     # }}}
+    def absP(self) -> float:  # {{{
+        """doc
+        Return percent of range
+        """
+        # percent = (self.__max - self.__min) / self.__max * 100
+        # return round(percent, 2)
+
+        pct = abs(self.__end - self.__begin) / self.__begin * 100
+        return round(pct, 2)
+
+    # }}}
+    def delta(self) -> float:  # {{{
+        """doc
+        Return delta of range
+        """
+        return self.__end - self.__begin
+
+    # }}}
+    def deltaN(self) -> float:  # {{{
+        """doc
+        Return percent of range
+        """
+        # percent = (self.__max - self.__min) / self.__max * 100
+        # return round(percent, 2)
+
+        pct = (self.__end - self.__begin) / self.__begin
+        return round(pct, 2)
+
+    # }}}
+    def deltaP(self) -> float:  # {{{
+        """doc
+        Return percent of range
+        """
+        # percent = (self.__max - self.__min) / self.__max * 100
+        # return round(percent, 2)
+
+        pct = (self.__end - self.__begin) / self.__begin * 100
+        return round(pct, 2)
+
+    # }}}
+
     def half(self, n) -> Range:  # {{{
         """doc
         Возвращает диапазон n-ой половины бара -> Range

@@ -38,13 +38,15 @@ class Trend:
 
     # }}}
 
-    def __init__(self, e1: Extremum, e2: Extremum, term: Term):  # {{{
+    def __init__(  # {{{
+        self, e1: Extremum, e2: Extremum, elist: ExtremumList
+    ):
         logger.debug(f"{self.__class__.__name__}.__init__({e1}, {e2})")
         # assert e1.dt < e2.dt
 
         self.__e1 = e1
         self.__e2 = e2
-        self.__term = term
+        self.__elist = elist
         self.__strength = Trend.Strength.UNDEFINE
 
     # }}}
@@ -65,22 +67,22 @@ class Trend:
     # }}}
     @property  # asset  # {{{
     def asset(self):
-        return self.__e1.bar.chart.instrument
+        return self.__elist.asset
 
     # }}}
     @property  # chart  # {{{
     def chart(self):
-        return self.__e1.bar.chart
+        return self.__elist.chart
 
     # }}}
     @property  # timeframe  # {{{
     def timeframe(self):
-        return self.__e1.bar.chart.timeframe
+        return self.__elist.timeframe
 
     # }}}
     @property  # term  # {{{
     def term(self):
-        return self.__term
+        return min(self.__e1.term, self.__e2.term)
 
     # }}}
     @property  # type  # {{{
@@ -125,8 +127,21 @@ class Trend:
         return Extremum.speedPercent(self.__e1, self.__e2)
 
     # }}}
-    def volume(self) -> int:  # {{{
-        return Extremum.volume(self.__e1, self.__e2)
+    def volumeBear(self) -> int:  # {{{
+        return Extremum.volumeBear(self.__e1, self.__e2)
+
+    # }}}
+    def volumeBull(self) -> int:  # {{{
+        return Extremum.volumeBull(self.__e1, self.__e2)
+
+    # }}}
+    def volumeTotal(self) -> int:  # {{{
+        return Extremum.volumeTotal(self.__e1, self.__e2)
+
+    # }}}
+    def bars(self) -> pl.DataFrame:  # {{{
+        bars = self.__elist.chart.select(self.__e1.dt, self.__e2.dt)
+        return bars
 
     # }}}
 

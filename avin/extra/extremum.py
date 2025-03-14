@@ -9,155 +9,162 @@
 from __future__ import annotations
 
 import enum
+from typing import TypeVar
+
+import polars as pl
 
 from avin.config import Usr
-from avin.core.bar import Bar
 from avin.extra.term import Term
 
+ExtremumList = TypeVar("ExtremumList")
 
-class Extremum:
+
+class Extremum:  # {{{
     class Type(enum.Enum):  # {{{
         MIN = 0
         MAX = 1
 
-    # }}}
-    def __init__(self, typ: Extremum.Type, term: Term, bar: Bar):  # {{{
-        self.__bar = bar  # сохраняем исходный бар
-        self.__bar.addFlag(Bar.Type.EXTREMUM)  # вешаем бару флаг экстремум
-        self.__term = term
-        self.__type = typ
+        def __str__(self):  # {{{
+            return self.name
 
-        # определяем и сохраняем цену в зависимости от типа (MIN/MAX)
-        if typ == Extremum.Type.MAX:
-            self.__price = bar.high
-        elif typ == Extremum.Type.MIN:
-            self.__price = bar.low
+        # }}}
+
+        @classmethod  # fromStr  # {{{
+        def fromStr(cls, typ: str):
+            types = {
+                "MIN": Extremum.Type.MIN,
+                "MAX": Extremum.Type.MAX,
+            }
+            return types[typ]
+
+        # }}}
+
+    # }}}
+
+    def __init__(self, data: dict, elist: ExtremumList):  # {{{
+        self.__data = data
+        self.__elist = elist
 
     # }}}
     def __str__(self):  # {{{
-        dt = Usr.localTime(self.__bar.dt)
-        ticker = self.__bar.chart.asset.ticker
-        s = f"{ticker} {dt} {self.price}"
-        s += " MAX" if self.isMax() else " MIN"
-        s += f"{self.__term}"
+        dt = Usr.localTime(self.dt)
+        s = f"{dt} {self.term} {self.type} {self.price}"
         return s
 
     # }}}
     def __lt__(self, other):  # operator <  # {{{
         assert isinstance(other, Extremum)
 
-        # TODO: а с float ведь тоже можно делать сравнения...
-        return self.__price < other.__price
+        return self.price < other.price
 
     # }}}
     def __le__(self, other):  # operator <=  # {{{
         assert isinstance(other, Extremum)
-        return self.__price <= other.__price
+        return self.price <= other.price
 
     # }}}
     def __gt__(self, other):  # operator >  # {{{
         assert isinstance(other, Extremum)
-        return self.__price > other.__price
+        return self.price > other.price
 
     # }}}
     def __ge__(self, other):  # operator >=  # {{{
         assert isinstance(other, Extremum)
-        return self.__price >= other.__price
+        return self.price >= other.price
 
     # }}}
     def __eq__(self, other):  # operator ==  # {{{
         assert isinstance(other, Extremum)
-        return self.__price == other.__price
+        return self.price == other.price
 
     # }}}
     def __sub__(self, other):  # operator -  # {{{
         assert isinstance(other, Extremum)
-        return self.__price - other.__price
+        return self.price - other.price
 
     # }}}
 
     @property  # dt  # {{{
     def dt(self):
-        return self.__bar.dt
+        return self.__data["dt"]
 
     # }}}
-    @property  # price  # {{{
-    def price(self):
-        return self.__price
-
-    # }}}
-    @property  # bar   # {{{
-    def bar(self) -> Bar:
-        return self.__bar
+    @property  # term  # {{{
+    def term(self):
+        return Term.fromStr(self.__data["term"])
 
     # }}}
     @property  # type  # {{{
     def type(self):
-        self.__type
+        return Extremum.Type.fromStr(self.__data["type"])
 
     # }}}
-    @property  # term  # {{{
-    def type(self):
-        self.__term
+    @property  # price  # {{{
+    def price(self):
+        return self.__data["price"]
 
     # }}}
-    @property  # asset   # {{{
-    def asset(self) -> Asset:
-        return self.__bar.chart.asset
+    @property  # elist  # {{{
+    def elist(self):
+        return self.__elist
+
+    # }}}
+    @property  # asset  # {{{
+    def asset(self):
+        return self.__elist.asset
+
+    # }}}
+    @property  # chart  # {{{
+    def chart(self):
+        return self.__elist.chart
+
+    # }}}
+    @property  # timeframe  # {{{
+    def timeframe(self):
+        return self.__elist.timeframe
 
     # }}}
 
     def isMin(self) -> bool:  # {{{
-        return self.__type == Extremum.Type.MIN
+        return self.type == Extremum.Type.MIN
 
     # }}}
     def isMax(self) -> bool:  # {{{
-        return self.__type == Extremum.Type.MAX
+        return self.type == Extremum.Type.MAX
 
     # }}}
     def isT1(self) -> bool:  # {{{
-        return self.__term == Term.T1
+        return self.term == Term.T1
 
     # }}}
     def isT2(self) -> bool:  # {{{
-        return self.__term == Term.T2
+        return self.term == Term.T2
 
     # }}}
     def isT3(self) -> bool:  # {{{
-        return self.__term == Term.T3
+        return self.term == Term.T3
 
     # }}}
 
     @classmethod  # period  # {{{
     def period(cls, e1: Extremum, e2: Extremum) -> int:
-        assert False, "TODO_ME"
-        ### old code
-
         assert e1.dt < e2.dt
 
-        chart = e1.bar.chart
-        index1 = chart.getIndex(e1.bar)
-        index2 = chart.getIndex(e2.bar)
-        period = index2 - index1
-
-        return period
+        chart = e1.chart
+        bars = chart.select(e1.dt, e2.dt)
+        return len(bars)
 
     # }}}
     @classmethod  # deltaPrice  # {{{
     def deltaPrice(cls, e1: Extremum, e2: Extremum) -> float:
-        assert False, "TODO_ME"
-        ### old code
         assert e1.dt < e2.dt
 
         delta = abs(e2.price - e1.price)
-
         return delta
 
     # }}}
     @classmethod  # deltaPercent  # {{{
     def deltaPercent(cls, e1: Extremum, e2: Extremum) -> float:
-        assert False, "TODO_ME"
-        ### old code
         assert e1.dt < e2.dt
 
         delta = abs(e2.price - e1.price)
@@ -168,8 +175,6 @@ class Extremum:
     # }}}
     @classmethod  # speedPrice  # {{{
     def speedPrice(cls, e1: Extremum, e2: Extremum) -> float:
-        assert False, "TODO_ME"
-        ### old code
         assert e1.dt < e2.dt
 
         delta = abs(e2.price - e1.price)
@@ -181,8 +186,6 @@ class Extremum:
     # }}}
     @classmethod  # speedPercent  # {{{
     def speedPercent(cls, e1: Extremum, e2: Extremum) -> float:
-        assert False, "TODO_ME"
-        ### old code
         assert e1.dt < e2.dt
 
         delta = abs(e2.price - e1.price)
@@ -193,28 +196,44 @@ class Extremum:
         return round(speed, 2)
 
     # }}}
-    @classmethod  # volume  # {{{
-    def volume(cls, e1: Extremum, e2: Extremum) -> int:
-        assert False, "TODO_ME"
-        ### old code
+    @classmethod  # volumeBear  # {{{
+    def volumeBear(cls, e1: Extremum, e2: Extremum) -> int:
         assert e1.dt < e2.dt
 
-        chart = e1.bar.chart
-        bars = chart.getBars(begin=e1.bar, end=e2.bar)
+        chart = e1.chart
+        bars = chart.select(e1.dt, e2.dt)
+        bear = bars.filter(pl.col("open") > pl.col("close"))
+        vol = bear["volume"].sum()
 
-        # не учитываем объем первого экстремума, только объем баров движения
-        # от первого экстремума до второго
-        trend_bars = bars[1:]
+        return vol
 
-        # считаем сумму объемов
-        all_volume = 0
-        for bar in trend_bars:
-            all_volume += bar.vol
+    # }}}
+    @classmethod  # volumeBull  # {{{
+    def volumeBull(cls, e1: Extremum, e2: Extremum) -> int:
+        assert e1.dt < e2.dt
 
-        return all_volume
+        chart = e1.chart
+        bars = chart.select(e1.dt, e2.dt)
+        bull = bars.filter(pl.col("open") < pl.col("close"))
+        vol = bull["volume"].sum()
+
+        return vol
+
+    # }}}
+    @classmethod  # volumeTotal  # {{{
+    def volumeTotal(cls, e1: Extremum, e2: Extremum) -> int:
+        assert e1.dt < e2.dt
+
+        chart = e1.chart
+        bars = chart.select(e1.dt, e2.dt)
+        vol = bars["volume"].sum()
+
+        return vol
 
     # }}}
 
+
+# }}}
 
 if __name__ == "__main__":
     ...

@@ -103,8 +103,6 @@ class Bar:
     # }}}
     @property  # lower  # {{{
     def lower(self) -> Range:
-        # вот тут бы как нибудь мин прайс степ бы учесть..
-        # а то значения open close - попадают и в тело и в тени.
         if self.isBull():
             return Range(self.low, self.open, Range.Type.LOWER, self)
         else:

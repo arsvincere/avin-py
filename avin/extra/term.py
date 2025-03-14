@@ -11,18 +11,40 @@ from __future__ import annotations
 import enum
 
 
-class Term(enum.Enum):  # {{{
+class Term(enum.Enum):
     T1 = 1
     T2 = 2
     T3 = 3
     T4 = 4
     T5 = 5
 
-    def __str__(self):
+    def __str__(self):  # {{{
         return self.name
 
+    # }}}
+    def __lt__(self, other):  # operator <  # {{{
+        assert isinstance(other, Term)
+        return self.value < other.value
 
-# }}}
+    # }}}
+    def __gt__(self, other):  # operator >  # {{{
+        assert isinstance(other, Term)
+        return self.value > other.value
+
+    # }}}
+
+    @classmethod  # fromStr  # {{{
+    def fromStr(cls, string: str):
+        types = {
+            "T1": Term.T1,
+            "T2": Term.T2,
+            "T3": Term.T3,
+            "T4": Term.T4,
+            "T5": Term.T5,
+        }
+        return types[string]
+
+    # }}}
 
 
 if __name__ == "__main__":
