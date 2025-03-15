@@ -168,23 +168,6 @@ class Analytic(ABC):
         return abs(i + 1)
 
     # }}}
-    @staticmethod  # SPEED# {{{
-    def SPEED(chart, period):
-        assert chart.last is not None
-
-        if chart[-1] is None or chart[-period - 1] is None:
-            return None
-
-        first = chart[-period - 1].body.mid()
-        last = chart[-1].body.mid()
-        delta = last - first
-
-        percent = delta / first * 100
-        speed = percent / period
-
-        return speed
-
-    # }}}
     @staticmethod  # MA# {{{
     def MA(chart, period, parameter="close"):
         assert chart.last is not None

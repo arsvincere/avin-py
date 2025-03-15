@@ -20,8 +20,6 @@ from avin.data import Data
 from avin.extra.size import Size
 from avin.utils import Tree, configureLogger, logger, now
 
-__all__ = ("VolumeAnalytic",)
-
 
 class VolumeAnalytic(Analytic):
     name = "volume"

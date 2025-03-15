@@ -17,8 +17,6 @@ import pandas as pd
 from avin.analytic._analytic import Analytic
 from avin.utils import Tree, logger
 
-__all__ = ("VaweAnalytic",)
-
 
 class VaweAnalytic(Analytic):
     class Analyse(enum.Enum):  # {{{

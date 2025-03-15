@@ -21,8 +21,6 @@ from avin.extra import ExtremumList, Term
 from avin.extra.size import Size
 from avin.utils import configureLogger, logger, now
 
-__all__ = ("TrendAnalytic",)
-
 
 class TrendAnalytic(Analytic):
     name = "trend"
@@ -332,20 +330,33 @@ class TrendAnalytic(Analytic):
                 lambda x: cls._identifySize(x, trait_sz_table),
                 return_dtype=pl.Object,  # type = avin.Size
             )
+
+            size_col_name = f"{trait}_size"
+            ssize_col_name = f"{trait}_ssize"
             df = df.with_columns(
                 sizes.map_elements(
                     lambda x: x.name, return_dtype=pl.String
-                ).alias(f"{trait}_size"),
+                ).alias(size_col_name),
                 sizes.map_elements(
                     lambda x: x.simple().name, return_dtype=pl.String
-                ).alias(f"{trait}_ssize"),
+                ).alias(ssize_col_name),
             )
 
-        # TODO: тут получается один тренд будет XXL
-        # из за того что я классифицию размеры по формуле (begin <= x < end)
-        # то у меня полюбому в трендах сразу получается один XXL
-        # а так не должно быть, в истории он должен быть с размером
-        # GREATEST_BIG  /  XL   соответственно.
+            # INFO: из за того что я классифицию размеры
+            # по формуле (begin <= x < end)
+            # то у меня полюбому в получается один BLACKSWAN_BIG / XXL
+            # а так не должно быть, в истории он должен быть с размером
+            # GREATEST_BIG  /  XL   соответственно. Replace it.
+            df = df.with_columns(
+                pl.when(pl.col(size_col_name) == "BLACKSWAN_BIG")
+                .then(pl.lit("GREATEST_BIG"))
+                .otherwise(pl.col(size_col_name))
+                .alias(size_col_name),
+                pl.when(pl.col(ssize_col_name) == "XXL")
+                .then(pl.lit("XL"))
+                .otherwise(pl.col(ssize_col_name))
+                .alias(ssize_col_name),
+            )
 
         # save all trends with setted trait sizes
         name = f"{cls.name} {tf} {term} {cls.Analyse.TREND}"
