@@ -98,7 +98,7 @@ class TrendAnalytic(Analytic):
 
         chart = await cls.__loadChart(asset, tf)
         elist = cls.__defineExtremum(chart)
-        cls.__collectTrends(elist, term)
+        cls.__getAllTrends(elist, term)
         cls.__defineTrendSizes(asset, tf, term)
         cls.__setTrendSizes(asset, tf, term)
 
@@ -122,7 +122,7 @@ class TrendAnalytic(Analytic):
                 chart = await cls.__loadChart(asset, tf)
                 elist = cls.__defineExtremum(chart)
                 for term in Term:
-                    cls.__collectTrends(elist, term)
+                    cls.__getAllTrends(elist, term)
                     cls.__defineTrendSizes(asset, tf, term)
                     cls.__setTrendSizes(asset, tf, term)
 
@@ -176,13 +176,13 @@ class TrendAnalytic(Analytic):
         return elist
 
     # }}}
-    @classmethod  # __collectTrends  # {{{
-    def __collectTrends(
+    @classmethod  # __getAllTrends  # {{{
+    def __getAllTrends(
         cls,
         elist: ExtremumList,
         term: Term,
     ):
-        logger.info(f"   Collect trends {term}")
+        logger.info(f"   Get all trends {term}")
 
         trends = elist.getAllTrends(term)
         df = cls.__createDataFrame(trends)

@@ -224,10 +224,8 @@ class ExtremumList:
         # set start direction of trend = first bar.type
         if prev["open"] < prev["close"]:
             trend_t = Trend.Type.BULL
-        elif prev["open"] > prev["close"]:
-            trend_t = Trend.Type.BEAR
         else:
-            assert False, "TODO: skip point bars???"
+            trend_t = Trend.Type.BEAR
 
         # cacl extremums
         for cur in df.iter_rows(named=True):
