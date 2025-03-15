@@ -15,16 +15,18 @@ from avin.const import Dir
 class Usr:  # {{{
     # User subdirectories
     ANALYSE = os.path.join(Dir.USR, "analyse")
-    ANALYTIC = os.path.join(Dir.USR, "analytic")
+    BACKUP = os.path.join(Dir.USR, "backup")
+    # ANALYTIC = os.path.join(Dir.USR, "analytic")
     CACHE = os.path.join(Dir.USR, "cache")
     CONNECT = os.path.join(Dir.USR, "connect")
     DATA = os.path.join(Dir.USR, "data")
     FILTER = os.path.join(Dir.USR, "filter")
     MARK = os.path.join(Dir.USR, "mark")
-    RESEARCH = os.path.join(Dir.USR, "research")
-    SCAN = os.path.join(Dir.USR, "scan")
+    SCRIPT = os.path.join(Dir.USR, "script")
+    # RESEARCH = os.path.join(Dir.USR, "research")
+    # SCAN = os.path.join(Dir.USR, "scan")
     STRATEGY = os.path.join(Dir.USR, "strategy")
-    UTILS = os.path.join(Dir.USR, "utils")
+    # UTILS = os.path.join(Dir.USR, "utils")
 
     # User notes
     NOTE = os.path.join(Dir.USR, "note.un")
@@ -85,10 +87,10 @@ class Auto:  # {{{
     UPDATE_ANALYTIC_PERIOD: timedelta = timedelta(days=30)
 
     # Postgres backup
-    BACKUP_PATH: str = Usr.DATA
-    BACKUP_MARKET_DATA: bool = True
-    BACKUP_USER_DB: bool = True
-    BACKUP_DATA_HISTORY: int = 2  # files
+    BACKUP_PATH: str = Usr.BACKUP
+    BACKUP_MARKET: bool = True
+    BACKUP_PUBLIC: bool = True
+    BACKUP_MARKET_HISTORY: int = 2  # files
     BACKUP_PUBLIC_HISTORY: int = 10  # files
 
 

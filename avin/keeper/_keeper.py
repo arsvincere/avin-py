@@ -37,10 +37,10 @@ class Keeper:
     DATABASE = Usr.PG_DATABASE
     HOST = Usr.PG_HOST
 
-    __LAST_BACKUP_DATA_DT = Cmd.path(Usr.DATA, "data_bak_date")
-    __LAST_BACKUP_USER_DT = Cmd.path(Usr.DATA, "public_bak_date")
-    __BACKUP_DATA = Auto.BACKUP_MARKET_DATA
-    __BACKUP_USER = Auto.BACKUP_USER_DB
+    __LAST_BACKUP_DATA_DT = Cmd.path(Usr.BACKUP, "_market_bak_date")
+    __LAST_BACKUP_USER_DT = Cmd.path(Usr.BACKUP, "_public_bak_date")
+    __BACKUP_DATA = Auto.BACKUP_MARKET
+    __BACKUP_USER = Auto.BACKUP_PUBLIC
 
     @classmethod  # createDataBase  # {{{
     def createDataBase(cls) -> None:
@@ -91,7 +91,7 @@ class Keeper:
         logger.debug(f"{cls.__name__}.backupMarketData()")
 
         Cmd.makeDirs(Auto.BACKUP_PATH)
-        file_name = f"data_{Date.today()}.bak"
+        file_name = f"market_{Date.today()}.bak"
         data_path = Cmd.path(Auto.BACKUP_PATH, file_name)
         os.system(f"pg_dump {cls.DATABASE} -Fc -f {data_path} -n data")
 
@@ -2277,11 +2277,12 @@ class Keeper:
         logger.debug(f"{cls.__name__}.__deleteOldBackup()")
 
         files = Cmd.content(Auto.BACKUP_PATH, full_path=True)
-        data_files = sorted([i for i in files if "data_" in i])
+        files = Cmd.select(files, extension=".bak")
+        data_files = sorted([i for i in files if "market_" in i])
         public_files = sorted([i for i in files if "public_" in i])
 
         # delete data backups
-        while len(data_files) > Auto.BACKUP_DATA_HISTORY:
+        while len(data_files) > Auto.BACKUP_MARKET_HISTORY:
             Cmd.delete(data_files[0])
             data_files.pop(0)
 
