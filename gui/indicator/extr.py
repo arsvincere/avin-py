@@ -470,26 +470,28 @@ class _ExtremumSettings(QtWidgets.QDialog):  # {{{
         t1 = Term.T1
         t2 = Term.T2
         t3 = Term.T3
+        t4 = Term.T4
+        t5 = Term.T5
 
         tf = TimeFrame("1M")
         gextr.setTrend(tf, t1, self.trend_1m_t1.isChecked())
-        # gextr.setTrend(tf, t2, self.trend_1m_t2.isChecked())
-        # gextr.setTrend(tf, t3, self.trend_1m_t3.isChecked())
+        gextr.setTrend(tf, t2, self.trend_1m_t2.isChecked())
+        gextr.setTrend(tf, t3, self.trend_1m_t3.isChecked())
 
         tf = TimeFrame("5M")
         gextr.setTrend(tf, t1, self.trend_5m_t1.isChecked())
-        # gextr.setTrend(tf, t2, self.trend_5m_t2.isChecked())
-        # gextr.setTrend(tf, t3, self.trend_5m_t3.isChecked())
+        gextr.setTrend(tf, t2, self.trend_5m_t2.isChecked())
+        gextr.setTrend(tf, t3, self.trend_5m_t3.isChecked())
 
         tf = TimeFrame("1H")
         gextr.setTrend(tf, t1, self.trend_1h_t1.isChecked())
-        # gextr.setTrend(tf, t2, self.trend_1h_t2.isChecked())
-        # gextr.setTrend(tf, t3, self.trend_1h_t3.isChecked())
+        gextr.setTrend(tf, t2, self.trend_1h_t2.isChecked())
+        gextr.setTrend(tf, t3, self.trend_1h_t3.isChecked())
 
         tf = TimeFrame("D")
         gextr.setTrend(tf, t1, self.trend_d_t1.isChecked())
-        # gextr.setTrend(tf, t2, self.trend_d_t2.isChecked())
-        # gextr.setTrend(tf, t3, self.trend_d_t3.isChecked())
+        gextr.setTrend(tf, t2, self.trend_d_t2.isChecked())
+        gextr.setTrend(tf, t3, self.trend_d_t3.isChecked())
 
     # }}}
     def configure(self, gextr):  # {{{

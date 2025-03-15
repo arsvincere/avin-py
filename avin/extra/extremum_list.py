@@ -14,10 +14,8 @@ from avin.core.bar import Bar
 from avin.core.chart import Chart
 from avin.core.timeframe import TimeFrame
 from avin.extra.extremum import Extremum
-from avin.extra.move import Move
 from avin.extra.term import Term
 from avin.extra.trend import Trend
-from avin.extra.vawe import Vawe
 from avin.utils import UTC, Signal
 
 
@@ -26,14 +24,18 @@ class ExtremumList:
         self.__chart = chart
 
         # data
-        schema = {
+        self.__schema = {
             "dt": pl.datatypes.Datetime("us", UTC),
             "term": str,
             "type": str,
             "price": float,
         }
-        self.__t1 = pl.DataFrame(schema=schema)
-        self.__now = pl.DataFrame(schema=schema)
+        self.__t1 = pl.DataFrame(schema=self.__schema)
+        self.__t2 = pl.DataFrame(schema=self.__schema)
+        self.__t3 = pl.DataFrame(schema=self.__schema)
+        self.__t4 = pl.DataFrame(schema=self.__schema)
+        self.__t5 = pl.DataFrame(schema=self.__schema)
+        self.__now = pl.DataFrame(schema=self.__schema)
 
         # signals
         self.upd_extr = Signal(ExtremumList, Extremum)
@@ -45,6 +47,8 @@ class ExtremumList:
 
         # calc extremums
         self.__calcExtrT1()
+        self.__calcExtrT2()
+        self.__calcExtrT3()
 
     # }}}
 
@@ -68,122 +72,99 @@ class ExtremumList:
         return self.__t1
 
     # }}}
+    @property  # t2  # {{{
+    def t2(self):
+        return self.__t2
+
+    # }}}
+    @property  # t3  # {{{
+    def t3(self):
+        return self.__t3
+
+    # }}}
+    @property  # t4  # {{{
+    def t4(self):
+        return self.__t4
+
+    # }}}
+    @property  # t5  # {{{
+    def t5(self):
+        return self.__t5
+
+    # }}}
 
     def extr(self, term: Term, n: int) -> Extremum | None:  # {{{
-        assert n >= 0
-        assert term == Term.T1, "TODO other term"
+        assert n > 0
 
         match term:
             case Term.T1:
                 df = self.__t1
+            case Term.T2:
+                df = self.__t2
+            case Term.T3:
+                df = self.__t3
 
         if n > len(df):
             return None
-        if n < 0:
-            return None
 
-        if n == 0:
-            data = self.__now
-        elif n <= len(df):
-            data = df[-n]
-
-        dct = data.row(0, named=True)
+        dct = df.row(-n, named=True)
         e = Extremum(dct, self)
         return e
 
-        """
-        self.__shortterm self.__midterm self.__longterm
-        хранят экстремумы по порядку, то есть 0 это самый старый,
-        мне же нужно по n=1 выдать последний экстремум, n=2
-        предпоследний и тп. То есть получается:
-        n = 1  ->  self.__shortterm[-1]
-        n = 2  ->  self.__shortterm[-2]
-        ...
-        При этом n=0 - не имеет смысла - текущий экстремум не
-        известен еще. Или... см ТODO. А пока на 0 поставлю
-        временно ассерт.
-        """
-        # TODO:
-        # а вообще-то текущий экстремум - это отдельная задача
-        # которую надо будет порешать. Текущий экстремум это
-        # highestHigh / lowestLow среди баров которые пришли
-        # после последнего зафиксированного экстремума.
-        # Это для шорт терм. А для m-l там сложнее
-        # Там уже нужно смотреть не просто на бары - а на
-        # экстремумы. Хотя можно и на бары но это будет
-        # очень долго... надо на экстремумы смотреть.
-        assert n != 0
-
-        match term:
-            case Term.STERM:
-                if n > len(self.__shortterm):
-                    return None
-                return self.__shortterm[-n]
-
-            case Term.MTERM:
-                if n > len(self.__midterm):
-                    return None
-                return self.__midterm[-n]
-
-            case Term.LTERM:
-                if n > len(self.__longterm):
-                    return None
-                return self.__longterm[-n]
-
     # }}}
     def trend(self, term: Term, n: int) -> Trend | None:  # {{{
-        assert term == Term.T1, "TODO other term"
-
+        assert n > 0
         match term:
             case Term.T1:
                 df = self.__t1
+            case Term.T2:
+                df = self.__t2
+            case Term.T3:
+                df = self.__t3
+            case _:
+                assert False, "TODO_ME"
 
         if n > len(df) - 1:
             return None
 
-        if n == 0:
-            e1_data = self.__t1[-1]
-            e2_data = self.__now
-        elif n > 0:
-            e1_data = self.__t1[-n - 1]
-            e2_data = self.__t1[-n]
-        else:
-            assert False, "WTF???"
-
+        # if n == 0:
+        #     e1_data = self.__t1[-1]
+        #     e2_data = self.__now
+        e1_data = df[-n - 1]
+        e2_data = df[-n]
         e1 = Extremum(e1_data.row(0, named=True), self)
         e2 = Extremum(e2_data.row(0, named=True), self)
+
         t = Trend(e1, e2, self)
         return t
 
     # }}}
-    def vawe(self, term: Term, n: int) -> Vawe | None:  # {{{
-        assert False, "TODO_ME_UPDATE"
-        match term:
-            case Term.STERM:
-                return self.__sVawe(n)
-            case Term.MTERM:
-                return self.__mVawe(n)
-            case Term.LTERM:
-                return self.__lVawe(n)
-
-    # }}}
-    def move(self, term: Term, n: int) -> Move | None:  # {{{
-        assert False, "TODO_ME_UPDATE"
-        match term:
-            case Term.STERM:
-                return self.__sMove(n)
-            case Term.MTERM:
-                return self.__mMove(n)
-            case Term.LTERM:
-                return self.__lMove(n)
-
-    # }}}
+    # def vawe(self, term: Term, n: int) -> Vawe | None:  # {{{
+    #     assert False, "TODO_ME_UPDATE"
+    #     match term:
+    #         case Term.STERM:
+    #             return self.__sVawe(n)
+    #         case Term.MTERM:
+    #             return self.__mVawe(n)
+    #         case Term.LTERM:
+    #             return self.__lVawe(n)
+    #
+    # # }}}
+    # def move(self, term: Term, n: int) -> Move | None:  # {{{
+    #     assert False, "TODO_ME_UPDATE"
+    #     match term:
+    #         case Term.STERM:
+    #             return self.__sMove(n)
+    #         case Term.MTERM:
+    #             return self.__mMove(n)
+    #         case Term.LTERM:
+    #             return self.__lMove(n)
+    #
+    # # }}}
     def getAllTrends(self, term: Term) -> list[Trend]:  # {{{
-        assert term == Term.T1, "TODO other term"
-
         all_trends = list()
 
-        n = 0
+        n = 1
         trend = self.trend(term, n)
         while trend is not None:
             all_trends.append(trend)
@@ -194,28 +175,28 @@ class ExtremumList:
         return all_trends
 
     # }}}
-    def getAllVawes(self, term: Term) -> list[Vawe]:  # {{{
-        assert False, "TODO_ME_UPDATE"
-        match term:
-            case Term.STERM:
-                return self.__getAllSVawes()
-            case Term.MTERM:
-                return self.__getAllMVawes()
-            case Term.LTERM:
-                return self.__getAllLVawes()
-
-    # }}}
-    def getAllMoves(self, term: Term) -> list[Move]:  # {{{
-        assert False, "TODO_ME_UPDATE"
-        match term:
-            case Term.STERM:
-                return self.__getAllSMoves()
-            case Term.MTERM:
-                return self.__getAllMMoves()
-            case Term.LTERM:
-                return self.__getAllLMoves()
-
-    # }}}
+    # def getAllVawes(self, term: Term) -> list[Vawe]:  # {{{
+    #     assert False, "TODO_ME_UPDATE"
+    #     match term:
+    #         case Term.STERM:
+    #             return self.__getAllSVawes()
+    #         case Term.MTERM:
+    #             return self.__getAllMVawes()
+    #         case Term.LTERM:
+    #             return self.__getAllLVawes()
+    #
+    # # }}}
+    # def getAllMoves(self, term: Term) -> list[Move]:  # {{{
+    #     assert False, "TODO_ME_UPDATE"
+    #     match term:
+    #         case Term.STERM:
+    #             return self.__getAllSMoves()
+    #         case Term.MTERM:
+    #             return self.__getAllMMoves()
+    #         case Term.LTERM:
+    #             return self.__getAllLMoves()
+    #
+    # # }}}
 
     def __calcExtrT1(self) -> None:  # {{{
         term = Term.T1
@@ -230,15 +211,15 @@ class ExtremumList:
 
         # set start direction of trend = first bar.type
         if prev["open"] < prev["close"]:
-            self.__trend_t = Trend.Type.BULL
+            trend_t = Trend.Type.BULL
         elif prev["open"] > prev["close"]:
-            self.__trend_t = Trend.Type.BEAR
+            trend_t = Trend.Type.BEAR
         else:
             assert False, "TODO: skip point bars???"
 
         # cacl extremums
         for cur in df.iter_rows(named=True):
-            if self.__trend_t == Trend.Type.BULL:
+            if trend_t == Trend.Type.BULL:
                 if cur["high"] > prev["high"]:
                     self.__now = pl.DataFrame(
                         {
@@ -258,9 +239,9 @@ class ExtremumList:
                             "price": cur["low"],
                         }
                     )
-                    self.__trend_t = Trend.Type.BEAR
+                    trend_t = Trend.Type.BEAR
 
-            elif self.__trend_t == Trend.Type.BEAR:
+            elif trend_t == Trend.Type.BEAR:
                 if cur["low"] < prev["low"]:
                     self.__now = pl.DataFrame(
                         {
@@ -280,9 +261,105 @@ class ExtremumList:
                             "price": cur["high"],
                         }
                     )
-                    self.__trend_t = Trend.Type.BULL
+                    trend_t = Trend.Type.BULL
 
             prev = cur
+
+    # }}}
+    def __calcExtrT2(self) -> None:  # {{{
+        df = self.__t1
+
+        # pop first extr
+        prev = df.row(0, named=True)
+        now_t2 = pl.DataFrame(prev)
+        df = df.filter(pl.col("dt") != prev["dt"])
+
+        # set start direction of trend
+        if prev["type"] == "MAX":
+            trend_t = Trend.Type.BULL
+            prev_max = prev
+            prev_min = None
+        else:
+            trend_t = Trend.Type.BEAR
+            prev_max = None
+            prev_min = prev
+
+        # cacl extremums T2
+        for cur in df.iter_rows(named=True):
+            if trend_t == Trend.Type.BULL:
+                if cur["type"] == "MIN":
+                    prev_min = cur
+                elif cur["price"] > prev_max["price"]:
+                    now_t2 = pl.DataFrame(cur)
+                    prev_max = cur
+                else:
+                    self.__t2.extend(now_t2)
+                    now_t2 = pl.DataFrame(prev_min)
+                    trend_t = Trend.Type.BEAR
+                    prev_max = cur
+
+            elif trend_t == Trend.Type.BEAR:
+                if cur["type"] == "MAX":
+                    prev_max = cur
+                elif cur["price"] < prev_min["price"]:
+                    now_t2 = pl.DataFrame(cur)
+                    prev_min = cur
+                else:
+                    self.__t2.extend(now_t2)
+                    now_t2 = pl.DataFrame(prev_max)
+                    trend_t = Trend.Type.BULL
+                    prev_min = cur
+
+        # replace values of column "term" from "T1" to "T2"
+        self.__t2 = self.__t2.with_columns(term=pl.lit("T2"))
+
+    # }}}
+    def __calcExtrT3(self) -> None:  # {{{
+        df = self.__t2
+
+        # pop first extr
+        prev = df.row(0, named=True)
+        now_t3 = pl.DataFrame(prev)
+        df = df.filter(pl.col("dt") != prev["dt"])
+
+        # set start direction of trend
+        if prev["type"] == "MAX":
+            trend_t = Trend.Type.BULL
+            prev_max = prev
+            prev_min = None
+        else:
+            trend_t = Trend.Type.BEAR
+            prev_max = None
+            prev_min = prev
+
+        # cacl extremums T2
+        for cur in df.iter_rows(named=True):
+            if trend_t == Trend.Type.BULL:
+                if cur["type"] == "MIN":
+                    prev_min = cur
+                elif cur["price"] > prev_max["price"]:
+                    now_t3 = pl.DataFrame(cur)
+                    prev_max = cur
+                else:
+                    self.__t3.extend(now_t3)
+                    now_t3 = pl.DataFrame(prev_min)
+                    trend_t = Trend.Type.BEAR
+                    prev_max = cur
+
+            elif trend_t == Trend.Type.BEAR:
+                if cur["type"] == "MAX":
+                    prev_max = cur
+                elif cur["price"] < prev_min["price"]:
+                    now_t3 = pl.DataFrame(cur)
+                    prev_min = cur
+                else:
+                    self.__t3.extend(now_t3)
+                    now_t3 = pl.DataFrame(prev_max)
+                    trend_t = Trend.Type.BULL
+                    prev_min = cur
+
+        # replace values of column "term" from "T2" to "T3"
+        self.__t3 = self.__t3.with_columns(term=pl.lit("T3"))
 
     # }}}
     def __onNewBar(self, chart: Chart, bar: Bar):  # {{{

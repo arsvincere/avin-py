@@ -19,7 +19,7 @@ from avin.extra.term import Term
 ExtremumList = TypeVar("ExtremumList")
 
 
-class Extremum:  # {{{
+class Extremum:
     class Type(enum.Enum):  # {{{
         MIN = 0
         MAX = 1
@@ -232,8 +232,6 @@ class Extremum:  # {{{
 
     # }}}
 
-
-# }}}
 
 if __name__ == "__main__":
     ...
