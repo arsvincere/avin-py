@@ -47,8 +47,10 @@ class ExtremumList:
 
         # calc extremums
         self.__calcExtrT1()
-        self.__calcExtrT2()
-        self.__calcExtrT3()
+        self.__calcExtrNext(self.__t1, self.__t2, "T2")
+        self.__calcExtrNext(self.__t2, self.__t3, "T3")
+        self.__calcExtrNext(self.__t3, self.__t4, "T4")
+        self.__calcExtrNext(self.__t4, self.__t5, "T5")
 
     # }}}
 
@@ -103,17 +105,24 @@ class ExtremumList:
                 df = self.__t2
             case Term.T3:
                 df = self.__t3
+            case Term.T4:
+                df = self.__t4
+            case Term.T5:
+                df = self.__t5
+            case _:
+                assert False, "TODO_ME"
 
         if n > len(df):
             return None
 
-        dct = df.row(-n, named=True)
-        e = Extremum(dct, self)
+        data = df.row(-n, named=True)
+        e = Extremum(data, self)
         return e
 
     # }}}
     def trend(self, term: Term, n: int) -> Trend | None:  # {{{
         assert n > 0
+
         match term:
             case Term.T1:
                 df = self.__t1
@@ -121,19 +130,20 @@ class ExtremumList:
                 df = self.__t2
             case Term.T3:
                 df = self.__t3
+            case Term.T4:
+                df = self.__t4
+            case Term.T5:
+                df = self.__t5
             case _:
                 assert False, "TODO_ME"
 
         if n > len(df) - 1:
             return None
 
-        # if n == 0:
-        #     e1_data = self.__t1[-1]
-        #     e2_data = self.__now
-        e1_data = df[-n - 1]
-        e2_data = df[-n]
-        e1 = Extremum(e1_data.row(0, named=True), self)
-        e2 = Extremum(e2_data.row(0, named=True), self)
+        e1_data = df.row(-n - 1, named=True)
+        e2_data = df.row(-n, named=True)
+        e1 = Extremum(e1_data, self)
+        e2 = Extremum(e2_data, self)
 
         t = Trend(e1, e2, self)
         return t
@@ -266,12 +276,12 @@ class ExtremumList:
             prev = cur
 
     # }}}
-    def __calcExtrT2(self) -> None:  # {{{
-        df = self.__t1
+    def __calcExtrNext(self, in_t, out_t, out_name) -> None:  # {{{
+        df = in_t
 
         # pop first extr
         prev = df.row(0, named=True)
-        now_t2 = pl.DataFrame(prev)
+        now_e = pl.DataFrame(prev)
         df = df.filter(pl.col("dt") != prev["dt"])
 
         # set start direction of trend
@@ -284,17 +294,17 @@ class ExtremumList:
             prev_max = None
             prev_min = prev
 
-        # cacl extremums T2
+        # cacl extremums high term
         for cur in df.iter_rows(named=True):
             if trend_t == Trend.Type.BULL:
                 if cur["type"] == "MIN":
                     prev_min = cur
                 elif cur["price"] > prev_max["price"]:
-                    now_t2 = pl.DataFrame(cur)
+                    now_e = pl.DataFrame(cur)
                     prev_max = cur
                 else:
-                    self.__t2.extend(now_t2)
-                    now_t2 = pl.DataFrame(prev_min)
+                    out_t.extend(now_e)
+                    now_e = pl.DataFrame(prev_min)
                     trend_t = Trend.Type.BEAR
                     prev_max = cur
 
@@ -302,64 +312,16 @@ class ExtremumList:
                 if cur["type"] == "MAX":
                     prev_max = cur
                 elif cur["price"] < prev_min["price"]:
-                    now_t2 = pl.DataFrame(cur)
+                    now_e = pl.DataFrame(cur)
                     prev_min = cur
                 else:
-                    self.__t2.extend(now_t2)
-                    now_t2 = pl.DataFrame(prev_max)
+                    out_t.extend(now_e)
+                    now_e = pl.DataFrame(prev_max)
                     trend_t = Trend.Type.BULL
                     prev_min = cur
 
-        # replace values of column "term" from "T1" to "T2"
-        self.__t2 = self.__t2.with_columns(term=pl.lit("T2"))
-
-    # }}}
-    def __calcExtrT3(self) -> None:  # {{{
-        df = self.__t2
-
-        # pop first extr
-        prev = df.row(0, named=True)
-        now_t3 = pl.DataFrame(prev)
-        df = df.filter(pl.col("dt") != prev["dt"])
-
-        # set start direction of trend
-        if prev["type"] == "MAX":
-            trend_t = Trend.Type.BULL
-            prev_max = prev
-            prev_min = None
-        else:
-            trend_t = Trend.Type.BEAR
-            prev_max = None
-            prev_min = prev
-
-        # cacl extremums T2
-        for cur in df.iter_rows(named=True):
-            if trend_t == Trend.Type.BULL:
-                if cur["type"] == "MIN":
-                    prev_min = cur
-                elif cur["price"] > prev_max["price"]:
-                    now_t3 = pl.DataFrame(cur)
-                    prev_max = cur
-                else:
-                    self.__t3.extend(now_t3)
-                    now_t3 = pl.DataFrame(prev_min)
-                    trend_t = Trend.Type.BEAR
-                    prev_max = cur
-
-            elif trend_t == Trend.Type.BEAR:
-                if cur["type"] == "MAX":
-                    prev_max = cur
-                elif cur["price"] < prev_min["price"]:
-                    now_t3 = pl.DataFrame(cur)
-                    prev_min = cur
-                else:
-                    self.__t3.extend(now_t3)
-                    now_t3 = pl.DataFrame(prev_max)
-                    trend_t = Trend.Type.BULL
-                    prev_min = cur
-
-        # replace values of column "term" from "T2" to "T3"
-        self.__t3 = self.__t3.with_columns(term=pl.lit("T3"))
+        # replace values of column "term"
+        out_t = out_t.with_columns(term=pl.lit(out_name))
 
     # }}}
     def __onNewBar(self, chart: Chart, bar: Bar):  # {{{
