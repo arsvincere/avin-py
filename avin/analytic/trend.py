@@ -15,7 +15,7 @@ import polars as pl
 
 from avin.analytic._analytic import Analytic
 from avin.const import ONE_YEAR
-from avin.core import Asset, TimeFrame
+from avin.core import Asset, Chart, TimeFrame
 from avin.data import Data
 from avin.extra import ExtremumList, Term
 from avin.extra.size import Size
@@ -57,12 +57,12 @@ class TrendAnalytic(Analytic):
         trait: TrendAnalytic.Trait,
     ) -> pl.DataFrame:
         sizes = cls.load(
-            asset=trend.asset,
-            tf=trend.timeframe,
-            term=trend.term,
+            asset=asset,
+            tf=tf,
+            term=term,
             analyse=cls.Analyse.SIZE,
         )
-        trait_sizes = sizes.filter(pl.col(str(trait) == "trait"))
+        trait_sizes = sizes.filter(pl.col("trait") == str(trait))
 
         return trait_sizes
 
@@ -96,7 +96,9 @@ class TrendAnalytic(Analytic):
     async def analyse(cls, asset: Asset, tf: TimeFrame, term: Term) -> None:
         logger.info(f":: {cls.name} analyse {asset.ticker}-{tf} {term}")
 
-        await cls.__collectTrends(asset, tf, term)
+        chart = await cls.__loadChart(asset, tf)
+        elist = cls.__defineExtremum(chart)
+        cls.__collectTrends(elist, term)
         cls.__defineTrendSizes(asset, tf, term)
         cls.__setTrendSizes(asset, tf, term)
 
@@ -116,9 +118,13 @@ class TrendAnalytic(Analytic):
 
         for asset in assets:
             for tf in timeframes:
-                # for term in Term:
-                term = Term.T1
-                await TrendAnalytic.analyse(asset, tf, term)
+                logger.info(f":: {cls.name} analyse {asset.ticker}-{tf}")
+                chart = await cls.__loadChart(asset, tf)
+                elist = cls.__defineExtremum(chart)
+                for term in Term:
+                    cls.__collectTrends(elist, term)
+                    cls.__defineTrendSizes(asset, tf, term)
+                    cls.__setTrendSizes(asset, tf, term)
 
     # }}}
     @classmethod  # load  # {{{
@@ -140,9 +146,11 @@ class TrendAnalytic(Analytic):
 
     @classmethod  # __loadChart  # {{{
     async def __loadChart(cls, asset, tf):
+        logger.info("   Loading chart")
+
         match str(tf):
             case "1M":
-                begin = now() - ONE_YEAR * 5
+                begin = now() - ONE_YEAR * 1
             case "5M":
                 begin = now() - ONE_YEAR * 5
             case "1H":
@@ -159,23 +167,29 @@ class TrendAnalytic(Analytic):
         return chart
 
     # }}}
+    @classmethod  # __defineExtremum  # {{{
+    def __defineExtremum(cls, chart: Chart):
+        logger.info("   Define extremums")
+
+        elist = ExtremumList(chart)
+
+        return elist
+
+    # }}}
     @classmethod  # __collectTrends  # {{{
-    async def __collectTrends(
+    def __collectTrends(
         cls,
-        asset: Asset,
-        tf: TimeFrame,
+        elist: ExtremumList,
         term: Term,
     ):
-        logger.info("   Collect trends")
+        logger.info(f"   Collect trends {term}")
 
-        chart = await cls.__loadChart(asset, tf)
-        elist = ExtremumList(chart)
         trends = elist.getAllTrends(term)
-
         df = cls.__createDataFrame(trends)
-        name = f"{cls.name} {tf} {term} {cls.Analyse.TREND}"
+
+        name = f"{cls.name} {elist.timeframe} {term} {cls.Analyse.TREND}"
         super().save(
-            asset=asset,
+            asset=elist.asset,
             analyse_name=name,
             data_frame=df,
         )
@@ -183,6 +197,8 @@ class TrendAnalytic(Analytic):
     # }}}
     @classmethod  # __createDataFrame  # {{{
     def __createDataFrame(cls, trends: list[Trend]):
+        logger.info("   - create dataframe")
+
         begin = list()
         end = list()
         begin_price = list()
@@ -229,7 +245,7 @@ class TrendAnalytic(Analytic):
     # }}}
     @classmethod  # __defineTrendSizes  # {{{
     def __defineTrendSizes(cls, asset: Asset, tf: TimeFrame, term: Term):
-        logger.info("   Define trend sizes")
+        logger.info("   - define trend sizes")
 
         # load trends
         name = f"{cls.name} {tf} {term} {cls.Analyse.TREND}"
@@ -237,7 +253,8 @@ class TrendAnalytic(Analytic):
 
         # skip if the amount is small
         min_trends = 200
-        if len(trend) < 200:
+        n = len(trend)
+        if n < min_trends:
             logger.warning(
                 f"Skip {asset.ticker}-{tf}{term} "
                 f"- not enought trends [{n}/{min_trends}]"
@@ -299,7 +316,7 @@ class TrendAnalytic(Analytic):
     # }}}
     @classmethod  # __setTrendSizes  # {{{
     def __setTrendSizes(cls, asset: Asset, tf: TimeFrame, term: Term):
-        logger.info("   Set trend sizes")
+        logger.info("   - set trend sizes")
 
         # load trends & table sizes
         df = super().load(asset, f"{cls.name} {tf} {term} trend")
@@ -324,6 +341,12 @@ class TrendAnalytic(Analytic):
                 ).alias(f"{trait}_ssize"),
             )
 
+        # TODO: тут получается один тренд будет XXL
+        # из за того что я классифицию размеры по формуле (begin <= x < end)
+        # то у меня полюбому в трендах сразу получается один XXL
+        # а так не должно быть, в истории он должен быть с размером
+        # GREATEST_BIG  /  XL   соответственно.
+
         # save all trends with setted trait sizes
         name = f"{cls.name} {tf} {term} {cls.Analyse.TREND}"
         super().save(asset, name, df)
@@ -332,20 +355,23 @@ class TrendAnalytic(Analytic):
 
 
 async def main():  # {{{
-    # pl.Config.set_tbl_rows(1000)
+    # pl.Config.set_tbl_rows(100)
     await TrendAnalytic.analyseAll()
     return
 
     asset = await Asset.fromStr("MOEX SHARE AFKS")
     tf = TimeFrame("D")
     term = Term.T1
+    trait = TrendAnalytic.Trait.DELTA
+    analyse = TrendAnalytic.Analyse.SIZE
 
-    await TrendAnalytic.analyse(asset, tf, term)
+    # await TrendAnalytic.analyse(asset, tf, term)
 
-    # analyse = TrendAnalytic.Analyse.TREND
     # df = TrendAnalytic.load(asset, tf, term, analyse)
     # print(df)
-    # print(df.columns)
+
+    # df = TrendAnalytic.getSizes(asset, tf, term, trait)
+    # print(df)
 
 
 # }}}

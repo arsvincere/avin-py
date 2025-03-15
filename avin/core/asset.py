@@ -309,6 +309,8 @@ class Asset(Instrument, ABC):  # {{{
             return Index(info)
         elif t == cls.Type.SHARE.name:
             return Share(info)
+        elif t == cls.Type.FUTURE.name:
+            return Future(info)
 
         logger.critical(f"Unknown asset type={t}")
         assert False
@@ -334,8 +336,22 @@ class Share(Asset):  # {{{
         assert info["type"] == Asset.Type.SHARE.name
 
         super().__init__(info)
-        self.__book = None
-        self.__tic = None
+
+    # }}}
+    @property  # uid{{{
+    def uid(self):
+        return self.info["uid"]
+
+    # }}}
+
+
+# }}}
+class Future(Asset):  # {{{
+    def __init__(self, info: dict):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__init__()")
+        assert info["type"] == Asset.Type.FUTURE.name
+
+        super().__init__(info)
 
     # }}}
     @property  # uid{{{
