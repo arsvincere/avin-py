@@ -35,7 +35,6 @@ class ExtremumList:
         self.__t3 = pl.DataFrame(schema=self.__schema)
         self.__t4 = pl.DataFrame(schema=self.__schema)
         self.__t5 = pl.DataFrame(schema=self.__schema)
-        self.__now = pl.DataFrame(schema=self.__schema)
 
         # signals
         self.upd_extr = Signal(ExtremumList, Extremum)
@@ -219,6 +218,9 @@ class ExtremumList:
         prev = df.row(0, named=True)
         df = df.filter(pl.col("index") != 0)
 
+        # current extremum
+        now_e = pl.DataFrame(schema=self.__schema)
+
         # set start direction of trend = first bar.type
         if prev["open"] < prev["close"]:
             trend_t = Trend.Type.BULL
@@ -231,7 +233,7 @@ class ExtremumList:
         for cur in df.iter_rows(named=True):
             if trend_t == Trend.Type.BULL:
                 if cur["high"] > prev["high"]:
-                    self.__now = pl.DataFrame(
+                    now_e = pl.DataFrame(
                         {
                             "dt": cur["dt"],
                             "term": term.name,
@@ -240,8 +242,8 @@ class ExtremumList:
                         }
                     )
                 else:
-                    self.__t1.extend(self.__now)
-                    self.__now = pl.DataFrame(
+                    self.__t1.extend(now_e)
+                    now_e = pl.DataFrame(
                         {
                             "dt": cur["dt"],
                             "term": term.name,
@@ -253,7 +255,7 @@ class ExtremumList:
 
             elif trend_t == Trend.Type.BEAR:
                 if cur["low"] < prev["low"]:
-                    self.__now = pl.DataFrame(
+                    now_e = pl.DataFrame(
                         {
                             "dt": cur["dt"],
                             "term": term.name,
@@ -262,8 +264,8 @@ class ExtremumList:
                         }
                     )
                 else:
-                    self.__t1.extend(self.__now)
-                    self.__now = pl.DataFrame(
+                    self.__t1.extend(now_e)
+                    now_e = pl.DataFrame(
                         {
                             "dt": cur["dt"],
                             "term": term.name,
