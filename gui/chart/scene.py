@@ -43,8 +43,8 @@ class ChartScene(QtWidgets.QGraphicsScene):
 
         x = e.scenePos().x()
 
-        self.bar_info.update(x)
-        self.vol_info.update(x)
+        self.bar_info.updateInfo(x)
+        self.vol_info.updateInfo(x)
 
         return e.ignore()
 
@@ -59,7 +59,7 @@ class ChartScene(QtWidgets.QGraphicsScene):
         x = e.scenePos().x()
 
         for label in self.top:
-            label.update(x)
+            label.updateInfo(x)
 
         return e.ignore()
 
@@ -201,6 +201,8 @@ class ChartScene(QtWidgets.QGraphicsScene):
                 self.footer.append(i)
             if i.position == Indicator.Position.LEFT:
                 self.left.append(i)
+            if i.position == Indicator.Position.RIGHT:
+                self.right.append(i)
 
     # }}}
     def removeIndicators(self) -> None:  # {{{

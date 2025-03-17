@@ -28,7 +28,7 @@ class BarInfo(QtWidgets.QWidget):  # {{{
         self.gchart = gchart
 
     # }}}
-    def update(self, x):  # {{{
+    def updateInfo(self, x):  # {{{
         logger.debug(f"{self.__class__.__name__}.set(bar)")
 
         gbar = self.gchart.gbarOnX(x)
@@ -91,7 +91,7 @@ class VolumeInfo(QtWidgets.QWidget):  # {{{
         self.gchart = gchart
 
     # }}}
-    def update(self, x):  # {{{
+    def updateInfo(self, x):  # {{{
         logger.debug(f"{self.__class__.__name__}.set(bar)")
 
         gbar = self.gchart.gbarOnX(x)

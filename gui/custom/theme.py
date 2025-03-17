@@ -72,6 +72,9 @@ class Theme:
         VAWE_BEAR = QtGui.QColor("#AA0000")
         VAWE_BULL = QtGui.QColor("#00AA00")
 
+        POSTERIOR_BULL = QtGui.QColor("#2298BB6C")
+        POSTERIOR_BEAR = QtGui.QColor("#22FF5D62")
+
         # TODO: delete it
         # common color
         NONE = QtGui.QColor("#00000000")

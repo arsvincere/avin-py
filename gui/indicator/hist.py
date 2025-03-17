@@ -6,6 +6,8 @@
 # LICENSE:      GNU GPLv3
 # ============================================================================
 
+from __future__ import annotations
+
 import sys
 
 import pandas as pd
@@ -75,8 +77,145 @@ class HistIndicator(Indicator):  # {{{
 
 
 # }}}
+class _HistLabel(QtWidgets.QWidget):  # {{{
+    def __init__(self, indicator, parent=None):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__init__()")
+        QtWidgets.QWidget.__init__(self, parent)
+
+        self.__indicator = indicator
+        self.__createWidgets()
+        self.__createLayots()
+        self.__connect()
+
+    # }}}
+
+    @property  # indicator  # {{{
+    def indicator(self):
+        return self.__indicator
+
+    # }}}
+
+    # def setGChart(self, gchart):  # {{{
+    #     self.gchart = gchart
+    #
+    # # }}}
+    def updateInfo(self, x):  # {{{
+        pass
+
+    # }}}
+
+    def __createWidgets(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__createWidgets()")
+
+        self.label_name = QtWidgets.QLabel(self.__indicator.name)
+        self.btn_hide = ToolButton(Icon.HIDE, width=16, height=16)
+        self.btn_settings = ToolButton(Icon.CONFIG, width=16, height=16)
+        self.btn_delete = ToolButton(Icon.DELETE, width=16, height=16)
+
+    # }}}
+    def __createLayots(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__createLayots()")
+
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addWidget(self.label_name)
+        hbox.addWidget(self.btn_hide)
+        hbox.addWidget(self.btn_settings)
+        hbox.addWidget(self.btn_delete)
+        hbox.addStretch()
+        hbox.setContentsMargins(0, 0, 0, 0)
+
+        self.setLayout(hbox)
+
+    # }}}
+    def __connect(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__connect()")
+        self.btn_settings.clicked.connect(self.__onSettings)
+
+    # }}}
+
+    @QtCore.pyqtSlot()  # __onSettings  # {{{
+    def __onSettings(self):
+        logger.debug(f"{self.__class__.__name__}.__onSettings()")
+
+        self.indicator.configure()
+
+    # }}}
 
 
+# }}}
+class _HistSettings(QtWidgets.QDialog):  # {{{
+    def __init__(self, indicator, parent=None):  # {{{
+        QtWidgets.QDialog.__init__(self, parent)
+        self.__indicator = indicator
+
+        self.__config()
+        self.__createWidgets()
+        self.__createLayots()
+        self.__connect()
+        self.__initUI()
+
+    # }}}
+
+    @property  # indicator  # {{{
+    def indicator(self):
+        return self.__indicator
+
+    # }}}
+
+    def configureSilent(self, gextr: _HistGraphics):  # {{{
+        logger.debug(f"{self.__class__.__name__}.configure")
+
+    # }}}
+    def configure(self, gextr):  # {{{
+        logger.debug(f"{self.__class__.__name__}.showSettings")
+
+    # }}}
+
+    def __config(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__config()")
+
+        self.setWindowTitle("AVIN")
+        self.setStyleSheet(Css.DIALOG)
+        self.setWindowFlags(QtCore.Qt.WindowType.FramelessWindowHint)
+
+    # }}}
+    def __createWidgets(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__createWidgets()")
+
+        self.title_label = Label("| Extremum settings:", parent=self)
+        self.title_label.setStyleSheet(Css.TITLE)
+
+        self.ok_btn = ToolButton(Icon.OK)
+        self.cancel_btn = ToolButton(Icon.CANCEL)
+
+    # }}}
+    def __createLayots(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__createLayots()")
+
+        hbox_btn = QtWidgets.QHBoxLayout()
+        hbox_btn.addWidget(self.title_label)
+        hbox_btn.addStretch()
+        hbox_btn.addWidget(self.ok_btn)
+        hbox_btn.addWidget(self.cancel_btn)
+
+        vbox = QtWidgets.QVBoxLayout(self)
+        vbox.addLayout(hbox_btn)
+
+    # }}}
+    def __connect(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__connect()")
+
+        self.ok_btn.clicked.connect(self.accept)
+        self.cancel_btn.clicked.connect(self.reject)
+
+    # }}}
+    def __initUI(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__initUI()")
+
+    # }}}
+
+
+# }}}
 class _HistGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
     HEIGHT = 150
     INDENT = Cfg.Chart.BAR_INDENT
@@ -198,153 +337,6 @@ class _HistGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
     #     self.hist = tics.hist(tf)
     #
     # # }}}
-
-
-# }}}
-class _HistLabel(QtWidgets.QWidget):  # {{{
-    def __init__(self, indicator, parent=None):  # {{{
-        logger.debug(f"{self.__class__.__name__}.__init__()")
-        QtWidgets.QWidget.__init__(self, parent)
-
-        self.__indicator = indicator
-        self.__createWidgets()
-        self.__createLayots()
-        self.__connect()
-
-    # }}}
-
-    @property  # indicator  # {{{
-    def indicator(self):
-        return self.__indicator
-
-    # }}}
-
-    def setGChart(self, gchart):  # {{{
-        self.gchart = gchart
-
-    # }}}
-    def update(self, x):  # {{{
-        pass
-
-    # }}}
-
-    def __createWidgets(self):  # {{{
-        logger.debug(f"{self.__class__.__name__}.__createWidgets()")
-
-        self.label_name = QtWidgets.QLabel(self.__indicator.name)
-        self.btn_hide = ToolButton(Icon.HIDE, width=16, height=16)
-        self.btn_settings = ToolButton(Icon.CONFIG, width=16, height=16)
-        self.btn_delete = ToolButton(Icon.DELETE, width=16, height=16)
-
-        self.info_5m = Label("5M")
-        self.info_1h = Label("1H")
-        self.info_d = Label("D")
-
-        self.info_5m.setStyleSheet(Css.CHART_LABEL)
-        self.info_1h.setStyleSheet(Css.CHART_LABEL)
-        self.info_d.setStyleSheet(Css.CHART_LABEL)
-
-    # }}}
-    def __createLayots(self):  # {{{
-        logger.debug(f"{self.__class__.__name__}.__createLayots()")
-
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(self.label_name)
-        hbox.addWidget(self.btn_hide)
-        hbox.addWidget(self.btn_settings)
-        hbox.addWidget(self.btn_delete)
-        hbox.addStretch()
-        hbox.setContentsMargins(0, 0, 0, 0)
-
-        self.setLayout(hbox)
-
-    # }}}
-    def __connect(self):  # {{{
-        logger.debug(f"{self.__class__.__name__}.__connect()")
-        self.btn_settings.clicked.connect(self.__onSettings)
-
-    # }}}
-
-    @QtCore.pyqtSlot()  # __onSettings  # {{{
-    def __onSettings(self):
-        logger.debug(f"{self.__class__.__name__}.__onSettings()")
-
-        self.indicator.configure()
-
-    # }}}
-
-
-# }}}
-class _HistSettings(QtWidgets.QDialog):  # {{{
-    def __init__(self, indicator, parent=None):  # {{{
-        QtWidgets.QDialog.__init__(self, parent)
-        self.__indicator = indicator
-
-        self.__config()
-        self.__createWidgets()
-        self.__createLayots()
-        self.__connect()
-        self.__initUI()
-
-    # }}}
-
-    @property  # indicator  # {{{
-    def indicator(self):
-        return self.__indicator
-
-    # }}}
-
-    def configureSilent(self, gextr: _HistGraphics):  # {{{
-        logger.debug(f"{self.__class__.__name__}.configure")
-
-    # }}}
-    def configure(self, gextr):  # {{{
-        logger.debug(f"{self.__class__.__name__}.showSettings")
-
-    # }}}
-
-    def __config(self):  # {{{
-        logger.debug(f"{self.__class__.__name__}.__config()")
-
-        self.setWindowTitle("AVIN")
-        self.setStyleSheet(Css.DIALOG)
-        self.setWindowFlags(QtCore.Qt.WindowType.FramelessWindowHint)
-
-    # }}}
-    def __createWidgets(self):  # {{{
-        logger.debug(f"{self.__class__.__name__}.__createWidgets()")
-
-        self.title_label = Label("| Extremum settings:", parent=self)
-        self.title_label.setStyleSheet(Css.TITLE)
-
-        self.ok_btn = ToolButton(Icon.OK)
-        self.cancel_btn = ToolButton(Icon.CANCEL)
-
-    # }}}
-    def __createLayots(self):  # {{{
-        logger.debug(f"{self.__class__.__name__}.__createLayots()")
-
-        hbox_btn = QtWidgets.QHBoxLayout()
-        hbox_btn.addWidget(self.title_label)
-        hbox_btn.addStretch()
-        hbox_btn.addWidget(self.ok_btn)
-        hbox_btn.addWidget(self.cancel_btn)
-
-        vbox = QtWidgets.QVBoxLayout(self)
-        vbox.addLayout(hbox_btn)
-
-    # }}}
-    def __connect(self):  # {{{
-        logger.debug(f"{self.__class__.__name__}.__connect()")
-
-        self.ok_btn.clicked.connect(self.accept)
-        self.cancel_btn.clicked.connect(self.reject)
-
-    # }}}
-    def __initUI(self):  # {{{
-        logger.debug(f"{self.__class__.__name__}.__initUI()")
-
-    # }}}
 
 
 # }}}

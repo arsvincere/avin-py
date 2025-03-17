@@ -12,11 +12,11 @@ import enum
 
 
 class Term(enum.Enum):
-    T1 = 1
-    T2 = 2
-    T3 = 3
-    T4 = 4
-    T5 = 5
+    T1 = 0
+    T2 = 1
+    T3 = 2
+    T4 = 3
+    T5 = 4
 
     def __str__(self):  # {{{
         return self.name

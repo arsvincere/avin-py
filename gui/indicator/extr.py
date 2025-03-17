@@ -12,7 +12,7 @@ import sys
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 
-from avin import ExtremumList, Move, Term, TimeFrame, Tree, Trend, logger
+from avin import ExtremumList, Term, TimeFrame, Tree, Trend, logger
 from gui.chart.gchart import GBar, GChart
 from gui.chart.indicator_item import IndicatorItem
 from gui.custom import Css, Icon, Label, MonoLabel, Theme, ToolButton
@@ -93,11 +93,11 @@ class _ExtremumLabel(QtWidgets.QWidget):  # {{{
 
     # }}}
 
-    def setGChart(self, gchart):  # {{{
-        self.gchart = gchart
-
-    # }}}
-    def update(self, x):  # {{{
+    # def setGChart(self, gchart):  # {{{
+    #     self.gchart = gchart
+    #
+    # # }}}
+    def updateInfo(self, x):  # {{{
         # 5M S p=5/BIG  d=15.5/NORMAL  s=3.1/SMALL  v=1000/VERY_BIG
         # 5M M p=5/BIG  d=15.5/NORMAL  s=3.1/SMALL  v=1000/VERY_BIG
         # 5M L p=5/BIG  d=15.5/NORMAL  s=3.1/SMALL  v=1000/VERY_BIG
@@ -155,6 +155,7 @@ class _ExtremumLabel(QtWidgets.QWidget):  # {{{
         vbox.addWidget(self.info_1h)
         vbox.addWidget(self.info_d)
 
+        vbox.setContentsMargins(0, 0, 0, 0)
         self.setLayout(vbox)
 
     # }}}
@@ -203,32 +204,32 @@ class _ExtremumSettings(QtWidgets.QDialog):  # {{{
         t5 = Term.T5
 
         tf = TimeFrame("1M")
-        gextr.setTrend(tf, t1, self.trend_1m_t1.isChecked())
-        gextr.setTrend(tf, t2, self.trend_1m_t2.isChecked())
-        gextr.setTrend(tf, t3, self.trend_1m_t3.isChecked())
-        gextr.setTrend(tf, t4, self.trend_1m_t4.isChecked())
-        gextr.setTrend(tf, t5, self.trend_1m_t5.isChecked())
+        gextr.setTrendVisible(tf, t1, self.trend_1m_t1.isChecked())
+        gextr.setTrendVisible(tf, t2, self.trend_1m_t2.isChecked())
+        gextr.setTrendVisible(tf, t3, self.trend_1m_t3.isChecked())
+        gextr.setTrendVisible(tf, t4, self.trend_1m_t4.isChecked())
+        gextr.setTrendVisible(tf, t5, self.trend_1m_t5.isChecked())
 
         tf = TimeFrame("5M")
-        gextr.setTrend(tf, t1, self.trend_5m_t1.isChecked())
-        gextr.setTrend(tf, t2, self.trend_5m_t2.isChecked())
-        gextr.setTrend(tf, t3, self.trend_5m_t3.isChecked())
-        gextr.setTrend(tf, t4, self.trend_5m_t4.isChecked())
-        gextr.setTrend(tf, t5, self.trend_5m_t5.isChecked())
+        gextr.setTrendVisible(tf, t1, self.trend_5m_t1.isChecked())
+        gextr.setTrendVisible(tf, t2, self.trend_5m_t2.isChecked())
+        gextr.setTrendVisible(tf, t3, self.trend_5m_t3.isChecked())
+        gextr.setTrendVisible(tf, t4, self.trend_5m_t4.isChecked())
+        gextr.setTrendVisible(tf, t5, self.trend_5m_t5.isChecked())
 
         tf = TimeFrame("1H")
-        gextr.setTrend(tf, t1, self.trend_1h_t1.isChecked())
-        gextr.setTrend(tf, t2, self.trend_1h_t2.isChecked())
-        gextr.setTrend(tf, t3, self.trend_1h_t3.isChecked())
-        gextr.setTrend(tf, t4, self.trend_1h_t4.isChecked())
-        gextr.setTrend(tf, t5, self.trend_1h_t5.isChecked())
+        gextr.setTrendVisible(tf, t1, self.trend_1h_t1.isChecked())
+        gextr.setTrendVisible(tf, t2, self.trend_1h_t2.isChecked())
+        gextr.setTrendVisible(tf, t3, self.trend_1h_t3.isChecked())
+        gextr.setTrendVisible(tf, t4, self.trend_1h_t4.isChecked())
+        gextr.setTrendVisible(tf, t5, self.trend_1h_t5.isChecked())
 
         tf = TimeFrame("D")
-        gextr.setTrend(tf, t1, self.trend_d_t1.isChecked())
-        gextr.setTrend(tf, t2, self.trend_d_t2.isChecked())
-        gextr.setTrend(tf, t3, self.trend_d_t3.isChecked())
-        gextr.setTrend(tf, t4, self.trend_d_t4.isChecked())
-        gextr.setTrend(tf, t5, self.trend_d_t5.isChecked())
+        gextr.setTrendVisible(tf, t1, self.trend_d_t1.isChecked())
+        gextr.setTrendVisible(tf, t2, self.trend_d_t2.isChecked())
+        gextr.setTrendVisible(tf, t3, self.trend_d_t3.isChecked())
+        gextr.setTrendVisible(tf, t4, self.trend_d_t4.isChecked())
+        gextr.setTrendVisible(tf, t5, self.trend_d_t5.isChecked())
 
     # }}}
     def configure(self, gextr):  # {{{
@@ -369,7 +370,7 @@ class _ExtremumGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
 
     # }}}
 
-    def setTrend(  # {{{
+    def setTrendVisible(  # {{{
         self, tf: TimeFrame, term: Term, visible: bool
     ) -> None:
         # PERF: если не отрисованы эти линии, и приходит настройка
@@ -377,8 +378,26 @@ class _ExtremumGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
         if not self.__isExist(tf, term) and not visible:
             return
 
-        gtrends = self.__getGTrend(tf, term)
+        gtrends = self.getGTrends(tf, term)
         gtrends.setVisible(visible)
+
+    # }}}
+    def getGTrends(self, tf, term) -> QtWidgets.QGraphicsItemGroup:  # {{{
+        # try find in cache
+        gtrends = self.cache[tf][term]
+        if gtrends:
+            return gtrends
+
+        # load chart & create elist -> create graphic trends
+        gchart = self.gasset.gchart(tf)
+        elist = ExtremumList(gchart.chart)
+        gtrends = self.__createGTrends(self.gchart, elist, term)
+
+        # add to self, and save in cache
+        self.addToGroup(gtrends)
+        self.cache[tf][term] = gtrends
+
+        return gtrends
 
     # }}}
     def getInfo(self, x):  # {{{
@@ -408,24 +427,6 @@ class _ExtremumGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
         # try find in cache
         gtrends = self.cache[tf][term]
         return bool(gtrends)
-
-    # }}}
-    def __getGTrend(self, tf, term) -> QtWidgets.QGraphicsItemGroup:  # {{{
-        # try find in cache
-        gtrends = self.cache[tf][term]
-        if gtrends:
-            return gtrends
-
-        # load chart & create elist -> create graphic trends
-        gchart = self.gasset.gchart(tf)
-        elist = ExtremumList(gchart.chart)
-        gtrends = self.__createGTrends(self.gchart, elist, term)
-
-        # add to self, and save in cache
-        self.addToGroup(gtrends)
-        self.cache[tf][term] = gtrends
-
-        return gtrends
 
     # }}}
     def __getGMove(self, tf, term) -> QtWidgets.QGraphicsItemGroup:  # {{{
@@ -459,51 +460,6 @@ class _ExtremumGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
             return True
 
         return False
-
-    # }}}
-
-
-# }}}
-class _GMove(QtWidgets.QGraphicsItemGroup):  # {{{
-    T1_WIDTH = 1
-    T2_WIDTH = 2
-    T3_WIDTH = 3
-
-    COLOR_BEAR = Theme.Chart.VAWE_BEAR
-    COLOR_BULL = Theme.Chart.VAWE_BULL
-
-    def __init__(  # {{{
-        self, gchart: GChart, move: Move, parent=None
-    ):
-        logger.debug(f"{self.__class__.__name__}.__init__()")
-        QtWidgets.QGraphicsItemGroup.__init__(self, parent)
-
-        self.gchart = gchart
-        self.move = move
-
-        self.__createLines()
-
-    # }}}
-
-    def __createLines(self):  # {{{
-        match str(self.move.type.name):
-            case "BEAR":
-                color = self.COLOR_BEAR
-            case "BULL":
-                color = self.COLOR_BULL
-
-        match self.move.term:
-            case Term.T1:
-                width = self.T1_WIDTH
-            case Term.T2:
-                width = self.T2_WIDTH
-            case Term.T3:
-                width = self.T3_WIDTH
-
-        for trend in self.move.getTrends():
-            gtrend = _GTrend(self.gchart, trend)
-            gtrend.setPen(QtGui.QPen(color, width))
-            self.addToGroup(gtrend)
 
     # }}}
 
@@ -555,10 +511,6 @@ class _GTrend(QtWidgets.QGraphicsItemGroup):  # {{{
             f"{t.strength.name[0:1]} "
         )
         return string
-
-    # }}}
-    def setPen(self, pen: QtGui.QPen):  # {{{
-        self.line.setPen(pen)
 
     # }}}
 

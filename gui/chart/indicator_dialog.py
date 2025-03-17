@@ -23,6 +23,7 @@ from gui.custom import (
 )
 from gui.indicator.extr import ExtremumIndicator
 from gui.indicator.hist import HistIndicator
+from gui.indicator.posterior_delta import PosteriorDeltaIndicator
 from gui.indicator.quant import QuantIndicator
 
 
@@ -90,6 +91,7 @@ class IndicatorSelectDialog(QtWidgets.QDialog):  # {{{
             ExtremumIndicator(),
             HistIndicator(),
             QuantIndicator(),
+            PosteriorDeltaIndicator(),
         ]
 
         # create items in tree

@@ -30,12 +30,6 @@ class ExtremumList:
             "type": str,
             "price": float,
         }
-        self.__t1 = pl.DataFrame(schema=self.__schema)
-        self.__t2 = pl.DataFrame(schema=self.__schema)
-        self.__t3 = pl.DataFrame(schema=self.__schema)
-        self.__t4 = pl.DataFrame(schema=self.__schema)
-        self.__t5 = pl.DataFrame(schema=self.__schema)
-
         # signals
         self.upd_extr = Signal(ExtremumList, Extremum)
         self.new_extr = Signal(ExtremumList, Extremum)
@@ -45,11 +39,12 @@ class ExtremumList:
         self.__chart.upd_bar.connect(self.__onUpdBar)
 
         # calc extremums
-        self.__calcExtrT1()
-        self.__calcExtrNext(self.__t1, self.__t2, "T2")
-        self.__calcExtrNext(self.__t2, self.__t3, "T3")
-        self.__calcExtrNext(self.__t3, self.__t4, "T4")
-        self.__calcExtrNext(self.__t4, self.__t5, "T5")
+
+        self.__t1 = self.__calcExtrT1()
+        self.__t2 = self.__calcExtrNext(self.__t1, "T2")
+        self.__t3 = self.__calcExtrNext(self.__t2, "T3")
+        self.__t4 = self.__calcExtrNext(self.__t3, "T4")
+        self.__t5 = self.__calcExtrNext(self.__t4, "T5")
 
     # }}}
 
@@ -207,12 +202,14 @@ class ExtremumList:
     #
     # # }}}
 
-    def __calcExtrT1(self) -> None:  # {{{
+    def __calcExtrT1(self) -> pl.DataFrame:  # {{{
         term = Term.T1
         df = self.__chart.data_frame.with_row_index()
         df = df.filter(pl.col("high") != pl.col("low"))  # skip point bars
         if df.is_empty():
             return
+
+        out_extr = pl.DataFrame(schema=self.__schema)
 
         # pop first bar
         prev = df.row(0, named=True)
@@ -240,7 +237,7 @@ class ExtremumList:
                         }
                     )
                 else:
-                    self.__t1.extend(now_e)
+                    out_extr.extend(now_e)
                     now_e = pl.DataFrame(
                         {
                             "dt": cur["dt"],
@@ -262,7 +259,7 @@ class ExtremumList:
                         }
                     )
                 else:
-                    self.__t1.extend(now_e)
+                    out_extr.extend(now_e)
                     now_e = pl.DataFrame(
                         {
                             "dt": cur["dt"],
@@ -275,11 +272,15 @@ class ExtremumList:
 
             prev = cur
 
+        return out_extr
+
     # }}}
-    def __calcExtrNext(self, in_t, out_t, out_name) -> None:  # {{{
-        df = in_t
+    def __calcExtrNext(self, in_extr, out_name) -> None:  # {{{
+        df = in_extr
         if df.is_empty():
             return
+
+        out_extr = pl.DataFrame(schema=self.__schema)
 
         # pop first extr
         prev = df.row(0, named=True)
@@ -305,7 +306,7 @@ class ExtremumList:
                     now_e = pl.DataFrame(cur)
                     prev_max = cur
                 else:
-                    out_t.extend(now_e)
+                    out_extr.extend(now_e)
                     now_e = pl.DataFrame(prev_min)
                     trend_t = Trend.Type.BEAR
                     prev_max = cur
@@ -317,13 +318,14 @@ class ExtremumList:
                     now_e = pl.DataFrame(cur)
                     prev_min = cur
                 else:
-                    out_t.extend(now_e)
+                    out_extr.extend(now_e)
                     now_e = pl.DataFrame(prev_max)
                     trend_t = Trend.Type.BULL
                     prev_min = cur
 
         # replace values of column "term"
-        out_t = out_t.with_columns(term=pl.lit(out_name))
+        out_extr = out_extr.with_columns(term=pl.lit(out_name))
+        return out_extr
 
     # }}}
     def __onNewBar(self, chart: Chart, bar: Bar):  # {{{

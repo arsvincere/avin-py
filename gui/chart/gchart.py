@@ -450,6 +450,10 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
         self.__indicators.clear()
 
     # }}}
+    def getIndicators(self) -> list[Indicator]:  # {{{
+        return self.__indicators
+
+    # }}}
 
     def nFromX(self, x) -> int:  # {{{
         logger.debug(f"{self.__class__.__name__}.nFromX()")
@@ -747,6 +751,8 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
         self.gbars.append(gbar)
         self.addToGroup(gbar)
 
+        # TODO: вот это надо сделать не кучей для всех, а по
+        # сигналу от индикатора.
         # update indicators
         for i in self.__indicators:
             gitem = i.gitem

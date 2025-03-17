@@ -187,6 +187,7 @@ class ChartView(QtWidgets.QGraphicsView):
         scene = self.scene()
         assert scene is not None
         height = self.size().height()
+        width = self.size().width()
 
         # move labels
         pos_0x0 = self.mapToScene(150, 0)
@@ -200,6 +201,11 @@ class ChartView(QtWidgets.QGraphicsView):
         # move left
         pos = self.mapToScene(0, 0)
         for i in scene.left:
+            i.gitem.setPos(pos.x(), 0)
+
+        # move right
+        pos = self.mapToScene(width, 0)
+        for i in scene.right:
             i.gitem.setPos(pos.x(), 0)
 
 

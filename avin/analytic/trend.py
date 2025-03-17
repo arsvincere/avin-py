@@ -63,8 +63,10 @@ class TrendAnalytic(Analytic):
             term=term,
             analyse=cls.Analyse.SIZE,
         )
-        trait_sizes = sizes.filter(pl.col("trait") == str(trait))
+        if sizes is None:
+            return None
 
+        trait_sizes = sizes.filter(pl.col("trait") == str(trait))
         return trait_sizes
 
     # }}}
@@ -102,13 +104,15 @@ class TrendAnalytic(Analytic):
 
     # }}}
     @classmethod  # deltaSize  # {{{
-    def deltaSize(cls, trend: Trend) -> Size:
+    def deltaSize(cls, trend: Trend) -> Size | None:
         sizes = cls.getSizes(
             asset=trend.asset,
             tf=trend.timeframe,
             term=trend.term,
             trait=cls.Trait.DELTA,
         )
+        if sizes is None:
+            return None
 
         value = trend.deltaPercent()
         size = super()._identifySize(value, sizes)
@@ -173,10 +177,18 @@ class TrendAnalytic(Analytic):
     # }}}
 
     @classmethod  # posterior  # {{{
-    def posterior(cls, trend: Trend) -> pl.DataFrame:
+    def posterior(cls, trend: Trend) -> pl.DataFrame | None:
+        assert isinstance(trend, Trend)
+
+        # try get trend delta size
+        size = TrendAnalytic.deltaSize(trend)
+        if size is None:
+            return None
+
+        # get df with cumulative probability
         trait = "delta_ssize"
         H = [str(i) for i in SimpleSize]
-        obs = str(TrendAnalytic.deltaSize(trend).simple())
+        obs = str(size.simple())
         trends = cls.load(
             asset=trend.asset,
             tf=trend.timeframe,
@@ -185,7 +197,7 @@ class TrendAnalytic(Analytic):
         )
         posterior = cls.__posteriorSimple(obs, H, trait, trends)
 
-        price = trend.end.price
+        # load sizes table
         ssizes = cls.load(
             asset=trend.asset,
             tf=trend.timeframe,
@@ -204,7 +216,10 @@ class TrendAnalytic(Analytic):
                 end=-pl.col("end"),
             )
 
+        # calc prices
+        price = trend.end.price
         posterior = posterior.with_columns(
+            # begin_price=price,  # + trait_ssizes["begin"] * price / 100,
             begin_price=price + trait_ssizes["begin"] * price / 100,
             end_price=price + trait_ssizes["end"] * price / 100,
         )
