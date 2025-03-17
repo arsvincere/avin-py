@@ -24,7 +24,7 @@ def test_Size():  # {{{
 
 # }}}
 def test_SimpleSize():  # {{{
-    assert BLACKSWAN_SMALL == XXS
+    assert BlackSwan.BLACKSWAN_SMALL == BlackSwan.XXS
 
     assert Size.GREATEST_SMALL == SimpleSize.XS
     assert Size.ANOMAL_SMALL == SimpleSize.XS
@@ -46,7 +46,7 @@ def test_SimpleSize():  # {{{
     assert Size.ANOMAL_BIG == SimpleSize.XL
     assert Size.GREATEST_BIG == SimpleSize.XL
 
-    assert BLACKSWAN_BIG == XXL
+    assert BlackSwan.BLACKSWAN_BIG == BlackSwan.XXL
 
 
 # }}}
@@ -107,6 +107,22 @@ async def test_Trend(event_loop):
 
     print(t.isStrong())
     print(t.isWeak())
+
+
+# }}}
+
+
+@pytest.mark.asyncio  # TrendAnalytic  # {{{
+async def test_Trend(event_loop):
+    asset = await Asset.fromStr("moex share afks")
+    chart = await asset.loadChart(TimeFrame("5M"))
+    elist = ExtremumList(chart)
+    term = Term.T1
+
+    trend = elist.trend(term, 2)
+
+    p = TrendAnalytic.posterior(trend)
+    print(p)
 
 
 # }}}
