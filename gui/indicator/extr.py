@@ -361,8 +361,9 @@ class _ExtremumGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
         QtWidgets.QGraphicsItemGroup.__init__(self, parent)
 
-        # self.gchart = gchart
-        # self.chart = gchart.chart
+        self.gchart = gchart
+        self.chart = gchart.chart
+        self.asset = gchart.chart.asset
         self.gasset = gchart.gasset
         self.cache = Tree()
 
@@ -371,15 +372,13 @@ class _ExtremumGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
     def setTrend(  # {{{
         self, tf: TimeFrame, term: Term, visible: bool
     ) -> None:
+        # PERF: если не отрисованы эти линии, и приходит настройка
+        # visible=False - то ничего не делаем.
+        if not self.__isExist(tf, term) and not visible:
+            return
+
         gtrends = self.__getGTrend(tf, term)
         gtrends.setVisible(visible)
-
-    # }}}
-    def setMove(  # {{{
-        self, tf: TimeFrame, term: Term, visible: bool
-    ) -> None:
-        gmoves = self.__getGMove(tf, term)
-        gmoves.setVisible(visible)
 
     # }}}
     def getInfo(self, x):  # {{{
@@ -405,6 +404,12 @@ class _ExtremumGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
 
     # }}}
 
+    def __isExist(self, tf, term) -> bool:  # {{{
+        # try find in cache
+        gtrends = self.cache[tf][term]
+        return bool(gtrends)
+
+    # }}}
     def __getGTrend(self, tf, term) -> QtWidgets.QGraphicsItemGroup:  # {{{
         # try find in cache
         gtrends = self.cache[tf][term]
@@ -414,7 +419,7 @@ class _ExtremumGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
         # load chart & create elist -> create graphic trends
         gchart = self.gasset.gchart(tf)
         elist = ExtremumList(gchart.chart)
-        gtrends = self.__createGTrends(gchart, elist, term)
+        gtrends = self.__createGTrends(self.gchart, elist, term)
 
         # add to self, and save in cache
         self.addToGroup(gtrends)
@@ -432,34 +437,18 @@ class _ExtremumGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
 
         gtrends = QtWidgets.QGraphicsItemGroup()
         for trend in trends:
+            # XXX: так как я делаю совмещения трендов с разных
+            # таймфреймов, на дневном графике будут бары допустим
+            # с 2020 г, а на 5М графике только с 2025г (последние 5000 баров)
+            # соответственно, если тренд не умещается на текущем графике
+            # пропускаем его.
+            if trend.begin.dt < self.gchart.chart.first.dt:
+                continue
+
             gtrend = _GTrend(gchart, trend)
             gtrends.addToGroup(gtrend)
 
         return gtrends
-
-    # }}}
-    def __createGMoves(self):  # {{{
-        self.gs_moves = QtWidgets.QGraphicsItemGroup()
-        self.s_moves = self.elist.getAllMoves(Term.T1)
-        for move in self.s_moves:
-            gmove = _GMove(self.gchart, move)
-            self.gs_moves.addToGroup(gmove)
-
-        self.gm_moves = QtWidgets.QGraphicsItemGroup()
-        self.m_moves = self.elist.getAllMoves(Term.T2)
-        for move in self.m_moves:
-            gmove = _GMove(self.gchart, move)
-            self.gm_moves.addToGroup(gmove)
-
-        self.gl_moves = QtWidgets.QGraphicsItemGroup()
-        self.l_moves = self.elist.getAllMoves(Term.T3)
-        for move in self.l_moves:
-            gmove = _GMove(self.gchart, move)
-            self.gl_moves.addToGroup(gmove)
-
-        self.addToGroup(self.gs_moves)
-        self.addToGroup(self.gm_moves)
-        self.addToGroup(self.gl_moves)
 
     # }}}
 
