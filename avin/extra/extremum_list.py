@@ -278,6 +278,8 @@ class ExtremumList:
     # }}}
     def __calcExtrNext(self, in_t, out_t, out_name) -> None:  # {{{
         df = in_t
+        if df.is_empty():
+            return
 
         # pop first extr
         prev = df.row(0, named=True)

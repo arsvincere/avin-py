@@ -17,8 +17,10 @@ from avin.analytic._analytic import Analytic
 from avin.const import ONE_YEAR
 from avin.core import Asset, Chart, TimeFrame
 from avin.data import Data
-from avin.extra import ExtremumList, Term
-from avin.extra.size import Size
+from avin.extra.extremum_list import ExtremumList
+from avin.extra.size import SimpleSize, Size
+from avin.extra.term import Term
+from avin.extra.trend import Trend
 from avin.utils import configureLogger, logger, now
 
 
@@ -28,6 +30,7 @@ class TrendAnalytic(Analytic):
     class Analyse(enum.Enum):  # {{{
         TREND = 1
         SIZE = 2
+        SIMPLE_SIZE = 3
 
         def __str__(self):
             return self.name.lower()
@@ -65,6 +68,25 @@ class TrendAnalytic(Analytic):
         return trait_sizes
 
     # }}}
+    @classmethod  # getSimpleSizes  # {{{
+    def getSimpleSizes(
+        cls,
+        asset: Asset,
+        tf: TimeFrame,
+        term: Term,
+        trait: TrendAnalytic.Trait,
+    ) -> pl.DataFrame:
+        sizes = cls.load(
+            asset=asset,
+            tf=tf,
+            term=term,
+            analyse=cls.Analyse.SIMPLE_SIZE,
+        )
+        trait_sizes = sizes.filter(pl.col("trait") == str(trait))
+
+        return trait_sizes
+
+    # }}}
     @classmethod  # periodSize  # {{{
     def periodSize(cls, trend: Trend) -> Size:
         size = cls.__getSize(trend, cls.Trait.PERIOD, trend.period())
@@ -73,7 +95,15 @@ class TrendAnalytic(Analytic):
     # }}}
     @classmethod  # deltaSize  # {{{
     def deltaSize(cls, trend: Trend) -> Size:
-        size = cls.__getSize(trend, cls.Trait.DELTA, trend.deltaPercent())
+        sizes = cls.getSizes(
+            asset=trend.asset,
+            tf=trend.timeframe,
+            term=trend.term,
+            trait=cls.Trait.DELTA,
+        )
+
+        value = trend.deltaPercent()
+        size = super()._identifySize(value, sizes)
         return size
 
     # }}}
@@ -90,6 +120,47 @@ class TrendAnalytic(Analytic):
 
     # }}}
 
+    @classmethod  # posterior  # {{{
+    def posterior(cls, trend: Trend) -> pl.DataFrame:
+        trait = "delta_ssize"
+        H = [str(i) for i in SimpleSize]
+        obs = str(TrendAnalytic.deltaSize(trend).simple())
+        trends = cls.load(
+            asset=trend.asset,
+            tf=trend.timeframe,
+            term=trend.term,
+            analyse=cls.Analyse.TREND,
+        )
+        posterior = cls.__posteriorSimple(obs, H, trait, trends)
+
+        price = trend.end.price
+        ssizes = cls.load(
+            asset=trend.asset,
+            tf=trend.timeframe,
+            term=trend.term,
+            analyse=cls.Analyse.SIMPLE_SIZE,
+        )
+        trait_ssizes = ssizes.filter(pl.col("trait") == "delta")
+
+        # Если тренд бычий, значит следующий медвежий.
+        # а дельты все по модулю посчитаны, так что
+        # для определения цен текущего медвежьего тренда, надо
+        # дельты умножить на -1
+        if trend.isBull():
+            trait_ssizes = trait_ssizes.with_columns(
+                begin=-pl.col("begin"),
+                end=-pl.col("end"),
+            )
+
+        posterior = posterior.with_columns(
+            begin_price=price + trait_ssizes["begin"] * price / 100,
+            end_price=price + trait_ssizes["end"] * price / 100,
+        )
+
+        return posterior
+
+    # }}}
+
     @classmethod  # analyse  #  {{{
     async def analyse(cls, asset: Asset, tf: TimeFrame, term: Term) -> None:
         logger.info(f":: {cls.name} analyse {asset.ticker}-{tf} {term}")
@@ -98,6 +169,7 @@ class TrendAnalytic(Analytic):
         elist = cls.__defineExtremum(chart)
         cls.__getAllTrends(elist, term)
         cls.__defineTrendSizes(asset, tf, term)
+        cls.__defineTrendSimpleSizes(asset, tf, term)
         cls.__setTrendSizes(asset, tf, term)
 
     # }}}
@@ -111,7 +183,7 @@ class TrendAnalytic(Analytic):
             TimeFrame("D"),
             TimeFrame("1H"),
             TimeFrame("5M"),
-            TimeFrame("1M"),
+            # TimeFrame("1M"),
         ]
 
         for asset in assets:
@@ -122,6 +194,7 @@ class TrendAnalytic(Analytic):
                 for term in Term:
                     cls.__getAllTrends(elist, term)
                     cls.__defineTrendSizes(asset, tf, term)
+                    cls.__defineTrendSimpleSizes(asset, tf, term)
                     cls.__setTrendSizes(asset, tf, term)
 
     # }}}
@@ -232,8 +305,8 @@ class TrendAnalytic(Analytic):
                 "period": period,
                 "delta": delta,
                 "speed": speed,
-                "vol_bear": vol_total,
-                "vol_bull": vol_total,
+                "vol_bear": vol_bear,
+                "vol_bull": vol_bull,
                 "vol_total": vol_total,
             }
         )
@@ -254,7 +327,7 @@ class TrendAnalytic(Analytic):
         n = len(trend)
         if n < min_trends:
             logger.warning(
-                f"Skip {asset.ticker}-{tf}{term} "
+                f"Skip {asset.ticker}-{tf} {term} "
                 f"- not enought trends [{n}/{min_trends}]"
             )
             return
@@ -272,8 +345,8 @@ class TrendAnalytic(Analytic):
         delta = delta.with_columns(trait=pl.lit("delta"))
         speed = speed.with_columns(trait=pl.lit("speed"))
         vol_bear = vol_bear.with_columns(trait=pl.lit("vol_bear"))
-        vol_bull = vol_bear.with_columns(trait=pl.lit("vol_bull"))
-        vol_total = vol_bear.with_columns(trait=pl.lit("vol_total"))
+        vol_bull = vol_bull.with_columns(trait=pl.lit("vol_bull"))
+        vol_total = vol_total.with_columns(trait=pl.lit("vol_total"))
 
         # cast int -> float
         period = period.cast({"begin": pl.Float64, "end": pl.Float64})
@@ -293,23 +366,60 @@ class TrendAnalytic(Analytic):
         super().save(asset, name, sizes)
         return
 
-        # name = f"{cls.name} {tf} {term} period_{cls.Analyse.SIZE}"
-        # super().save(asset, name, period)
-        #
-        # name = f"{cls.name} {tf} {term} delta_{cls.Analyse.SIZE}"
-        # super().save(asset, name, delta)
-        #
-        # name = f"{cls.name} {tf} {term} speed_{cls.Analyse.SIZE}"
-        # super().save(asset, name, speed)
-        #
-        # name = f"{cls.name} {tf} {term} vol_bear_{cls.Analyse.SIZE}"
-        # super().save(asset, name, vol_bear)
-        #
-        # name = f"{cls.name} {tf} {term} vol_bull_{cls.Analyse.SIZE}"
-        # super().save(asset, name, vol_bull)
-        #
-        # name = f"{cls.name} {tf} {term} vol_total_{cls.Analyse.SIZE}"
-        # super().save(asset, name, vol_total)
+    # }}}
+    @classmethod  # __defineTrendSimpleSizes  # {{{
+    def __defineTrendSimpleSizes(
+        cls, asset: Asset, tf: TimeFrame, term: Term
+    ):
+        logger.info("   - define trend simple sizes")
+
+        # load trends
+        name = f"{cls.name} {tf} {term} {cls.Analyse.TREND}"
+        trend = super().load(asset, name)
+
+        # skip if the amount is small
+        min_trends = 200
+        n = len(trend)
+        if n < min_trends:
+            logger.warning(
+                f"Skip {asset.ticker}-{tf} {term} "
+                f"- not enought trends [{n}/{min_trends}]"
+            )
+            return
+
+        # classify
+        period = super()._classifySimpleSizes(trend["period"])
+        delta = super()._classifySimpleSizes(trend["delta"])
+        speed = super()._classifySimpleSizes(trend["speed"])
+        vol_bear = super()._classifySimpleSizes(trend["vol_bear"])
+        vol_bull = super()._classifySimpleSizes(trend["vol_bull"])
+        vol_total = super()._classifySimpleSizes(trend["vol_total"])
+
+        # add column with trait name
+        period = period.with_columns(trait=pl.lit("period"))
+        delta = delta.with_columns(trait=pl.lit("delta"))
+        speed = speed.with_columns(trait=pl.lit("speed"))
+        vol_bear = vol_bear.with_columns(trait=pl.lit("vol_bear"))
+        vol_bull = vol_bull.with_columns(trait=pl.lit("vol_bull"))
+        vol_total = vol_total.with_columns(trait=pl.lit("vol_total"))
+
+        # cast int -> float
+        period = period.cast({"begin": pl.Float64, "end": pl.Float64})
+        vol_bear = vol_bear.cast({"begin": pl.Float64, "end": pl.Float64})
+        vol_bull = vol_bull.cast({"begin": pl.Float64, "end": pl.Float64})
+        vol_total = vol_total.cast({"begin": pl.Float64, "end": pl.Float64})
+
+        # total df
+        sizes = period
+        sizes.extend(delta)
+        sizes.extend(speed)
+        sizes.extend(vol_bear)
+        sizes.extend(vol_bull)
+        sizes.extend(vol_total)
+
+        name = f"{cls.name} {tf} {term} {cls.Analyse.SIMPLE_SIZE}"
+        super().save(asset, name, sizes)
+        return
 
     # }}}
     @classmethod  # __setTrendSizes  # {{{
@@ -364,22 +474,61 @@ class TrendAnalytic(Analytic):
 
     # }}}
 
+    @classmethod  # __posteriorSimple  # {{{
+    def __posteriorSimple(
+        cls, obs: str, H: list[str], trait: str, trends: pl.DataFrame
+    ) -> pl.DataFrame:
+        df = trends.with_row_index()
+        obs_trends = df.filter(pl.col(trait) == obs)
+        obs_index = obs_trends["index"]
+        h_index = obs_index + 1
+
+        posterior = list()
+        for h in H:
+            pair_trends = df.filter(
+                pl.col("index").is_in(h_index),
+                pl.col(trait) == h,
+            )
+            p = len(pair_trends) / len(obs_trends)
+            posterior.append(p)
+
+        result = pl.DataFrame(
+            {
+                trait: H,
+                "probability": posterior,
+            }
+        )
+        result = result.with_columns(
+            cumulative=pl.col("probability").reverse().cum_sum().reverse()
+            * 100
+        )
+        return result
+
+    # }}}
+
 
 async def main():  # {{{
-    # pl.Config.set_tbl_rows(100)
-    await TrendAnalytic.analyseAll()
-    return
+    # pl.Config.set_tbl_rows(50)
+    # await TrendAnalytic.analyseAll()
+    # return
 
     asset = await Asset.fromStr("MOEX SHARE AFKS")
     tf = TimeFrame("D")
     term = Term.T1
     trait = TrendAnalytic.Trait.DELTA
-    analyse = TrendAnalytic.Analyse.SIZE
 
-    # await TrendAnalytic.analyse(asset, tf, term)
+    await TrendAnalytic.analyse(asset, tf, term)
 
+    # analyse = TrendAnalytic.Analyse.TREND
+    # df = TrendAnalytic.load(asset, tf, term, analyse)
+    # print(df[["delta", "vol_total", "delta_size", "vol_total_size"]])
+
+    # analyse = TrendAnalytic.Analyse.SIMPLE_SIZE
     # df = TrendAnalytic.load(asset, tf, term, analyse)
     # print(df)
+
+    df = TrendAnalytic.getSimpleSizes(asset, tf, term, trait)
+    print(df)
 
     # df = TrendAnalytic.getSizes(asset, tf, term, trait)
     # print(df)

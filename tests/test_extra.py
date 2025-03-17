@@ -10,6 +10,46 @@ import pytest
 from avin import *
 
 
+def test_Size():  # {{{
+    b = Size.BIG
+    m = Size.M
+    s = Size.SMALL
+
+    assert s < b
+    assert m <= b
+    assert b > s
+    assert b >= m
+    assert m == Size.M
+
+
+# }}}
+def test_SimpleSize():  # {{{
+    assert BLACKSWAN_SMALL == XXS
+
+    assert Size.GREATEST_SMALL == SimpleSize.XS
+    assert Size.ANOMAL_SMALL == SimpleSize.XS
+    assert Size.EXTRA_SMALL == SimpleSize.XS
+    assert Size.VERY_SMALL == SimpleSize.XS
+
+    assert Size.SMALLEST == SimpleSize.S
+    assert Size.SMALLER == SimpleSize.S
+
+    assert Size.SMALL == SimpleSize.M
+    assert Size.M == SimpleSize.M
+    assert Size.BIG == SimpleSize.M
+
+    assert Size.BIGGER == SimpleSize.L
+    assert Size.BIGGEST == SimpleSize.L
+
+    assert Size.VERY_BIG == SimpleSize.XL
+    assert Size.EXTRA_BIG == SimpleSize.XL
+    assert Size.ANOMAL_BIG == SimpleSize.XL
+    assert Size.GREATEST_BIG == SimpleSize.XL
+
+    assert BLACKSWAN_BIG == XXL
+
+
+# }}}
 @pytest.mark.asyncio  # Extremum  # {{{
 async def test_Extremum(event_loop):
     asset = await Asset.fromStr("moex share sber")

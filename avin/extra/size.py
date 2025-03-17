@@ -12,14 +12,8 @@ import enum
 
 from avin.core import Range
 
-__all__ = (
-    "Size",
-    "SimpleSize",
-)
 
-
-class Size(enum.Enum):
-    BLACKSWAN_SMALL = Range(-100500, 0)
+class Size(enum.Enum):  # {{{
     GREATEST_SMALL = Range(0, 1)
     ANOMAL_SMALL = Range(1, 3)
     EXTRA_SMALL = Range(3, 5)
@@ -35,7 +29,6 @@ class Size(enum.Enum):
     EXTRA_BIG = Range(95, 97)
     ANOMAL_BIG = Range(97, 99)
     GREATEST_BIG = Range(99, 100)
-    BLACKSWAN_BIG = Range(100, 100500)
 
     def __str__(self):  # {{{
         return self.name
@@ -75,7 +68,7 @@ class Size(enum.Enum):
     @classmethod  # fromStr  # {{{
     def fromStr(cls, string_size: str):
         sizes = {
-            "BLACKSWAN_SMALL": Size.BLACKSWAN_SMALL,
+            "BLACKSWAN_SMALL": BlackSwan.BLACKSWAN_SMALL,
             "GREATEST_SMALL": Size.GREATEST_SMALL,
             "ANOMAL_SMALL": Size.ANOMAL_SMALL,
             "EXTRA_SMALL": Size.EXTRA_SMALL,
@@ -91,21 +84,20 @@ class Size(enum.Enum):
             "EXTRA_BIG": Size.EXTRA_BIG,
             "ANOMAL_BIG": Size.ANOMAL_BIG,
             "GREATEST_BIG": Size.GREATEST_BIG,
-            "BLACKSWAN_BIG": Size.BLACKSWAN_BIG,
+            "BLACKSWAN_BIG": BlackSwan.BLACKSWAN_BIG,
         }
         return sizes[string_size]
 
     # }}}
 
 
-class SimpleSize(enum.Enum):
-    XXS = Range(-100500, 0)
+# }}}
+class SimpleSize(enum.Enum):  # {{{
     XS = Range(0, 10)
     S = Range(10, 30)
     M = Range(30, 70)
     L = Range(70, 90)
     XL = Range(90, 100)
-    XXL = Range(100, 100500)
 
     def __str__(self):  # {{{
         return self.name
@@ -120,8 +112,6 @@ class SimpleSize(enum.Enum):
 
         assert isinstance(other, Size)
         match self:
-            case SimpleSize.XXS:
-                equal = (Size.BLACKSWAN_SMALL.value,)
             case SimpleSize.XS:
                 equal = (
                     Size.GREATEST_SMALL.value,
@@ -152,8 +142,6 @@ class SimpleSize(enum.Enum):
                     Size.ANOMAL_BIG.value,
                     Size.GREATEST_BIG.value,
                 )
-            case SimpleSize.XXL:
-                equal = (Size.BLACKSWAN_BIG.value,)
 
         return other.value in equal
 
@@ -198,17 +186,39 @@ class SimpleSize(enum.Enum):
     @classmethod  # fromStr  # {{{
     def fromStr(cls, string_size: str):
         sizes = {
-            "XXS": SimpleSize.XXS,
+            "XXS": BlackSwan.XXS,
             "XS": SimpleSize.XS,
             "S": SimpleSize.S,
             "M": SimpleSize.M,
             "L": SimpleSize.L,
             "XL": SimpleSize.XL,
-            "XXL": SimpleSize.XXL,
+            "XXL": BlackSwan.XXL,
         }
         return sizes[string_size]
 
     # }}}
+
+
+# }}}
+class BlackSwan(enum.Enum):  # {{{
+    BLACKSWAN_SMALL = Range(-100500, 0)
+    BLACKSWAN_BIG = Range(100, 100500)
+    XXS = Range(-100500, 0)
+    XXL = Range(100, 100500)
+
+    def simple(self) -> BlackSwan:  # {{{
+        if self == BlackSwan.BLACKSWAN_BIG:
+            return BlackSwan.XXL
+
+        if self == BlackSwan.BLACKSWAN_SMALL:
+            return BlackSwan.XXS
+
+        assert False, "WTF???"
+
+    # }}}
+
+
+# }}}
 
 
 if __name__ == "__main__":

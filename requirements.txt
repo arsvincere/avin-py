@@ -10,3 +10,4 @@ cython
 pyarrow
 sqlalchemy
 psycopg2
+polars

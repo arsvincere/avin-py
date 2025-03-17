@@ -14,7 +14,7 @@ import polars as pl
 
 from avin.config import Usr
 from avin.core.asset import Asset
-from avin.extra.size import Size
+from avin.extra.size import BlackSwan, SimpleSize, Size
 from avin.utils import Cmd, logger
 
 
@@ -57,8 +57,18 @@ class Analytic(ABC):
         return sizes_df
 
     # }}}
+    @classmethod  # _classifySimpleSizes  # {{{
+    def _classifySimpleSizes(cls, values: pl.Series) -> pl.DataFrame:
+        assert isinstance(values, pl.Series)
+        assert len(values) > 100
+
+        cdf = cls.__createCDF(values)
+        sizes_df = cls.__createSimpleSizesDataFrame(cdf)
+        return sizes_df
+
+    # }}}
     @classmethod  # _identifySize  # {{{
-    def _identifySize(cls, value, sizes: pl.DataFrame) -> Size:
+    def _identifySize(cls, value, sizes: pl.DataFrame) -> Size | None:
         # try find size
         result = sizes.filter(
             (value >= pl.col("begin")),
@@ -72,11 +82,17 @@ class Analytic(ABC):
 
         # else - BLACKSWAN
         if value < sizes.item(0, "begin"):
-            return Size.BLACKSWAN_SMALL
+            return BlackSwan.BLACKSWAN_SMALL
         if value > sizes.item(-1, "begin"):
-            return Size.BLACKSWAN_BIG
+            return BlackSwan.BLACKSWAN_BIG
 
-        assert False, "WTF?"
+        # INFO:
+        # сюда попадаем например при анализе объемов по индексу, там всегда
+        # нули так что возвращаем None
+        logger.warning(
+            f"Analytic: fail to identify size:\nvalue={value}\nsizes={sizes}"
+        )
+        return None
 
     # }}}
 
@@ -128,12 +144,35 @@ class Analytic(ABC):
         cdf = cdf.with_row_index()
         begin = cdf.item(0, "value")
         for size in Size:
-            if size in (
-                Size.BLACKSWAN_SMALL,  # не существующие еще черные лебеди
-                Size.BLACKSWAN_BIG,  # не существующие еще черные лебеди
-            ):
-                continue
+            f = cdf.filter(pl.col("cdf_percent") <= size.value.max)
+            if f.is_empty():
+                end = begin
+            else:
+                end = f.item(-1, "value")
 
+            row = pl.DataFrame(
+                {"size": str(size), "begin": begin, "end": end}
+            )
+            sizes_df.extend(row)
+            begin = end
+
+        return sizes_df
+
+    # }}}
+    @classmethod  # __createSimepleSizesDataFrame  #{{{
+    def __createSimpleSizesDataFrame(cls, cdf: pl.DataFrame) -> pl.DataFrame:
+        value_type = type(cdf.item(0, "value"))
+        sizes_df = pl.DataFrame(
+            schema=[
+                ("size", pl.String),
+                ("begin", value_type),
+                ("end", value_type),
+            ]
+        )
+
+        cdf = cdf.with_row_index()
+        begin = cdf.item(0, "value")
+        for size in SimpleSize:
             f = cdf.filter(pl.col("cdf_percent") <= size.value.max)
             if f.is_empty():
                 end = begin
