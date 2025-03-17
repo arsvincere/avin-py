@@ -89,7 +89,15 @@ class TrendAnalytic(Analytic):
     # }}}
     @classmethod  # periodSize  # {{{
     def periodSize(cls, trend: Trend) -> Size:
-        size = cls.__getSize(trend, cls.Trait.PERIOD, trend.period())
+        sizes = cls.getSizes(
+            asset=trend.asset,
+            tf=trend.timeframe,
+            term=trend.term,
+            trait=cls.Trait.PERIOD,
+        )
+
+        value = trend.period()
+        size = super()._identifySize(value, sizes)
         return size
 
     # }}}
@@ -109,13 +117,57 @@ class TrendAnalytic(Analytic):
     # }}}
     @classmethod  # speedSize  # {{{
     def speedSize(cls, trend: Trend) -> Size:
-        size = cls.__getSize(trend, cls.Trait.SPEED, trend.speedPercent())
+        sizes = cls.getSizes(
+            asset=trend.asset,
+            tf=trend.timeframe,
+            term=trend.term,
+            trait=cls.Trait.SPEED,
+        )
+
+        value = trend.speedPercent()
+        size = super()._identifySize(value, sizes)
         return size
 
     # }}}
-    @classmethod  # volumeSize  # {{{
-    def volumeSize(cls, trend: Trend) -> Size:
-        size = cls.__getSize(trend, cls.Trait.VOLUME, trend.volume())
+    @classmethod  # volumeBearSize  # {{{
+    def volumeBearSize(cls, trend: Trend) -> Size:
+        sizes = cls.getSizes(
+            asset=trend.asset,
+            tf=trend.timeframe,
+            term=trend.term,
+            trait=cls.Trait.VOL_TOTAL,
+        )
+
+        value = trend.volumeBear()
+        size = super()._identifySize(value, sizes)
+        return size
+
+    # }}}
+    @classmethod  # volumeBullSize  # {{{
+    def volumeBullSize(cls, trend: Trend) -> Size:
+        sizes = cls.getSizes(
+            asset=trend.asset,
+            tf=trend.timeframe,
+            term=trend.term,
+            trait=cls.Trait.VOL_TOTAL,
+        )
+
+        value = trend.volumeBull()
+        size = super()._identifySize(value, sizes)
+        return size
+
+    # }}}
+    @classmethod  # volumeTotalSize  # {{{
+    def volumeTotalSize(cls, trend: Trend) -> Size:
+        sizes = cls.getSizes(
+            asset=trend.asset,
+            tf=trend.timeframe,
+            term=trend.term,
+            trait=cls.Trait.VOL_TOTAL,
+        )
+
+        value = trend.volumeTotal()
+        size = super()._identifySize(value, sizes)
         return size
 
     # }}}
