@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import bisect
 import os
+import time as timer
 from collections import defaultdict
 from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
@@ -212,6 +213,26 @@ def next_dt(dt: DateTime, tf: TimeFrame) -> DateTime:  # {{{
 # }}}
 def Tree():  # {{{
     return defaultdict(Tree)
+
+
+# }}}
+
+
+class Timer:  # {{{
+    __START = None
+    __FINISH = None
+
+    @staticmethod  # start  # {{{
+    def start():
+        Timer.__START = timer.time()
+
+    # }}}
+    @staticmethod  # finish # {{{
+    def finish():
+        Timer.__FINISH = timer.time()
+        print(":: Timer:", Timer.__FINISH - Timer.__START)
+
+    # }}}
 
 
 # }}}

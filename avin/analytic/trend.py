@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import enum
 
+import numpy as np
 import polars as pl
 
 from avin.analytic._analytic import Analytic
@@ -22,6 +23,23 @@ from avin.extra.size import SimpleSize, Size
 from avin.extra.term import Term
 from avin.extra.trend import Trend
 from avin.utils import configureLogger, logger, now
+
+# TODO: trait - включить в аргументы load
+# и в имя сохраненного анализа. Пусть даже названия будут длинными
+# delta_size, еще подумать... но пусть в папке даже лежат
+# много файлов: trend trend_size trend_simple_size, size, simple_size,
+# Возможно трейт как раз стоит исключить, а в Analyse прописать все
+# возможные соотношения: delta_size, period_size, volume_size, speed_size,
+# delta_ssize, period_ssize, volume_ssize
+# Вот второе кажется хорошо.
+# - trend
+# - trend_size         - в этих таймфреймах самих трендов уже не будет
+# - trend_simple_size  - их надо будет join делать потом, но зато понятно
+# - delta_size         - и не надо грузить лишнее
+# - period_size
+# - speed_size
+# - volume_size
+# Подумай еще 100 раз. Скорость загрузки пока все еще 0.05сек.
 
 
 class TrendAnalytic(Analytic):
@@ -49,60 +67,6 @@ class TrendAnalytic(Analytic):
 
     # }}}
 
-    @classmethod  # getSizes  # {{{
-    def getSizes(
-        cls,
-        asset: Asset,
-        tf: TimeFrame,
-        term: Term,
-        trait: TrendAnalytic.Trait,
-    ) -> pl.DataFrame:
-        sizes = cls.load(
-            asset=asset,
-            tf=tf,
-            term=term,
-            analyse=cls.Analyse.SIZE,
-        )
-        if sizes is None:
-            return None
-
-        trait_sizes = sizes.filter(pl.col("trait") == str(trait))
-        return trait_sizes
-
-    # }}}
-    @classmethod  # getSimpleSizes  # {{{
-    def getSimpleSizes(
-        cls,
-        asset: Asset,
-        tf: TimeFrame,
-        term: Term,
-        trait: TrendAnalytic.Trait,
-    ) -> pl.DataFrame:
-        sizes = cls.load(
-            asset=asset,
-            tf=tf,
-            term=term,
-            analyse=cls.Analyse.SIMPLE_SIZE,
-        )
-        trait_sizes = sizes.filter(pl.col("trait") == str(trait))
-
-        return trait_sizes
-
-    # }}}
-    @classmethod  # periodSize  # {{{
-    def periodSize(cls, trend: Trend) -> Size:
-        sizes = cls.getSizes(
-            asset=trend.asset,
-            tf=trend.timeframe,
-            term=trend.term,
-            trait=cls.Trait.PERIOD,
-        )
-
-        value = trend.period()
-        size = super()._identifySize(value, sizes)
-        return size
-
-    # }}}
     @classmethod  # deltaSize  # {{{
     def deltaSize(cls, trend: Trend) -> Size | None:
         sizes = cls.getSizes(
@@ -115,6 +79,20 @@ class TrendAnalytic(Analytic):
             return None
 
         value = trend.deltaPercent()
+        size = super()._identifySize(value, sizes)
+        return size
+
+    # }}}
+    @classmethod  # periodSize  # {{{
+    def periodSize(cls, trend: Trend) -> Size:
+        sizes = cls.getSizes(
+            asset=trend.asset,
+            tf=trend.timeframe,
+            term=trend.term,
+            trait=cls.Trait.PERIOD,
+        )
+
+        value = trend.period()
         size = super()._identifySize(value, sizes)
         return size
 
@@ -176,8 +154,98 @@ class TrendAnalytic(Analytic):
 
     # }}}
 
-    @classmethod  # posterior  # {{{
-    def posterior(cls, trend: Trend) -> pl.DataFrame | None:
+    @classmethod  # getSizes  # {{{
+    def getSizes(
+        cls,
+        asset: Asset,
+        tf: TimeFrame,
+        term: Term,
+        trait: TrendAnalytic.Trait,
+    ) -> pl.DataFrame:
+        sizes = cls.load(
+            asset=asset,
+            tf=tf,
+            term=term,
+            analyse=cls.Analyse.SIZE,
+        )
+        if sizes is None:
+            return None
+
+        trait_sizes = sizes.filter(pl.col("trait") == str(trait))
+        return trait_sizes
+
+    # }}}
+    @classmethod  # getSimpleSizes  # {{{
+    def getSimpleSizes(
+        cls,
+        asset: Asset,
+        tf: TimeFrame,
+        term: Term,
+        trait: TrendAnalytic.Trait,
+    ) -> pl.DataFrame:
+        sizes = cls.load(
+            asset=asset,
+            tf=tf,
+            term=term,
+            analyse=cls.Analyse.SIMPLE_SIZE,
+        )
+        trait_sizes = sizes.filter(pl.col("trait") == str(trait))
+
+        return trait_sizes
+
+    # }}}
+    @classmethod  # posteriorSize  # {{{
+    def posteriorSize(cls, trend: Trend) -> pl.DataFrame | None:
+        assert isinstance(trend, Trend)
+
+        # try get trend delta size
+        size = TrendAnalytic.deltaSize(trend)
+        if size is None:
+            return None
+
+        # get df with cumulative probability
+        trait = "delta_size"
+        H = [str(i) for i in Size]
+        obs = str(size)
+        trends = cls.load(
+            asset=trend.asset,
+            tf=trend.timeframe,
+            term=trend.term,
+            analyse=cls.Analyse.TREND,
+        )
+        posterior = cls.__posterior(obs, H, trait, trends)
+
+        # load sizes table
+        sizes = cls.load(
+            asset=trend.asset,
+            tf=trend.timeframe,
+            term=trend.term,
+            analyse=cls.Analyse.SIZE,
+        )
+        trait_sizes = sizes.filter(pl.col("trait") == "delta")
+
+        # Если тренд бычий, значит следующий медвежий.
+        # а дельты все по модулю посчитаны, так что
+        # для определения цен текущего медвежьего тренда, надо
+        # дельты умножить на -1
+        if trend.isBull():
+            trait_sizes = trait_sizes.with_columns(
+                begin=-pl.col("begin"),
+                end=-pl.col("end"),
+            )
+
+        # calc prices
+        price = trend.end.price
+        posterior = posterior.with_columns(
+            begin_price=price + trait_sizes["begin"] * price / 100,
+            end_price=price + trait_sizes["end"] * price / 100,
+        )
+
+        return posterior
+
+    # }}}
+    @classmethod  # posteriorSimpleSize  # {{{
+    def posteriorSimpleSize(cls, trend: Trend) -> pl.DataFrame | None:
         assert isinstance(trend, Trend)
 
         # try get trend delta size
@@ -195,7 +263,7 @@ class TrendAnalytic(Analytic):
             term=trend.term,
             analyse=cls.Analyse.TREND,
         )
-        posterior = cls.__posteriorSimple(obs, H, trait, trends)
+        posterior = cls.__posterior(obs, H, trait, trends)
 
         # load sizes table
         ssizes = cls.load(
@@ -222,6 +290,47 @@ class TrendAnalytic(Analytic):
             # begin_price=price,  # + trait_ssizes["begin"] * price / 100,
             begin_price=price + trait_ssizes["begin"] * price / 100,
             end_price=price + trait_ssizes["end"] * price / 100,
+        )
+
+        return posterior
+
+    # }}}
+    @classmethod  # posteriorStep  # {{{
+    def posteriorStep(cls, trend: Trend) -> pl.DataFrame | None:
+        assert isinstance(trend, Trend)
+
+        # try get trend delta size
+        size = TrendAnalytic.deltaSize(trend)
+        if size is None:
+            return None
+
+        # get df with cumulative probability
+        obs = {
+            "feat": "delta_size",
+            "value": str(size),
+        }
+        step = 0.1
+        trends = cls.load(
+            asset=trend.asset,
+            tf=trend.timeframe,
+            term=trend.term,
+            analyse=cls.Analyse.TREND,
+        )
+        posterior = cls.__posteriorStep(obs, step, trends)
+
+        # Если тренд бычий, значит следующий медвежий.
+        # а дельты все по модулю посчитаны, так что
+        # для определения цен текущего медвежьего тренда, надо
+        # дельты умножить на -1
+        if trend.isBull():
+            k = -1
+        else:
+            k = 1
+
+        # calc prices
+        price = trend.end.price
+        posterior = posterior.with_columns(
+            price=price + k * posterior["delta"] * price / 100,
         )
 
         return posterior
@@ -541,8 +650,8 @@ class TrendAnalytic(Analytic):
 
     # }}}
 
-    @classmethod  # __posteriorSimple  # {{{
-    def __posteriorSimple(
+    @classmethod  # __posterior  # {{{
+    def __posterior(
         cls, obs: str, H: list[str], trait: str, trends: pl.DataFrame
     ) -> pl.DataFrame:
         df = trends.with_row_index()
@@ -568,6 +677,46 @@ class TrendAnalytic(Analytic):
         result = result.with_columns(
             cumulative=pl.col("probability").reverse().cum_sum().reverse()
             * 100
+        )
+        return result
+
+    # }}}
+    @classmethod  # __posteriorStep  # {{{
+    def __posteriorStep(
+        cls, obs: dict, step: float, trends: pl.DataFrame
+    ) -> pl.DataFrame:
+        df = trends.with_row_index()
+        obs_trends = df.filter(pl.col(obs["feat"]) == obs["value"])
+        obs_index = obs_trends["index"]
+        h_index = obs_index + 1
+
+        begin = 0
+        end = trends["delta"].max() + step
+
+        delta = list()
+        posterior = list()
+        X = np.arange(begin, end, step)
+        for x in X:
+            combo = df.filter(
+                pl.col("index").is_in(h_index),
+                pl.col("delta") > x,
+            )
+            p = len(combo) / len(obs_trends)
+
+            delta.append(x)
+            posterior.append(p)
+
+            if p <= 0.01:
+                break
+
+        result = pl.DataFrame(
+            {
+                "delta": delta,
+                "probability": posterior,
+            }
+        )
+        result = result.with_columns(
+            cumulative=pl.col("probability") * 100,
         )
         return result
 

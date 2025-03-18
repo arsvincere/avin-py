@@ -121,7 +121,11 @@ async def test_Trend(event_loop):
 
     trend = elist.trend(term, 2)
 
-    p = TrendAnalytic.posterior(trend)
+    p = TrendAnalytic.posteriorSize(trend)
+    print(p)
+    p = TrendAnalytic.posteriorSimpleSize(trend)
+    print(p)
+    p = TrendAnalytic.posteriorStep(trend)
     print(p)
 
 
