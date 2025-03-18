@@ -13,7 +13,6 @@ import sys
 from PyQt6 import QtCore, QtWidgets
 
 from avin import (
-    Cfg,
     Term,
     Trend,
     TrendAnalytic,
@@ -228,7 +227,8 @@ class _Settings(QtWidgets.QDialog):  # {{{
 # }}}
 class _Graphics(QtWidgets.QGraphicsItemGroup):  # {{{
     WIDTH = -200
-    BG = Theme.Chart.BG_FOOTER
+    BG = Theme.Chart.BG
+    FRAME = Theme.Chart.BG_FOOTER
 
     def __init__(self, gchart: GChart, parent=None):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
@@ -250,7 +250,7 @@ class _Graphics(QtWidgets.QGraphicsItemGroup):  # {{{
         height = self.gchart.rect.height()
 
         frame = QtWidgets.QGraphicsRectItem(x0, y0, width, height)
-        frame.setPen(self.BG)
+        frame.setPen(self.FRAME)
         frame.setBrush(self.BG)
         self.addToGroup(frame)
 
@@ -289,8 +289,8 @@ class _Graphics(QtWidgets.QGraphicsItemGroup):  # {{{
 
 # }}}
 class _GPosteriorDelta(QtWidgets.QGraphicsItemGroup):  # {{{
-    SEGMENT = _Graphics.WIDTH / 5
-    INDENT = -Cfg.Chart.BAR_INDENT
+    SEGMENT = -20
+    INDENT = -1
     COLOR_BEAR = Theme.Chart.POSTERIOR_BEAR
     COLOR_BULL = Theme.Chart.POSTERIOR_BULL
 
@@ -316,19 +316,33 @@ class _GPosteriorDelta(QtWidgets.QGraphicsItemGroup):  # {{{
 
     def __getPosteriorProbability(self):  # {{{
         """Posterior example  (pl.DataFrame)
-        ┌─────────────┬─────────────┬────────────┬─────────────┬───────────┐
-        │ delta_ssize ┆ probability ┆ cumulative ┆ begin_price ┆ end_price │
-        │ ---         ┆ ---         ┆ ---        ┆ ---         ┆ ---       │
-        │ str         ┆ f64         ┆ f64        ┆ f64         ┆ f64       │
-        ╞═════════════╪═════════════╪════════════╪═════════════╪═══════════╡
-        │ XS          ┆ 0.0         ┆ 100.0      ┆ 110.572     ┆ 111.749   │
-        │ S           ┆ 0.053846    ┆ 100.0      ┆ 111.749     ┆ 112.695   │
-        │ M           ┆ 0.330769    ┆ 94.615385  ┆ 112.695     ┆ 115.236   │
-        │ L           ┆ 0.3         ┆ 61.538462  ┆ 115.236     ┆ 119.592   │
-        │ XL          ┆ 0.315385    ┆ 31.538462  ┆ 119.592     ┆ 242.462   │
-        └─────────────┴─────────────┴────────────┴─────────────┴───────────┘
+        ┌───────┬─────────────┬────────────┬───────────┐
+        │ delta ┆ probability ┆ cumulative ┆ price     │
+        │ ---   ┆ ---         ┆ ---        ┆ ---       │
+        │ f64   ┆ f64         ┆ f64        ┆ f64       │
+        ╞═══════╪═════════════╪════════════╪═══════════╡
+        │ 0.0   ┆ 1.0         ┆ 100.0      ┆ 19.415    │
+        │ 0.1   ┆ 0.799779    ┆ 79.977886  ┆ 19.434415 │
+        │ 0.2   ┆ 0.381815    ┆ 38.181509  ┆ 19.45383  │
+        │ 0.3   ┆ 0.224717    ┆ 22.471719  ┆ 19.473245 │
+        │ 0.4   ┆ 0.143914    ┆ 14.391426  ┆ 19.49266  │
+        │ …     ┆ …           ┆ …          ┆ …         │
         """
-        return TrendAnalytic.posterior(self.trend)
+        match str(self.trend.timeframe):
+            case "1M":
+                step = 0.05
+            case "5M":
+                step = 0.1
+            case "1H":
+                step = 0.2
+            case "D":
+                step = 1.0
+            case "W":
+                step = 2.0
+            case "M":
+                step = 3.0
+
+        return TrendAnalytic.posteriorStep(self.trend, step)
 
     # }}}
     def __calcCoordinates(self):  # {{{
@@ -346,7 +360,7 @@ class _GPosteriorDelta(QtWidgets.QGraphicsItemGroup):  # {{{
         self.y1 = list()
         self.p = list()
         for row in self.posterior.iter_rows(named=True):
-            end_price = row["end_price"]
+            end_price = row["price"]
             y = self.gchart.yFromPrice(end_price)
             p = row["cumulative"]
 
@@ -364,25 +378,31 @@ class _GPosteriorDelta(QtWidgets.QGraphicsItemGroup):  # {{{
     # }}}
     def __createGraphics(self):  # {{{
         # create rect
-        for y in self.y1:
+        for p, y in zip(self.p, self.y1):
             height = y - self.y0
             rect = QtWidgets.QGraphicsRectItem(
                 self.x0, self.y0, self.width, height
             )
             rect.setPen(self.color)
             rect.setBrush(self.color)
+            rect.setOpacity(p / 100 / 2)
+
             self.addToGroup(rect)
 
     # }}}
     def __createText(self):  # {{{
         for p, y in zip(self.p, self.y1):
-            text = QtWidgets.QGraphicsSimpleTextItem(str(round(p, 1)))
+            text = str(round(p))
+            print(text)
+            text = ".." if text == "100" else text
+            print("-", text)
+            text_item = QtWidgets.QGraphicsSimpleTextItem(text)
             if self.trend.isBear():
-                text.setPos(self.x1, y)
+                text_item.setPos(self.x1, y)
             else:
-                height = text.boundingRect().height()
-                text.setPos(self.x1, y - height)
-            self.addToGroup(text)
+                height = text_item.boundingRect().height()
+                text_item.setPos(self.x1, y - height)
+            self.addToGroup(text_item)
 
     # }}}
 

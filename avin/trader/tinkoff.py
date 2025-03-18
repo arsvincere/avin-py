@@ -1550,6 +1550,8 @@ class Tinkoff(Broker):
             t.SUBSCRIPTION_INTERVAL_10_MIN: TimeFrame("10M"),
             t.SUBSCRIPTION_INTERVAL_ONE_HOUR: TimeFrame("1H"),
             t.SUBSCRIPTION_INTERVAL_ONE_DAY: TimeFrame("D"),
+            t.SUBSCRIPTION_INTERVAL_WEEK: TimeFrame("W"),
+            t.SUBSCRIPTION_INTERVAL_MONTH: TimeFrame("M"),
         }
         av_timeframe = intervals[ti_interval]
 

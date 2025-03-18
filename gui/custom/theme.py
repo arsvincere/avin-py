@@ -41,18 +41,17 @@ class Theme:
         BG_FOOTER = QtGui.QColor(Color.dragonBlack5)
         CROSS = QtGui.QColor(Color.dragonBlack6)
 
-        BEAR = QtGui.QColor("#FF5D62")  # kanagawa 5.3
-        BULL = QtGui.QColor("#98BB6C")  # kanagawa 4.2
+        BEAR = QtGui.QColor("#FF5D62")
+        BULL = QtGui.QColor("#98BB6C")
         UNDEFINE = QtGui.QColor("#FFFFFF")
+        BULL_BEHIND = QtGui.QColor("#98BB6C")
+        BEAR_BEHIND = QtGui.QColor("#FF5D62")
+        UNDEFINE_BEHIND = QtGui.QColor("#FFFFFF")
 
-        VOL_BEAR = QtGui.QColor("#33FF5D62")  # kanagawa 5.3
-        VOL_BULL = QtGui.QColor("#3398BB6C")  # kanagawa 4.2
+        VOL_BEAR = QtGui.QColor("#33FF5D62")
+        VOL_BULL = QtGui.QColor("#3398BB6C")
         VOL_UNDEFINE = QtGui.QColor("#33FFFFFF")
         VOL_FRAME = QtGui.QColor(Color.dragonBlack1)
-
-        BULL_BEHIND = QtGui.QColor("#1198BB6C")  # kanagawa 4.2
-        BEAR_BEHIND = QtGui.QColor("#11FF5D62")  # kanagawa 5.3
-        UNDEFINE_BEHIND = QtGui.QColor("#11FFFFFF")
 
         # Trade
         STOP = QtGui.QColor("#c84053")
@@ -63,17 +62,20 @@ class Theme:
         TRADE_UNDEFINE = QtGui.QColor("#888888")
 
         # Extremum
-        INSIDE_BG = QtGui.QColor("#AA000000")
-        OUTSIDE_BG = QtGui.QColor("#44FFFFFF")
-        TREND_5M = QtGui.QColor("#22FFFFFF")
-        TREND_1H = QtGui.QColor("#44A3D4D5")
-        TREND_D = QtGui.QColor("#88658594")
-        TREND_W = QtGui.QColor("#FF957FB8")
+        TREND_T1 = QtGui.QColor("#FFFFFF")
+        TREND_T2 = QtGui.QColor("#A3D4D5")  # #00FFFF
+        TREND_T3 = QtGui.QColor("#658594")  # #7E9CD8
+        TREND_T3 = QtGui.QColor("#7E9CD8")  # #7E9CD8
+        TREND_T4 = QtGui.QColor("#957FB8")
+        TREND_T5 = QtGui.QColor("#DCA561")
         VAWE_BEAR = QtGui.QColor("#AA0000")
         VAWE_BULL = QtGui.QColor("#00AA00")
+        INSIDE_BG = QtGui.QColor("#000000")
+        OUTSIDE_BG = QtGui.QColor("#FFFFFF")
 
-        POSTERIOR_BULL = QtGui.QColor("#2298BB6C")
-        POSTERIOR_BEAR = QtGui.QColor("#22FF5D62")
+        # Posterior
+        POSTERIOR_BULL = QtGui.QColor("#98BB6C")
+        POSTERIOR_BEAR = QtGui.QColor("#FF5D62")
 
         # TODO: delete it
         # common color

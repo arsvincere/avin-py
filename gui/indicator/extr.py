@@ -466,18 +466,18 @@ class _ExtremumGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
 
 # }}}
 class _GTrend(QtWidgets.QGraphicsItemGroup):  # {{{
-    T1_WIDTH = 1
-    T2_WIDTH = 2
-    T3_WIDTH = 3
-    T4_WIDTH = 4
-    T5_WIDTH = 5
+    WIDTH_1M = 0.5
+    WIDTH_5M = 1
+    WIDTH_1H = 2
+    WIDTH_D = 3
+    WIDTH_W = 4
+    WIDTH_M = 5
 
-    COLOR_1M = Theme.Chart.TREND_5M
-    COLOR_5M = Theme.Chart.TREND_5M
-    COLOR_1H = Theme.Chart.TREND_1H
-    COLOR_D = Theme.Chart.TREND_D
-    COLOR_W = Theme.Chart.TREND_D
-    COLOR_M = Theme.Chart.TREND_D
+    COLOR_T1 = Theme.Chart.TREND_T1
+    COLOR_T2 = Theme.Chart.TREND_T2
+    COLOR_T3 = Theme.Chart.TREND_T3
+    COLOR_T4 = Theme.Chart.TREND_T4
+    COLOR_T5 = Theme.Chart.TREND_T5
 
     def __init__(  # {{{
         self, gchart: GChart, trend: Trend, parent=None
@@ -533,33 +533,38 @@ class _GTrend(QtWidgets.QGraphicsItemGroup):  # {{{
     def __createLine(self):  # {{{
         match str(self.trend.timeframe):
             case "1M":
-                color = self.COLOR_1M
+                width = self.WIDTH_1M
             case "5M":
-                color = self.COLOR_5M
+                width = self.WIDTH_5M
             case "1H":
-                color = self.COLOR_1H
+                width = self.WIDTH_1H
             case "D":
-                color = self.COLOR_D
+                width = self.WIDTH_D
             case "W":
-                color = self.COLOR_W
+                width = self.WIDTH_W
             case "M":
-                color = self.COLOR_M
+                width = self.WIDTH_M
             case _:
                 assert False, f"TODO_ME??? {self.trend.timeframe}"
 
         match self.trend.term:
             case Term.T1:
-                width = self.T1_WIDTH
+                color = self.COLOR_T1
+                opacity = 0.2
             case Term.T2:
-                width = self.T2_WIDTH
+                color = self.COLOR_T2
+                opacity = 0.4
             case Term.T3:
-                width = self.T3_WIDTH
+                color = self.COLOR_T3
+                opacity = 0.6
             case Term.T4:
-                width = self.T3_WIDTH
+                color = self.COLOR_T4
+                opacity = 0.8
             case Term.T5:
-                width = self.T3_WIDTH
+                color = self.COLOR_T5
+                opacity = 1
             case _:
-                assert False, f"??? {self.trend.term}"
+                assert False, f"TODO_ME??? {self.trend.term}"
 
         self.line = QtWidgets.QGraphicsLineItem(
             self.begin_pos.x(),
@@ -569,6 +574,7 @@ class _GTrend(QtWidgets.QGraphicsItemGroup):  # {{{
         )
         pen = QtGui.QPen(color, width)
         self.line.setPen(pen)
+        self.line.setOpacity(opacity)
 
         self.addToGroup(self.line)
 

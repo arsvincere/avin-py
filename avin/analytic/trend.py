@@ -296,7 +296,7 @@ class TrendAnalytic(Analytic):
 
     # }}}
     @classmethod  # posteriorStep  # {{{
-    def posteriorStep(cls, trend: Trend) -> pl.DataFrame | None:
+    def posteriorStep(cls, trend: Trend, step: float) -> pl.DataFrame | None:
         assert isinstance(trend, Trend)
 
         # try get trend delta size
@@ -309,7 +309,6 @@ class TrendAnalytic(Analytic):
             "feat": "delta_size",
             "value": str(size),
         }
-        step = 0.1
         trends = cls.load(
             asset=trend.asset,
             tf=trend.timeframe,
@@ -322,10 +321,7 @@ class TrendAnalytic(Analytic):
         # а дельты все по модулю посчитаны, так что
         # для определения цен текущего медвежьего тренда, надо
         # дельты умножить на -1
-        if trend.isBull():
-            k = -1
-        else:
-            k = 1
+        k = -1 if trend.isBull() else 1
 
         # calc prices
         price = trend.end.price
