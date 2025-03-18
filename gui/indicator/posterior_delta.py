@@ -273,7 +273,10 @@ class _Graphics(QtWidgets.QGraphicsItemGroup):  # {{{
         last_trends = list()
         for term in Term:
             gtrends = extr_indicator.gitem.getGTrends(tf, term)
-            last_g_trend = gtrends.childItems()[-1]
+            gtrends = gtrends.childItems()
+            if not gtrends:
+                continue
+            last_g_trend = gtrends[-1]
             last_trends.append(last_g_trend.trend)
 
         for trend in last_trends:
@@ -393,9 +396,7 @@ class _GPosteriorDelta(QtWidgets.QGraphicsItemGroup):  # {{{
     def __createText(self):  # {{{
         for p, y in zip(self.p, self.y1):
             text = str(round(p))
-            print(text)
             text = ".." if text == "100" else text
-            print("-", text)
             text_item = QtWidgets.QGraphicsSimpleTextItem(text)
             if self.trend.isBear():
                 text_item.setPos(self.x1, y)
