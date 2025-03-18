@@ -128,10 +128,41 @@ class _ExtremumLabel(QtWidgets.QWidget):  # {{{
         self.btn_settings = ToolButton(Icon.CONFIG, width=16, height=16)
         self.btn_delete = ToolButton(Icon.DELETE, width=16, height=16)
 
-        self.info_5m = Label("1M")
         self.info_5m = Label("5M")
+        self.t1_5m = ToolButton(text="T1", width=16, height=16)
+        self.t2_5m = ToolButton(text="T2", width=16, height=16)
+        self.t3_5m = ToolButton(text="T3", width=16, height=16)
+        self.t4_5m = ToolButton(text="T4", width=16, height=16)
+        self.t5_5m = ToolButton(text="T5", width=16, height=16)
+        self.t1_5m.setCheckable(True)
+        self.t2_5m.setCheckable(True)
+        self.t3_5m.setCheckable(True)
+        self.t4_5m.setCheckable(True)
+        self.t5_5m.setCheckable(True)
+
         self.info_1h = Label("1H")
+        self.t1_1h = ToolButton(text="T1", width=16, height=16)
+        self.t2_1h = ToolButton(text="T2", width=16, height=16)
+        self.t3_1h = ToolButton(text="T3", width=16, height=16)
+        self.t4_1h = ToolButton(text="T4", width=16, height=16)
+        self.t5_1h = ToolButton(text="T5", width=16, height=16)
+        self.t1_1h.setCheckable(True)
+        self.t2_1h.setCheckable(True)
+        self.t3_1h.setCheckable(True)
+        self.t4_1h.setCheckable(True)
+        self.t5_1h.setCheckable(True)
+
         self.info_d = Label("D")
+        self.t1_d = ToolButton(text="T1", width=16, height=16)
+        self.t2_d = ToolButton(text="T2", width=16, height=16)
+        self.t3_d = ToolButton(text="T3", width=16, height=16)
+        self.t4_d = ToolButton(text="T4", width=16, height=16)
+        self.t5_d = ToolButton(text="T5", width=16, height=16)
+        self.t1_d.setCheckable(True)
+        self.t2_d.setCheckable(True)
+        self.t3_d.setCheckable(True)
+        self.t4_d.setCheckable(True)
+        self.t5_d.setCheckable(True)
 
         self.info_5m.setStyleSheet(Css.CHART_LABEL)
         self.info_1h.setStyleSheet(Css.CHART_LABEL)
@@ -141,19 +172,43 @@ class _ExtremumLabel(QtWidgets.QWidget):  # {{{
     def __createLayots(self):  # {{{
         logger.debug(f"{self.__class__.__name__}.__createLayots()")
 
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(self.label_name)
-        hbox.addWidget(self.btn_hide)
-        hbox.addWidget(self.btn_settings)
-        hbox.addWidget(self.btn_delete)
-        hbox.addStretch()
-        hbox.setContentsMargins(0, 0, 0, 0)
+        hbox_title = QtWidgets.QHBoxLayout()
+        hbox_title.addWidget(self.label_name)
+        hbox_title.addWidget(self.btn_hide)
+        hbox_title.addWidget(self.btn_settings)
+        hbox_title.addWidget(self.btn_delete)
+        hbox_title.addStretch()
+        hbox_title.setContentsMargins(0, 0, 0, 0)
+
+        hbox_5m = QtWidgets.QHBoxLayout()
+        hbox_5m.addWidget(self.t1_5m)
+        hbox_5m.addWidget(self.t2_5m)
+        hbox_5m.addWidget(self.t3_5m)
+        hbox_5m.addWidget(self.t4_5m)
+        hbox_5m.addWidget(self.t5_5m)
+        hbox_5m.addWidget(self.info_5m)
+
+        hbox_1h = QtWidgets.QHBoxLayout()
+        hbox_1h.addWidget(self.t1_1h)
+        hbox_1h.addWidget(self.t2_1h)
+        hbox_1h.addWidget(self.t3_1h)
+        hbox_1h.addWidget(self.t4_1h)
+        hbox_1h.addWidget(self.t5_1h)
+        hbox_1h.addWidget(self.info_1h)
+
+        hbox_d = QtWidgets.QHBoxLayout()
+        hbox_d.addWidget(self.t1_d)
+        hbox_d.addWidget(self.t2_d)
+        hbox_d.addWidget(self.t3_d)
+        hbox_d.addWidget(self.t4_d)
+        hbox_d.addWidget(self.t5_d)
+        hbox_d.addWidget(self.info_d)
 
         vbox = QtWidgets.QVBoxLayout()
-        vbox.addLayout(hbox)
-        vbox.addWidget(self.info_5m)
-        vbox.addWidget(self.info_1h)
-        vbox.addWidget(self.info_d)
+        vbox.addLayout(hbox_title)
+        vbox.addLayout(hbox_5m)
+        vbox.addLayout(hbox_1h)
+        vbox.addLayout(hbox_d)
 
         vbox.setContentsMargins(0, 0, 0, 0)
         self.setLayout(vbox)
@@ -163,6 +218,24 @@ class _ExtremumLabel(QtWidgets.QWidget):  # {{{
         logger.debug(f"{self.__class__.__name__}.__connect()")
         self.btn_settings.clicked.connect(self.__onSettings)
 
+        self.t1_5m.clicked.connect(self.__onT1_5M)
+        self.t2_5m.clicked.connect(self.__onT2_5M)
+        self.t3_5m.clicked.connect(self.__onT3_5M)
+        self.t4_5m.clicked.connect(self.__onT4_5M)
+        self.t5_5m.clicked.connect(self.__onT5_5M)
+
+        self.t1_1h.clicked.connect(self.__onT1_1H)
+        self.t2_1h.clicked.connect(self.__onT2_1H)
+        self.t3_1h.clicked.connect(self.__onT3_1H)
+        self.t4_1h.clicked.connect(self.__onT4_1H)
+        self.t5_1h.clicked.connect(self.__onT5_1H)
+
+        self.t1_d.clicked.connect(self.__onT1_D)
+        self.t2_d.clicked.connect(self.__onT2_D)
+        self.t3_d.clicked.connect(self.__onT3_D)
+        self.t4_d.clicked.connect(self.__onT4_D)
+        self.t5_d.clicked.connect(self.__onT5_D)
+
     # }}}
 
     @QtCore.pyqtSlot()  # __onSettings  # {{{
@@ -170,6 +243,96 @@ class _ExtremumLabel(QtWidgets.QWidget):  # {{{
         logger.debug(f"{self.__class__.__name__}.__onSettings()")
 
         self.indicator.configure()
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT1_5M  # {{{
+    def __onT1_5M(self):
+        state = self.t1_5m.isChecked()
+        self.indicator.gitem.setTrendVisible(TimeFrame("5M"), Term.T1, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT2_5M  # {{{
+    def __onT2_5M(self):
+        state = self.t2_5m.isChecked()
+        self.indicator.gitem.setTrendVisible(TimeFrame("5M"), Term.T2, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT3_5M  # {{{
+    def __onT3_5M(self):
+        state = self.t3_5m.isChecked()
+        self.indicator.gitem.setTrendVisible(TimeFrame("5M"), Term.T3, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT4_5M  # {{{
+    def __onT4_5M(self):
+        state = self.t4_5m.isChecked()
+        self.indicator.gitem.setTrendVisible(TimeFrame("5M"), Term.T4, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT5_5M  # {{{
+    def __onT5_5M(self):
+        state = self.t5_5m.isChecked()
+        self.indicator.gitem.setTrendVisible(TimeFrame("5M"), Term.T5, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT1_1H  # {{{
+    def __onT1_1H(self):
+        state = self.t1_1h.isChecked()
+        self.indicator.gitem.setTrendVisible(TimeFrame("1H"), Term.T1, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT2_1H  # {{{
+    def __onT2_1H(self):
+        state = self.t2_1h.isChecked()
+        self.indicator.gitem.setTrendVisible(TimeFrame("1H"), Term.T2, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT3_1H  # {{{
+    def __onT3_1H(self):
+        state = self.t3_1h.isChecked()
+        self.indicator.gitem.setTrendVisible(TimeFrame("1H"), Term.T3, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT4_1H  # {{{
+    def __onT4_1H(self):
+        state = self.t4_1h.isChecked()
+        self.indicator.gitem.setTrendVisible(TimeFrame("1H"), Term.T4, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT5_1H  # {{{
+    def __onT5_1H(self):
+        state = self.t5_1h.isChecked()
+        self.indicator.gitem.setTrendVisible(TimeFrame("1H"), Term.T5, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT1_D  # {{{
+    def __onT1_D(self):
+        state = self.t1_d.isChecked()
+        self.indicator.gitem.setTrendVisible(TimeFrame("D"), Term.T1, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT2_D  # {{{
+    def __onT2_D(self):
+        state = self.t2_d.isChecked()
+        self.indicator.gitem.setTrendVisible(TimeFrame("D"), Term.T2, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT3_D  # {{{
+    def __onT3_D(self):
+        state = self.t3_d.isChecked()
+        self.indicator.gitem.setTrendVisible(TimeFrame("D"), Term.T3, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT4_D  # {{{
+    def __onT4_D(self):
+        state = self.t4_d.isChecked()
+        self.indicator.gitem.setTrendVisible(TimeFrame("D"), Term.T4, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT5_D  # {{{
+    def __onT5_D(self):
+        state = self.t5_d.isChecked()
+        self.indicator.gitem.setTrendVisible(TimeFrame("D"), Term.T5, state)
 
     # }}}
 
