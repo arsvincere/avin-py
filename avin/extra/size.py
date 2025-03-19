@@ -30,6 +30,27 @@ class Size(enum.Enum):  # {{{
     ANOMAL_BIG = Range(97, 99)
     GREATEST_BIG = Range(99, 100)
 
+    @property
+    def short_name(self):
+        names = {
+            Size.GREATEST_SMALL: "-7",
+            Size.ANOMAL_SMALL: "-6",
+            Size.EXTRA_SMALL: "-5",
+            Size.VERY_SMALL: "-4",
+            Size.SMALLEST: "-3",
+            Size.SMALLER: "-2",
+            Size.SMALL: "-1",
+            Size.M: " 0",
+            Size.BIG: "+1",
+            Size.BIGGER: "+2",
+            Size.BIGGEST: "+3",
+            Size.VERY_BIG: "+4",
+            Size.EXTRA_BIG: "+5",
+            Size.ANOMAL_BIG: "+6",
+            Size.GREATEST_BIG: "+7",
+        }
+        return names[self]
+
     def __str__(self):  # {{{
         return self.name
 
@@ -205,6 +226,16 @@ class BlackSwan(enum.Enum):  # {{{
     BLACKSWAN_BIG = Range(100, 100500)
     XXS = Range(-100500, 0)
     XXL = Range(100, 100500)
+
+    @property
+    def short_name(self):
+        names = {
+            BlackSwan.XXS: "-100500",
+            BlackSwan.XXL: "+100500",
+            BlackSwan.BLACKSWAN_SMALL: "-100500",
+            BlackSwan.BLACKSWAN_BIG: "+100500",
+        }
+        return names[self]
 
     def simple(self) -> BlackSwan:  # {{{
         if self == BlackSwan.BLACKSWAN_BIG:

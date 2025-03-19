@@ -6,12 +6,12 @@
 # LICENSE:      GNU GPLv3
 # ============================================================================
 
-from PyQt6 import QtWidgets
+from PyQt6 import QtCore, QtWidgets
 
 from avin.config import Usr
 from avin.const import WeekDays
 from avin.utils import logger
-from gui.custom import Css, Font
+from gui.custom import Css
 
 
 class BarInfo(QtWidgets.QWidget):  # {{{
@@ -28,9 +28,10 @@ class BarInfo(QtWidgets.QWidget):  # {{{
         self.gchart = gchart
 
     # }}}
-    def updateInfo(self, x):  # {{{
+    def updateInfo(self, pos: QtCore.QPointF):  # {{{
         logger.debug(f"{self.__class__.__name__}.set(bar)")
 
+        x = pos.x()
         gbar = self.gchart.gbarOnX(x)
         if gbar is None:
             return
@@ -41,13 +42,24 @@ class BarInfo(QtWidgets.QWidget):  # {{{
         full_pct = bar.full.deltaP()
         body_pct = bar.body.deltaP()
 
+        vol = bar.volume
+        if vol > 1_000_000:
+            m_vol = vol / 1_000_000
+            value = f"{m_vol:.2f}m"
+        elif vol > 1_000:
+            k_vol = vol / 1_000
+            value = f"{k_vol:.2f}k"
+        else:
+            value = f"{vol}"
+
         self.label_barinfo.setText(
             f"{local_time} {day} - "
-            f"Open: {bar.open:<6} "
-            f"High: {bar.high:<6} "
-            f"Low: {bar.low:<6} "
-            f"Close: {bar.close:<6} "
-            f"(Full: {full_pct:.2f}% Body: {body_pct:.2f}%)"
+            f"O: {bar.open:<6} "
+            f"H: {bar.high:<6} "
+            f"L: {bar.low:<6} "
+            f"C: {bar.close:<6} "
+            f"[Full: {full_pct:.2f}% Body: {body_pct:.2f}%] "
+            f"Vol: {value}"
         )
 
     # }}}
@@ -72,59 +84,6 @@ class BarInfo(QtWidgets.QWidget):  # {{{
         vbox = QtWidgets.QVBoxLayout(self)
         vbox.setContentsMargins(0, 0, 0, 0)
         vbox.addWidget(self.label_barinfo)
-
-    # }}}
-
-
-# }}}
-class VolumeInfo(QtWidgets.QWidget):  # {{{
-    def __init__(self, parent=None):  # {{{
-        logger.debug(f"{self.__class__.__name__}.__init__()")
-        QtWidgets.QGraphicsWidget.__init__(self, parent)
-
-        self.__createWidgets()
-        self.__createLayots()
-
-    # }}}
-
-    def setGChart(self, gchart):  # {{{
-        self.gchart = gchart
-
-    # }}}
-    def updateInfo(self, x):  # {{{
-        logger.debug(f"{self.__class__.__name__}.set(bar)")
-
-        gbar = self.gchart.gbarOnX(x)
-        if gbar is None:
-            return
-
-        vol = gbar.bar.volume
-        if vol > 1_000_000:
-            m_vol = vol / 1_000_000
-            value = f"{m_vol:.2f}m"
-        elif vol > 1_000:
-            k_vol = vol / 1_000
-            value = f"{k_vol:.2f}k"
-        else:
-            value = f"{vol}"
-
-        self.label_volinfo.setText(f"Volume: {value}")
-
-    # }}}
-
-    def __createWidgets(self):  # {{{
-        logger.debug(f"{self.__class__.__name__}.__createWidgets()")
-
-        self.label_volinfo = QtWidgets.QLabel("Volume: ")
-        self.label_volinfo.setFont(Font.MONO)
-
-    # }}}
-    def __createLayots(self):  # {{{
-        logger.debug(f"{self.__class__.__name__}.__createLayots()")
-
-        vbox = QtWidgets.QVBoxLayout(self)
-        vbox.addWidget(self.label_volinfo)
-        vbox.setContentsMargins(0, 0, 0, 0)
 
     # }}}
 

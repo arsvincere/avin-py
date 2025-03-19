@@ -11,7 +11,7 @@ from PyQt6 import QtCore, QtWidgets
 from avin.utils import logger
 from gui.chart.gchart import GChart
 from gui.chart.gcross import GCross
-from gui.chart.glabels import BarInfo, ChartLabels, VolumeInfo
+from gui.chart.glabels import BarInfo, ChartLabels
 from gui.chart.gtest import GTradeList
 from gui.custom import Theme
 from gui.indicator._indicator import Indicator
@@ -41,10 +41,7 @@ class ChartScene(QtWidgets.QGraphicsScene):
         if not self.__has_chart:
             return e.ignore()
 
-        x = e.scenePos().x()
-
-        self.bar_info.updateInfo(x)
-        self.vol_info.updateInfo(x)
+        self.bar_info.updateInfo(e.scenePos())
 
         return e.ignore()
 
@@ -56,10 +53,8 @@ class ChartScene(QtWidgets.QGraphicsScene):
         if not self.__has_chart:
             return e.ignore()
 
-        x = e.scenePos().x()
-
         for label in self.top:
-            label.updateInfo(x)
+            label.updateInfo(e.scenePos())
 
         return e.ignore()
 
@@ -251,12 +246,10 @@ class ChartScene(QtWidgets.QGraphicsScene):
 
         # create widgets
         self.bar_info = BarInfo()
-        self.vol_info = VolumeInfo()
 
         # create QtWidgets.QGraphicsProxyWidget
         self.top = ChartLabels()
         self.top.add(self.bar_info)
-        self.top.add(self.vol_info)
         self.top.setFlag(self.ignore_transformation)
 
         self.addItem(self.top)

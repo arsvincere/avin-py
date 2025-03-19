@@ -12,7 +12,15 @@ import sys
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 
-from avin import ExtremumList, Term, TimeFrame, Tree, Trend, logger
+from avin import (
+    ExtremumList,
+    Term,
+    TimeFrame,
+    Tree,
+    Trend,
+    TrendAnalytic,
+    logger,
+)
 from gui.chart.gchart import GBar, GChart
 from gui.chart.indicator_item import IndicatorItem
 from gui.custom import Css, Icon, Label, MonoLabel, Theme, ToolButton
@@ -93,30 +101,20 @@ class _ExtremumLabel(QtWidgets.QWidget):  # {{{
 
     # }}}
 
-    # def setGChart(self, gchart):  # {{{
-    #     self.gchart = gchart
-    #
-    # # }}}
-    def updateInfo(self, x):  # {{{
-        # 5M S p=5/BIG  d=15.5/NORMAL  s=3.1/SMALL  v=1000/VERY_BIG
-        # 5M M p=5/BIG  d=15.5/NORMAL  s=3.1/SMALL  v=1000/VERY_BIG
-        # 5M L p=5/BIG  d=15.5/NORMAL  s=3.1/SMALL  v=1000/VERY_BIG
-        # 1H S p=5/BIG  d=15.5/NORMAL  s=3.1/SMALL  v=1000/VERY_BIG
-        # 1H ...
+    def updateInfo(self, pos: QtCore.QPointF):  # {{{
+        x = pos.x()
+        gitem = self.__indicator.gitem
+        if gitem is None:
+            return
 
-        self.gitem = self.__indicator.gitem
+        string = gitem.getInfo(TimeFrame("5M"), x)
+        self.info_5m.setText(string)
 
-        # if self.gitem.gelist_5m is not None:
-        #     string = self.gitem.gelist_5m.getInfo(x)
-        #     self.info_5m.setText(string)
-        #
-        # if self.gitem.gelist_1h is not None:
-        #     string = self.gitem.gelist_1h.getInfo(x)
-        #     self.info_1h.setText(string)
-        #
-        # if self.gitem.gelist_d is not None:
-        #     string = self.gitem.gelist_d.getInfo(x)
-        #     self.info_d.setText(string)
+        string = gitem.getInfo(TimeFrame("1H"), x)
+        self.info_1h.setText(string)
+
+        string = gitem.getInfo(TimeFrame("D"), x)
+        self.info_d.setText(string)
 
     # }}}
 
@@ -129,11 +127,11 @@ class _ExtremumLabel(QtWidgets.QWidget):  # {{{
         self.btn_delete = ToolButton(Icon.DELETE, width=16, height=16)
 
         self.info_5m = Label("5M")
-        self.t1_5m = ToolButton(text="T1", width=16, height=16)
-        self.t2_5m = ToolButton(text="T2", width=16, height=16)
-        self.t3_5m = ToolButton(text="T3", width=16, height=16)
-        self.t4_5m = ToolButton(text="T4", width=16, height=16)
-        self.t5_5m = ToolButton(text="T5", width=16, height=16)
+        self.t1_5m = ToolButton(text="T1", width=24, height=24)
+        self.t2_5m = ToolButton(text="T2", width=24, height=24)
+        self.t3_5m = ToolButton(text="T3", width=24, height=24)
+        self.t4_5m = ToolButton(text="T4", width=24, height=24)
+        self.t5_5m = ToolButton(text="T5", width=24, height=24)
         self.t1_5m.setCheckable(True)
         self.t2_5m.setCheckable(True)
         self.t3_5m.setCheckable(True)
@@ -141,11 +139,11 @@ class _ExtremumLabel(QtWidgets.QWidget):  # {{{
         self.t5_5m.setCheckable(True)
 
         self.info_1h = Label("1H")
-        self.t1_1h = ToolButton(text="T1", width=16, height=16)
-        self.t2_1h = ToolButton(text="T2", width=16, height=16)
-        self.t3_1h = ToolButton(text="T3", width=16, height=16)
-        self.t4_1h = ToolButton(text="T4", width=16, height=16)
-        self.t5_1h = ToolButton(text="T5", width=16, height=16)
+        self.t1_1h = ToolButton(text="T1", width=24, height=24)
+        self.t2_1h = ToolButton(text="T2", width=24, height=24)
+        self.t3_1h = ToolButton(text="T3", width=24, height=24)
+        self.t4_1h = ToolButton(text="T4", width=24, height=24)
+        self.t5_1h = ToolButton(text="T5", width=24, height=24)
         self.t1_1h.setCheckable(True)
         self.t2_1h.setCheckable(True)
         self.t3_1h.setCheckable(True)
@@ -153,11 +151,11 @@ class _ExtremumLabel(QtWidgets.QWidget):  # {{{
         self.t5_1h.setCheckable(True)
 
         self.info_d = Label("D")
-        self.t1_d = ToolButton(text="T1", width=16, height=16)
-        self.t2_d = ToolButton(text="T2", width=16, height=16)
-        self.t3_d = ToolButton(text="T3", width=16, height=16)
-        self.t4_d = ToolButton(text="T4", width=16, height=16)
-        self.t5_d = ToolButton(text="T5", width=16, height=16)
+        self.t1_d = ToolButton(text="T1", width=24, height=24)
+        self.t2_d = ToolButton(text="T2", width=24, height=24)
+        self.t3_d = ToolButton(text="T3", width=24, height=24)
+        self.t4_d = ToolButton(text="T4", width=24, height=24)
+        self.t5_d = ToolButton(text="T5", width=24, height=24)
         self.t1_d.setCheckable(True)
         self.t2_d.setCheckable(True)
         self.t3_d.setCheckable(True)
@@ -563,24 +561,16 @@ class _ExtremumGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
         return gtrends
 
     # }}}
-    def getInfo(self, x):  # {{{
+    def getInfo(self, tf: TimeFrame, x: float):  # {{{
         string = ""
+        for term in Term:
+            if not self.__isExist(tf, term):
+                break
 
-        # TODO: binary search
-
-        for line in self.gs_trends.childItems():
-            if self.__xInLine(x, line):
-                string += line.getTextInfo()
-
-        for line in self.gm_trends.childItems():
-            if self.__xInLine(x, line):
-                string += "\n"
-                string += line.getTextInfo()
-
-        for line in self.gl_trends.childItems():
-            if self.__xInLine(x, line):
-                string += "\n"
-                string += line.getTextInfo()
+            gtrends = self.getGTrends(tf, term)
+            for gtrend in gtrends.childItems():
+                if gtrend.isIn(x):
+                    string += gtrend.getTextInfo()
 
         return string
 
@@ -616,16 +606,6 @@ class _ExtremumGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
 
     # }}}
 
-    def __xInLine(self, x, line: _GTrend):  # {{{
-        logger.debug(f"{self.__class__.__name__}.__xInTrend()")
-
-        if line.begin_pos.x() < x < line.end_pos.x():
-            return True
-
-        return False
-
-    # }}}
-
 
 # }}}
 class _GTrend(QtWidgets.QGraphicsItemGroup):  # {{{
@@ -658,22 +638,44 @@ class _GTrend(QtWidgets.QGraphicsItemGroup):  # {{{
 
     def getTextInfo(self) -> str:  # {{{
         logger.debug(f"{self.__class__.__name__}.getTextInfo()")
+        # 󰜷 󰜮 󰁆 󰁞 󱦳 󱦲  󰁃󰁜  󱦴󱦷 󰧆󰦺    "
 
         t = self.trend
-        volume = t.volume()
-        vol_str = f"{(t.volume() / 1_000_000):.2f}m"
+        tf = str(t.timeframe)
+        term = str(t.term)
+        typ = "" if t.isBull() else ""
+
+        p = t.period()
+        p_sz = TrendAnalytic.periodSize(t).simple()
+        d = t.deltaPercent()
+        d_sz = TrendAnalytic.deltaSize(t).simple()
+        s = t.speedPercent()
+        s_sz = TrendAnalytic.speedSize(t).simple()
+        v_total = f"{(t.volumeTotal() / 1_000_000):.2f}m"
+        v_total_sz = TrendAnalytic.volumeTotalSize(t).simple()
+        v_bear = f"{(t.volumeBear() / 1_000_000):.2f}m"
+        v_bear_sz = TrendAnalytic.volumeBearSize(t).simple()
+        v_bull = f"{(t.volumeBull() / 1_000_000):.2f}m"
+        v_bull_sz = TrendAnalytic.volumeBullSize(t).simple()
 
         string = (
-            f"{str(t.timeframe):<2} "
-            f"{t.term.name[0:2]:<2} "
-            f"{t.type.name} "
-            f"p={t.period():<3} "
-            f"d={t.deltaPercent():<6} "
-            f"s={t.speedPercent():<6} "
-            f"v={vol_str} "
-            f"{t.strength.name[0:1]} "
+            f"\n{tf:<2} "
+            f"{term:<2} "
+            f"{typ} "
+            f"p:{p_sz:<2} {p:<6} "
+            f"d:{d_sz:<2} {d:<6} "
+            f"s:{s_sz:<2} {s:<6} "
+            f"v:{v_total_sz:<2} {v_total:<6} "
+            f"(󰜷{v_bull_sz} {v_bull} 󰜮{v_bear_sz} {v_bear})"
         )
         return string
+
+    # }}}
+    def isIn(self, x: float) -> bool:  # {{{
+        if self.begin_pos.x() < x < self.end_pos.x():
+            return True
+
+        return False
 
     # }}}
 

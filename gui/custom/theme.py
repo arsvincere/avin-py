@@ -63,9 +63,8 @@ class Theme:
 
         # Extremum
         TREND_T1 = QtGui.QColor("#FFFFFF")
-        TREND_T2 = QtGui.QColor("#A3D4D5")  # #00FFFF
-        TREND_T3 = QtGui.QColor("#658594")  # #7E9CD8
-        TREND_T3 = QtGui.QColor("#7E9CD8")  # #7E9CD8
+        TREND_T2 = QtGui.QColor("#658594")
+        TREND_T3 = QtGui.QColor("#7E9CD8")  # #00FFFF
         TREND_T4 = QtGui.QColor("#957FB8")
         TREND_T5 = QtGui.QColor("#DCA561")
         VAWE_BEAR = QtGui.QColor("#AA0000")
