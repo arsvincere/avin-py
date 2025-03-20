@@ -12,6 +12,7 @@ import polars as pl
 
 from avin.core.bar import Bar
 from avin.core.chart import Chart
+from avin.core.indicator import Indicator
 from avin.core.timeframe import TimeFrame
 from avin.extra.extremum import Extremum
 from avin.extra.term import Term
@@ -19,9 +20,9 @@ from avin.extra.trend import Trend
 from avin.utils import UTC, Signal
 
 
-class ExtremumList:
-    def __init__(self, chart: Chart):  # {{{
-        self.__chart = chart
+class ExtremumList(Indicator):
+    def __init__(self):  # {{{
+        self.__name = "ExtremumList"
 
         # data
         self.__schema = {
@@ -31,23 +32,31 @@ class ExtremumList:
             "price": float,
         }
         # signals
-        self.upd_extr = Signal(ExtremumList, Extremum)
-        self.new_extr = Signal(ExtremumList, Extremum)
+        self.upd_extr = Signal(Extremum)
+        self.new_extr = Signal(Extremum)
 
-        # connect
-        self.__chart.new_bar.connect(self.__onNewBar)
-        self.__chart.upd_bar.connect(self.__onUpdBar)
-
-        # calc extremums
-
-        self.__t1 = self.__calcExtrT1()
-        self.__t2 = self.__calcExtrNext(self.__t1, "T2")
-        self.__t3 = self.__calcExtrNext(self.__t2, "T3")
-        self.__t4 = self.__calcExtrNext(self.__t3, "T4")
-        self.__t5 = self.__calcExtrNext(self.__t4, "T5")
+        # # connect
+        # self.__chart.new_bar.connect(self.__updExtrT1)
+        #
+        # # calc extremums
+        # self.__t1_now = None
+        # self.__t2_now = None
+        # self.__t3_now = None
+        # self.__t4_now = None
+        # self.__t5_now = None
+        # self.__t1 = self.__calcExtrT1()
+        # self.__t2 = self.__calcExtrNext(self.__t1, "T2")
+        # self.__t3 = self.__calcExtrNext(self.__t2, "T3")
+        # self.__t4 = self.__calcExtrNext(self.__t3, "T4")
+        # self.__t5 = self.__calcExtrNext(self.__t4, "T5")
 
     # }}}
 
+    @property  # name   # {{{
+    def name(self) -> str:
+        return self.__name
+
+    # }}}
     @property  # asset   # {{{
     def asset(self) -> Asset:
         return self.__chart.asset
@@ -89,9 +98,35 @@ class ExtremumList:
 
     # }}}
 
-    def extr(self, term: Term, n: int) -> Extremum | None:  # {{{
-        assert n > 0
+    def setChart(self, chart: Chart) -> None:  # {{{
+        self.__chart = chart
+        self.__chart.new_bar.connect(self.__updExtr)
 
+        self.__calcExtr()
+
+    # }}}
+    def extr(self, term: Term, n: int) -> Extremum | None:  # {{{
+        assert n >= 0
+
+        if n == 0:
+            match term:
+                case Term.T1:
+                    data = self.__t1_now
+                case Term.T2:
+                    data = self.__t2_now
+                case Term.T3:
+                    data = self.__t3_now
+                case Term.T4:
+                    data = self.__t4_now
+                case Term.T5:
+                    data = self.__t5_now
+                case _:
+                    assert False, "TODO_ME"
+
+            e = Extremum(data, self)
+            return e
+
+        # n > 0
         match term:
             case Term.T1:
                 df = self.__t1
@@ -202,90 +237,109 @@ class ExtremumList:
     #
     # # }}}
 
-    def __calcExtrT1(self) -> pl.DataFrame:  # {{{
-        term = Term.T1
-        df = self.__chart.data_frame.with_row_index()
-        df = df.filter(pl.col("high") != pl.col("low"))  # skip point bars
-        if df.is_empty():
-            return
+    def __calcExtr(self) -> None:  # {{{
+        t1, t1_now = self.__calcExtrT1(self.__chart, Term.T1)
+        t2, t2_now = self.__calcExtrNext(t1, Term.T2)
+        t3, t3_now = self.__calcExtrNext(t2, Term.T3)
+        t4, t4_now = self.__calcExtrNext(t3, Term.T4)
+        t5, t5_now = self.__calcExtrNext(t4, Term.T5)
 
+        self.__t1 = t1
+        self.__t2 = t2
+        self.__t3 = t3
+        self.__t4 = t4
+        self.__t5 = t5
+        self.__t1_now = t1_now
+        self.__t2_now = t2_now
+        self.__t3_now = t3_now
+        self.__t4_now = t4_now
+        self.__t5_now = t5_now
+
+    # }}}
+    def __calcExtrT1(self, chart: Chart, term: Term) -> pl.DataFrame:  # {{{
         out_extr = pl.DataFrame(schema=self.__schema)
+        out_now = dict()
+
+        bars = chart.data_frame.with_row_index()
+        bars = bars.filter(pl.col("high") != pl.col("low"))  # skip point bars
+        if bars.is_empty():
+            return out_extr, out_now
 
         # pop first bar
-        prev = df.row(0, named=True)
-        df = df.filter(pl.col("index") != 0)
-
-        # current extremum
-        now_e = pl.DataFrame(schema=self.__schema)
+        prev = bars.row(0, named=True)
+        bars = bars[0:-1]
 
         # set start direction of trend = first bar.type
         if prev["open"] < prev["close"]:
             trend_t = Trend.Type.BULL
+            out_now = {
+                "dt": prev["dt"],
+                "term": term.name,
+                "type": Extremum.Type.MAX.name,
+                "price": prev["high"],
+            }
         else:
             trend_t = Trend.Type.BEAR
+            out_now = {
+                "dt": prev["dt"],
+                "term": term.name,
+                "type": Extremum.Type.MAX.name,
+                "price": prev["low"],
+            }
 
         # cacl extremums
-        for cur in df.iter_rows(named=True):
+        for cur in bars.iter_rows(named=True):
             if trend_t == Trend.Type.BULL:
                 if cur["high"] > prev["high"]:
-                    now_e = pl.DataFrame(
-                        {
-                            "dt": cur["dt"],
-                            "term": term.name,
-                            "type": Extremum.Type.MAX.name,
-                            "price": cur["high"],
-                        }
-                    )
+                    out_now = {
+                        "dt": cur["dt"],
+                        "term": term.name,
+                        "type": Extremum.Type.MAX.name,
+                        "price": cur["high"],
+                    }
                 else:
-                    out_extr.extend(now_e)
-                    now_e = pl.DataFrame(
-                        {
-                            "dt": cur["dt"],
-                            "term": term.name,
-                            "type": Extremum.Type.MIN.name,
-                            "price": cur["low"],
-                        }
-                    )
+                    out_extr.extend(pl.DataFrame(out_now))
+                    out_now = {
+                        "dt": cur["dt"],
+                        "term": term.name,
+                        "type": Extremum.Type.MIN.name,
+                        "price": cur["low"],
+                    }
                     trend_t = Trend.Type.BEAR
 
             elif trend_t == Trend.Type.BEAR:
                 if cur["low"] < prev["low"]:
-                    now_e = pl.DataFrame(
-                        {
-                            "dt": cur["dt"],
-                            "term": term.name,
-                            "type": Extremum.Type.MIN.name,
-                            "price": cur["low"],
-                        }
-                    )
+                    out_now = {
+                        "dt": cur["dt"],
+                        "term": term.name,
+                        "type": Extremum.Type.MIN.name,
+                        "price": cur["low"],
+                    }
                 else:
-                    out_extr.extend(now_e)
-                    now_e = pl.DataFrame(
-                        {
-                            "dt": cur["dt"],
-                            "term": term.name,
-                            "type": Extremum.Type.MAX.name,
-                            "price": cur["high"],
-                        }
-                    )
+                    out_extr.extend(pl.DataFrame(out_now))
+                    out_now = {
+                        "dt": cur["dt"],
+                        "term": term.name,
+                        "type": Extremum.Type.MAX.name,
+                        "price": cur["high"],
+                    }
                     trend_t = Trend.Type.BULL
 
             prev = cur
 
-        return out_extr
+        return out_extr, out_now
 
     # }}}
-    def __calcExtrNext(self, in_extr, out_name) -> None:  # {{{
-        df = in_extr
-        if df.is_empty():
-            return
-
+    def __calcExtrNext(self, in_extr, out_term) -> None:  # {{{
         out_extr = pl.DataFrame(schema=self.__schema)
+        out_now = dict()
+        if in_extr.is_empty():
+            return out_extr, out_now
 
         # pop first extr
-        prev = df.row(0, named=True)
-        now_e = pl.DataFrame(prev)
-        df = df.filter(pl.col("dt") != prev["dt"])
+        prev = in_extr.row(0, named=True)
+        in_extr = in_extr[1:]
+        out_now = prev
 
         # set start direction of trend
         if prev["type"] == "MAX":
@@ -298,42 +352,251 @@ class ExtremumList:
             prev_min = prev
 
         # cacl extremums high term
-        for cur in df.iter_rows(named=True):
+        for cur in in_extr.iter_rows(named=True):
             if trend_t == Trend.Type.BULL:
                 if cur["type"] == "MIN":
                     prev_min = cur
                 elif cur["price"] > prev_max["price"]:
-                    now_e = pl.DataFrame(cur)
+                    out_now = cur
                     prev_max = cur
                 else:
-                    out_extr.extend(now_e)
-                    now_e = pl.DataFrame(prev_min)
-                    trend_t = Trend.Type.BEAR
+                    out_extr.extend(pl.DataFrame(out_now))
+                    out_now = prev_min
                     prev_max = cur
+                    trend_t = Trend.Type.BEAR
 
             elif trend_t == Trend.Type.BEAR:
                 if cur["type"] == "MAX":
                     prev_max = cur
                 elif cur["price"] < prev_min["price"]:
-                    now_e = pl.DataFrame(cur)
+                    out_now = pl.DataFrame(cur)
                     prev_min = cur
                 else:
-                    out_extr.extend(now_e)
-                    now_e = pl.DataFrame(prev_max)
-                    trend_t = Trend.Type.BULL
+                    out_extr.extend(pl.DataFrame(out_now))
+                    out_now = prev_max
                     prev_min = cur
+                    trend_t = Trend.Type.BULL
 
-        # replace values of column "term"
-        out_extr = out_extr.with_columns(term=pl.lit(out_name))
-        return out_extr
-
-    # }}}
-    def __onNewBar(self, chart: Chart, bar: Bar):  # {{{
-        pass
+        out_extr = out_extr.with_columns(term=pl.lit(out_term.name))
+        out_now["term"] = out_term.name
+        return out_extr, out_now
 
     # }}}
-    def __onUpdBar(self, chart: Chart, bar: Bar):  # {{{
-        pass
+    def __updExtr(self, chart: Chart, bar: Bar):  # {{{
+        has_new = self.__updExtrT1(chart, bar)
+        if has_new:
+            self.__updExtrNext(self.__t1, self.__t2, self.__t2_now, Term.T2)
+
+    # }}}
+    def __updExtrT1(self, chart: Chart, bar: Bar):  # {{{
+        updated = False
+        new_extr = False
+        if self.__t1_now["type"] == "MAX":
+            if bar.high > self.__t1_now["price"]:
+                self.__t1_now = {
+                    "dt": bar.dt,
+                    "term": Term.T1.name,
+                    "type": Extremum.Type.MAX.name,
+                    "price": bar.high,
+                }
+                updated = True
+            else:
+                self.__t1.extend(pl.DataFrame(self.__t1_now))
+                self.__t1_now = {
+                    "dt": bar.dt,
+                    "term": Term.T1.name,
+                    "type": Extremum.Type.MIN.name,
+                    "price": bar.low,
+                }
+                updated = True
+                new_extr = True
+
+        elif self.__t1_now["type"] == "MIN":
+            if bar.low < self.__t1_now["price"]:
+                self.__t1_now = {
+                    "dt": bar.dt,
+                    "term": Term.T1.name,
+                    "type": Extremum.Type.MIN.name,
+                    "price": bar.low,
+                }
+                updated = True
+            else:
+                self.__t1.extend(pl.DataFrame(self.__t1_now))
+                self.__t1_now = {
+                    "dt": bar.dt,
+                    "term": Term.T1.name,
+                    "type": Extremum.Type.MAX.name,
+                    "price": bar.high,
+                }
+                updated = True
+                new_extr = True
+
+        if new_extr:
+            self.new_extr.emit(self.extr(Term.T1, 1))
+        if updated:
+            self.upd_extr.emit(self.extr(Term.T1, 0))
+
+        return new_extr
+
+    # }}}
+    # def __updExtrNext(self, in_extr: pl.DataFrame, out_name) -> None:  # {{{
+    #     flag_new_historic = False
+    #
+    #     match out_name:
+    #         case "T2":
+    #             out_extr = self.__t2
+    #         case "T3":
+    #             out_extr = self.__t3
+    #         case "T4":
+    #             out_extr = self.__t4
+    #         case "T5":
+    #             out_extr = self.__t5
+    #
+    #     # достать текущий младший экстремум
+    #     in_now = in_extr.row(-1, named=True)
+    #     # достать текущий старший экстремум
+    #     last = out_extr.row(-1, named=True)
+    #
+    #     # если текущий старший тип != текущий младший тип -> делать ничего
+    #     if in_now["type"] != last["type"]:
+    #         return
+    #
+    #     # pop текущий старший экстремум
+    #     out_extr = out_extr[0:-1]
+    #     # если текущий старший тип == текущий младший тип (MAX)
+    #     if last["type"] == "MAX":
+    #         # если текущий младший перебил текущий старший
+    #         # обновляем текущий старший
+    #         if in_now["price"] > last["price"]:
+    #             out_now = in_now
+    #         # если текущий младший не перебил текущий старший
+    #         # разворачиваем текущий старший
+    #         else:
+    #             # то есть текущий старший помещаем обратно
+    #             out_extr.extend(pl.DataFrame(last))
+    #             # достаем предыдущий младший делаем его текущим старшим
+    #             out_now = in_extr.row(-2, named=True)
+    #             # сигнал новый исторический экстремум
+    #             self.new_extr.emit(Extremum(last, self))
+    #             flag_new_historic = True
+    #
+    #     # если текущий старший тип == текущий младший тип (MIN)
+    #     if last["type"] == "MIN":
+    #         # если текущий младший перебил текущий старший
+    #         # обновляем текущий старший
+    #         if in_now["price"] < last["price"]:
+    #             out_now = in_now
+    #         # если текущий младший не перебил текущий старший
+    #         # разворачиваем текущий старший
+    #         else:
+    #             # то есть текущий старший помещаем обратно
+    #             out_extr.extend(pl.DataFrame(last))
+    #             # достаем предыдущий младший делаем его текущим старшим
+    #             out_now = in_extr.row(-2, named=True)
+    #             # сигнал новый исторический экстремум
+    #             self.new_extr.emit(Extremum(last, self))
+    #             flag_new_historic = True
+    #
+    #     if flag_new_historic:
+    #         # вызываем следующую итерацию по старшему порядку
+    #         match out_name:
+    #             case "T2":
+    #                 self.__updExtrNext(out_extr, "T3")
+    #             case "T3":
+    #                 self.__updExtrNext(out_extr, "T4")
+    #             case "T4":
+    #                 self.__updExtrNext(out_extr, "T5")
+    #
+    #     # текущий старший перебитый или развернутый помещаем обратно
+    #     out_now["term"] = out_name
+    #     out_extr.extend(pl.DataFrame(out_now))
+    #     # сигнал обновленный текущий
+    #     self.upd_extr.emit(Extremum(out_now, self))
+    #
+    #     match out_name:
+    #         case "T2":
+    #             self.__t2 = out_extr
+    #         case "T3":
+    #             self.__t3 = out_extr
+    #         case "T4":
+    #             self.__t4 = out_extr
+    #         case "T5":
+    #             self.__t5 = out_extr
+    #
+    # # }}}
+    def __updExtrNext(  # {{{
+        self, in_extr, out_extr, out_now, out_term
+    ) -> None:
+        do = ""
+        # print(in_extr.tail(5), "in")
+        # print(out_extr.tail(5), "out")
+        # print(Extremum(out_now, self), "out_now")
+        # input("------------------------------------------------------- begin")
+
+        last = in_extr.row(-1, named=True)
+
+        # если текущий старший тип != текущий младший тип -> делать ничего
+        if last["type"] != out_now["type"]:
+            return out_extr, out_now
+
+        # если текущий старший тип == текущий младший тип == MAX
+        if out_now["type"] == "MAX":
+            # если текущий младший перебил текущий старший
+            # обновляем текущий старший
+            if last["price"] > out_now["price"]:
+                out_now = last
+                out_now["term"] = out_term.name
+                do = "upd_max"
+            # если текущий младший не перебил текущий старший
+            # разворачиваем текущий старший
+            else:
+                # то есть текущий старший делаем историческим
+                out_extr.extend(pl.DataFrame(out_now))
+                # достаем предыдущий младший делаем его текущим старшим
+                out_now = in_extr.row(-2, named=True)
+                out_now["term"] = out_term.name
+                do = "new_max"
+
+        # если текущий старший тип == текущий младший тип == MIN
+        elif out_now["type"] == "MIN":
+            # если текущий младший перебил текущий старший
+            # обновляем текущий старший
+            if last["price"] < out_now["price"]:
+                out_now = last
+                out_now["term"] = out_term.name
+                do = "upd_min"
+            # если текущий младший не перебил текущий старший
+            # разворачиваем текущий старший
+            else:
+                # то есть текущий старший делаем историческим
+                out_extr.extend(pl.DataFrame(out_now))
+                # достаем предыдущий младший делаем его текущим старшим
+                out_now = in_extr.row(-2, named=True)
+                out_now["term"] = out_term.name
+                do = "new_min"
+
+        match out_term:
+            case Term.T2:
+                self.__t2 = out_extr
+                self.__t2_now = out_now
+            case Term.T3:
+                self.__t3 = out_extr
+                self.__t3_now = out_now
+            case Term.T4:
+                self.__t4 = out_extr
+                self.__t4_now = out_now
+            case Term.T5:
+                self.__t5 = out_extr
+                self.__t5_now = out_now
+
+        # print(in_extr.tail(5), "in")
+        # print(out_extr.tail(5), "out")
+        # print(Extremum(out_now, self), "out_now")
+        # input(f"------------------------------------------------------- {do}")
+        # if new_extr:
+        #     self.new_extr.emit(self.extr(out_term, 1))
+        # if updated:
+        #     self.upd_extr.emit(self.extr(out_term, 0))
 
     # }}}
 
