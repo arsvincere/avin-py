@@ -95,8 +95,8 @@ class ChartWidget(QtWidgets.QWidget):
         logger.debug(f"{self.__class__.__name__}.clearAll()")
 
         gchart = self.__scene.currentGChart()
-        for i in self.__ind_list:
-            gchart.removeIndicator(i)
+        if gchart is not None:
+            gchart.clearIndicators()
 
         self.__mark_list.clear()
         self.__scene.removeAll()
@@ -177,11 +177,12 @@ class ChartWidget(QtWidgets.QWidget):
     def __drawIndicators(self) -> None:  # {{{
         # добавляем графику индикатора на gchart
         gchart = self.__scene.currentGChart()
-        for indicator in self.__ind_list:
+        for indicator_class in self.__ind_list:
+            indicator = indicator_class()
             gchart.addIndicator(indicator)
 
-        # добавляем график виджет лейблы на сцену в левый верхний угол
-        self.__scene.setIndList(self.__ind_list)
+            # добавляем виджет лейблы на сцену
+            self.__scene.addIndicator(indicator)
 
     # }}}
 

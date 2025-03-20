@@ -1,0 +1,783 @@
+#!/usr/bin/env  python3
+# ============================================================================
+# URL:          http://arsvincere.com
+# AUTHOR:       Alex Avin
+# E-MAIL:       mr.alexavin@gmail.com
+# LICENSE:      GNU GPLv3
+# ============================================================================
+
+from __future__ import annotations
+
+import sys
+
+from PyQt6 import QtCore, QtGui, QtWidgets
+
+from avin import (
+    ExtremumList,
+    Signal,
+    Term,
+    TimeFrame,
+    Timer,
+    Tree,
+    Trend,
+    TrendAnalytic,
+    logger,
+)
+from gui.chart.gchart import GBar, GChart
+from gui.chart.indicator_item import IndicatorItem
+from gui.custom import Css, Icon, Label, MonoLabel, Theme, ToolButton
+from gui.indicator._indicator import GIndicator
+
+
+class GExtremumIndicator(GIndicator):  # {{{
+    name = "Extremum"
+    position = GIndicator.Position.CHART
+    graphics_updated = Signal(QtWidgets.QGraphicsItemGroup)
+
+    def __init__(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__init__()")
+
+        self.indicator = ExtremumList()
+        self.gitem = None
+        self.__item = None
+        self.__label = None
+        self.__settings = None
+
+    # }}}
+
+    def item(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.item()")
+
+        if self.__item is None:
+            self.__item = IndicatorItem(self)
+
+        return self.__item
+
+    # }}}
+    def label(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.label()")
+
+        if self.__label is None:
+            self.__label = _Label(self)
+
+        return self.__label
+
+    # }}}
+    def graphics(self, gchart: GChart):  # {{{
+        logger.debug(f"{self.__class__.__name__}.graphics()")
+
+        self.gitem = _Graphics(self, gchart)
+        if self.__settings is None:
+            self.__settings = _Settings(self)
+        self.__settings.configureSilent(self.gitem)
+        return self.gitem
+
+    # }}}
+    def configure(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.configure()")
+
+        if self.__settings is None:
+            self.__settings = _Settings(self)
+
+        self.__settings.configure(self.gitem)
+
+    # }}}
+
+
+# }}}
+class _Label(QtWidgets.QWidget):  # {{{
+    def __init__(self, gind, parent=None):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__init__()")
+        QtWidgets.QWidget.__init__(self, parent)
+
+        self.__gindicator = gind
+        self.__createWidgets()
+        self.__createLayots()
+        self.__connect()
+
+    # }}}
+
+    @property  # gindicator  # {{{
+    def gindicator(self):
+        return self.__gindicator
+
+    # }}}
+
+    def updateInfo(self, pos: QtCore.QPointF):  # {{{
+        x = pos.x()
+        gitem = self.__gindicator.gitem
+        if gitem is None:
+            return
+
+        string = gitem.getInfo(TimeFrame("5M"), x)
+        self.info_5m.setText(string)
+
+        string = gitem.getInfo(TimeFrame("1H"), x)
+        self.info_1h.setText(string)
+
+        string = gitem.getInfo(TimeFrame("D"), x)
+        self.info_d.setText(string)
+
+    # }}}
+
+    def __createWidgets(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__createWidgets()")
+
+        self.label_name = QtWidgets.QLabel("Extremum")
+        self.btn_hide = ToolButton(Icon.HIDE, width=16, height=16)
+        self.btn_settings = ToolButton(Icon.CONFIG, width=16, height=16)
+        self.btn_delete = ToolButton(Icon.DELETE, width=16, height=16)
+
+        self.info_5m = Label("5M")
+        self.t1_5m = ToolButton(text="T1", width=24, height=24)
+        self.t2_5m = ToolButton(text="T2", width=24, height=24)
+        self.t3_5m = ToolButton(text="T3", width=24, height=24)
+        self.t4_5m = ToolButton(text="T4", width=24, height=24)
+        self.t5_5m = ToolButton(text="T5", width=24, height=24)
+        self.t1_5m.setCheckable(True)
+        self.t2_5m.setCheckable(True)
+        self.t3_5m.setCheckable(True)
+        self.t4_5m.setCheckable(True)
+        self.t5_5m.setCheckable(True)
+
+        self.info_1h = Label("1H")
+        self.t1_1h = ToolButton(text="T1", width=24, height=24)
+        self.t2_1h = ToolButton(text="T2", width=24, height=24)
+        self.t3_1h = ToolButton(text="T3", width=24, height=24)
+        self.t4_1h = ToolButton(text="T4", width=24, height=24)
+        self.t5_1h = ToolButton(text="T5", width=24, height=24)
+        self.t1_1h.setCheckable(True)
+        self.t2_1h.setCheckable(True)
+        self.t3_1h.setCheckable(True)
+        self.t4_1h.setCheckable(True)
+        self.t5_1h.setCheckable(True)
+
+        self.info_d = Label("D")
+        self.t1_d = ToolButton(text="T1", width=24, height=24)
+        self.t2_d = ToolButton(text="T2", width=24, height=24)
+        self.t3_d = ToolButton(text="T3", width=24, height=24)
+        self.t4_d = ToolButton(text="T4", width=24, height=24)
+        self.t5_d = ToolButton(text="T5", width=24, height=24)
+        self.t1_d.setCheckable(True)
+        self.t2_d.setCheckable(True)
+        self.t3_d.setCheckable(True)
+        self.t4_d.setCheckable(True)
+        self.t5_d.setCheckable(True)
+
+        self.info_5m.setStyleSheet(Css.CHART_LABEL)
+        self.info_1h.setStyleSheet(Css.CHART_LABEL)
+        self.info_d.setStyleSheet(Css.CHART_LABEL)
+
+    # }}}
+    def __createLayots(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__createLayots()")
+
+        hbox_title = QtWidgets.QHBoxLayout()
+        hbox_title.addWidget(self.label_name)
+        hbox_title.addWidget(self.btn_hide)
+        hbox_title.addWidget(self.btn_settings)
+        hbox_title.addWidget(self.btn_delete)
+        hbox_title.addStretch()
+        hbox_title.setContentsMargins(0, 0, 0, 0)
+
+        hbox_5m = QtWidgets.QHBoxLayout()
+        hbox_5m.addWidget(self.t1_5m)
+        hbox_5m.addWidget(self.t2_5m)
+        hbox_5m.addWidget(self.t3_5m)
+        hbox_5m.addWidget(self.t4_5m)
+        hbox_5m.addWidget(self.t5_5m)
+        hbox_5m.addWidget(self.info_5m)
+
+        hbox_1h = QtWidgets.QHBoxLayout()
+        hbox_1h.addWidget(self.t1_1h)
+        hbox_1h.addWidget(self.t2_1h)
+        hbox_1h.addWidget(self.t3_1h)
+        hbox_1h.addWidget(self.t4_1h)
+        hbox_1h.addWidget(self.t5_1h)
+        hbox_1h.addWidget(self.info_1h)
+
+        hbox_d = QtWidgets.QHBoxLayout()
+        hbox_d.addWidget(self.t1_d)
+        hbox_d.addWidget(self.t2_d)
+        hbox_d.addWidget(self.t3_d)
+        hbox_d.addWidget(self.t4_d)
+        hbox_d.addWidget(self.t5_d)
+        hbox_d.addWidget(self.info_d)
+
+        vbox = QtWidgets.QVBoxLayout()
+        vbox.addLayout(hbox_title)
+        vbox.addLayout(hbox_5m)
+        vbox.addLayout(hbox_1h)
+        vbox.addLayout(hbox_d)
+
+        vbox.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(vbox)
+
+    # }}}
+    def __connect(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__connect()")
+        self.btn_settings.clicked.connect(self.__onSettings)
+
+        self.t1_5m.clicked.connect(self.__onT1_5M)
+        self.t2_5m.clicked.connect(self.__onT2_5M)
+        self.t3_5m.clicked.connect(self.__onT3_5M)
+        self.t4_5m.clicked.connect(self.__onT4_5M)
+        self.t5_5m.clicked.connect(self.__onT5_5M)
+
+        self.t1_1h.clicked.connect(self.__onT1_1H)
+        self.t2_1h.clicked.connect(self.__onT2_1H)
+        self.t3_1h.clicked.connect(self.__onT3_1H)
+        self.t4_1h.clicked.connect(self.__onT4_1H)
+        self.t5_1h.clicked.connect(self.__onT5_1H)
+
+        self.t1_d.clicked.connect(self.__onT1_D)
+        self.t2_d.clicked.connect(self.__onT2_D)
+        self.t3_d.clicked.connect(self.__onT3_D)
+        self.t4_d.clicked.connect(self.__onT4_D)
+        self.t5_d.clicked.connect(self.__onT5_D)
+
+    # }}}
+
+    @QtCore.pyqtSlot()  # __onSettings  # {{{
+    def __onSettings(self):
+        logger.debug(f"{self.__class__.__name__}.__onSettings()")
+
+        self.gindicator.configure()
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT1_5M  # {{{
+    def __onT1_5M(self):
+        state = self.t1_5m.isChecked()
+        self.gindicator.gitem.setTrendVisible(TimeFrame("5M"), Term.T1, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT2_5M  # {{{
+    def __onT2_5M(self):
+        state = self.t2_5m.isChecked()
+        self.gindicator.gitem.setTrendVisible(TimeFrame("5M"), Term.T2, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT3_5M  # {{{
+    def __onT3_5M(self):
+        state = self.t3_5m.isChecked()
+        self.gindicator.gitem.setTrendVisible(TimeFrame("5M"), Term.T3, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT4_5M  # {{{
+    def __onT4_5M(self):
+        state = self.t4_5m.isChecked()
+        self.gindicator.gitem.setTrendVisible(TimeFrame("5M"), Term.T4, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT5_5M  # {{{
+    def __onT5_5M(self):
+        state = self.t5_5m.isChecked()
+        self.gindicator.gitem.setTrendVisible(TimeFrame("5M"), Term.T5, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT1_1H  # {{{
+    def __onT1_1H(self):
+        state = self.t1_1h.isChecked()
+        self.gindicator.gitem.setTrendVisible(TimeFrame("1H"), Term.T1, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT2_1H  # {{{
+    def __onT2_1H(self):
+        state = self.t2_1h.isChecked()
+        self.gindicator.gitem.setTrendVisible(TimeFrame("1H"), Term.T2, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT3_1H  # {{{
+    def __onT3_1H(self):
+        state = self.t3_1h.isChecked()
+        self.gindicator.gitem.setTrendVisible(TimeFrame("1H"), Term.T3, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT4_1H  # {{{
+    def __onT4_1H(self):
+        state = self.t4_1h.isChecked()
+        self.gindicator.gitem.setTrendVisible(TimeFrame("1H"), Term.T4, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT5_1H  # {{{
+    def __onT5_1H(self):
+        state = self.t5_1h.isChecked()
+        self.gindicator.gitem.setTrendVisible(TimeFrame("1H"), Term.T5, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT1_D  # {{{
+    def __onT1_D(self):
+        state = self.t1_d.isChecked()
+        self.gindicator.gitem.setTrendVisible(TimeFrame("D"), Term.T1, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT2_D  # {{{
+    def __onT2_D(self):
+        state = self.t2_d.isChecked()
+        self.gindicator.gitem.setTrendVisible(TimeFrame("D"), Term.T2, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT3_D  # {{{
+    def __onT3_D(self):
+        state = self.t3_d.isChecked()
+        self.gindicator.gitem.setTrendVisible(TimeFrame("D"), Term.T3, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT4_D  # {{{
+    def __onT4_D(self):
+        state = self.t4_d.isChecked()
+        self.gindicator.gitem.setTrendVisible(TimeFrame("D"), Term.T4, state)
+
+    # }}}
+    @QtCore.pyqtSlot()  # __onT5_D  # {{{
+    def __onT5_D(self):
+        state = self.t5_d.isChecked()
+        self.gindicator.gitem.setTrendVisible(TimeFrame("D"), Term.T5, state)
+
+    # }}}
+
+
+# }}}
+class _Settings(QtWidgets.QDialog):  # {{{
+    def __init__(self, gindicator, parent=None):  # {{{
+        QtWidgets.QDialog.__init__(self, parent)
+        self.__gindicator = gindicator
+
+        self.__config()
+        self.__createWidgets()
+        self.__createLayots()
+        self.__connect()
+        self.__initUI()
+
+    # }}}
+
+    @property  # gindicator  # {{{
+    def gindicator(self):
+        return self.__gindicator
+
+    # }}}
+
+    def configureSilent(self, gextr: _Graphics):  # {{{
+        logger.debug(f"{self.__class__.__name__}.configure")
+
+        t1 = Term.T1
+        t2 = Term.T2
+        t3 = Term.T3
+        t4 = Term.T4
+        t5 = Term.T5
+
+        tf = TimeFrame("1M")
+        gextr.setTrendVisible(tf, t1, self.trend_1m_t1.isChecked())
+        gextr.setTrendVisible(tf, t2, self.trend_1m_t2.isChecked())
+        gextr.setTrendVisible(tf, t3, self.trend_1m_t3.isChecked())
+        gextr.setTrendVisible(tf, t4, self.trend_1m_t4.isChecked())
+        gextr.setTrendVisible(tf, t5, self.trend_1m_t5.isChecked())
+
+        tf = TimeFrame("5M")
+        gextr.setTrendVisible(tf, t1, self.trend_5m_t1.isChecked())
+        gextr.setTrendVisible(tf, t2, self.trend_5m_t2.isChecked())
+        gextr.setTrendVisible(tf, t3, self.trend_5m_t3.isChecked())
+        gextr.setTrendVisible(tf, t4, self.trend_5m_t4.isChecked())
+        gextr.setTrendVisible(tf, t5, self.trend_5m_t5.isChecked())
+
+        tf = TimeFrame("1H")
+        gextr.setTrendVisible(tf, t1, self.trend_1h_t1.isChecked())
+        gextr.setTrendVisible(tf, t2, self.trend_1h_t2.isChecked())
+        gextr.setTrendVisible(tf, t3, self.trend_1h_t3.isChecked())
+        gextr.setTrendVisible(tf, t4, self.trend_1h_t4.isChecked())
+        gextr.setTrendVisible(tf, t5, self.trend_1h_t5.isChecked())
+
+        tf = TimeFrame("D")
+        gextr.setTrendVisible(tf, t1, self.trend_d_t1.isChecked())
+        gextr.setTrendVisible(tf, t2, self.trend_d_t2.isChecked())
+        gextr.setTrendVisible(tf, t3, self.trend_d_t3.isChecked())
+        gextr.setTrendVisible(tf, t4, self.trend_d_t4.isChecked())
+        gextr.setTrendVisible(tf, t5, self.trend_d_t5.isChecked())
+
+    # }}}
+    def configure(self, gextr):  # {{{
+        logger.debug(f"{self.__class__.__name__}.showSettings")
+
+        result = self.exec()
+        if result == QtWidgets.QDialog.DialogCode.Rejected:
+            return
+
+        if gextr is None:
+            return
+
+        self.configureSilent(gextr)
+
+    # }}}
+
+    def __config(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__config()")
+
+        self.setWindowTitle("AVIN")
+        self.setStyleSheet(Css.DIALOG)
+        self.setWindowFlags(QtCore.Qt.WindowType.FramelessWindowHint)
+
+    # }}}
+    def __createWidgets(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__createWidgets()")
+
+        self.title_label = Label(
+            f"| {self.gindicator.name} settings:", parent=self
+        )
+        self.title_label.setStyleSheet(Css.TITLE)
+        self.ok_btn = ToolButton(Icon.OK)
+        self.cancel_btn = ToolButton(Icon.CANCEL)
+
+        self.trend_1m_t1 = QtWidgets.QCheckBox("T1")
+        self.trend_1m_t2 = QtWidgets.QCheckBox("T2")
+        self.trend_1m_t3 = QtWidgets.QCheckBox("T3")
+        self.trend_1m_t4 = QtWidgets.QCheckBox("T4")
+        self.trend_1m_t5 = QtWidgets.QCheckBox("T5")
+
+        self.trend_5m_t1 = QtWidgets.QCheckBox("T1")
+        self.trend_5m_t2 = QtWidgets.QCheckBox("T2")
+        self.trend_5m_t3 = QtWidgets.QCheckBox("T3")
+        self.trend_5m_t4 = QtWidgets.QCheckBox("T4")
+        self.trend_5m_t5 = QtWidgets.QCheckBox("T5")
+
+        self.trend_1h_t1 = QtWidgets.QCheckBox("T1")
+        self.trend_1h_t2 = QtWidgets.QCheckBox("T2")
+        self.trend_1h_t3 = QtWidgets.QCheckBox("T3")
+        self.trend_1h_t4 = QtWidgets.QCheckBox("T4")
+        self.trend_1h_t5 = QtWidgets.QCheckBox("T5")
+
+        self.trend_d_t1 = QtWidgets.QCheckBox("T1")
+        self.trend_d_t2 = QtWidgets.QCheckBox("T2")
+        self.trend_d_t3 = QtWidgets.QCheckBox("T3")
+        self.trend_d_t4 = QtWidgets.QCheckBox("T4")
+        self.trend_d_t5 = QtWidgets.QCheckBox("T5")
+
+    # }}}
+    def __createLayots(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__createLayots()")
+
+        hbox_title = QtWidgets.QHBoxLayout()
+        hbox_title.addWidget(self.title_label)
+        hbox_title.addStretch()
+        hbox_title.addWidget(self.ok_btn)
+        hbox_title.addWidget(self.cancel_btn)
+
+        hbox_trend_1m = QtWidgets.QHBoxLayout()
+        hbox_trend_1m.addWidget(MonoLabel("Trend 1M: "))
+        hbox_trend_1m.addWidget(self.trend_1m_t1)
+        hbox_trend_1m.addWidget(self.trend_1m_t2)
+        hbox_trend_1m.addWidget(self.trend_1m_t3)
+        hbox_trend_1m.addWidget(self.trend_1m_t4)
+        hbox_trend_1m.addWidget(self.trend_1m_t5)
+
+        hbox_trend_5m = QtWidgets.QHBoxLayout()
+        hbox_trend_5m.addWidget(MonoLabel("Trend 5M: "))
+        hbox_trend_5m.addWidget(self.trend_5m_t1)
+        hbox_trend_5m.addWidget(self.trend_5m_t2)
+        hbox_trend_5m.addWidget(self.trend_5m_t3)
+        hbox_trend_5m.addWidget(self.trend_5m_t4)
+        hbox_trend_5m.addWidget(self.trend_5m_t5)
+
+        hbox_trend_1h = QtWidgets.QHBoxLayout()
+        hbox_trend_1h.addWidget(MonoLabel("Trend 1H: "))
+        hbox_trend_1h.addWidget(self.trend_1h_t1)
+        hbox_trend_1h.addWidget(self.trend_1h_t2)
+        hbox_trend_1h.addWidget(self.trend_1h_t3)
+        hbox_trend_1h.addWidget(self.trend_1h_t4)
+        hbox_trend_1h.addWidget(self.trend_1h_t5)
+
+        hbox_trend_d = QtWidgets.QHBoxLayout()
+        hbox_trend_d.addWidget(MonoLabel("Trend  D: "))
+        hbox_trend_d.addWidget(self.trend_d_t1)
+        hbox_trend_d.addWidget(self.trend_d_t2)
+        hbox_trend_d.addWidget(self.trend_d_t3)
+        hbox_trend_d.addWidget(self.trend_d_t4)
+        hbox_trend_d.addWidget(self.trend_d_t5)
+
+        vbox = QtWidgets.QVBoxLayout(self)
+        vbox.addLayout(hbox_title)
+        vbox.addSpacing(10)
+        vbox.addLayout(hbox_trend_1m)
+        vbox.addLayout(hbox_trend_5m)
+        vbox.addLayout(hbox_trend_1h)
+        vbox.addLayout(hbox_trend_d)
+
+    # }}}
+    def __connect(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__connect()")
+
+        self.ok_btn.clicked.connect(self.accept)
+        self.cancel_btn.clicked.connect(self.reject)
+
+    # }}}
+    def __initUI(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__initUI()")
+
+        # self.sshape_checkbox.setChecked(False)
+        # self.mshape_checkbox.setChecked(False)
+        # self.lshape_checkbox.setChecked(False)
+
+    # }}}
+
+
+# }}}
+class _Graphics(QtWidgets.QGraphicsItemGroup):  # {{{
+    def __init__(self, gindicator, gchart: GChart, parent=None):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__init__()")
+        QtWidgets.QGraphicsItemGroup.__init__(self, parent)
+
+        self.gindicator = gindicator
+        self.gchart = gchart
+        self.chart = gchart.chart
+        self.asset = gchart.chart.asset
+        self.gasset = gchart.gasset
+        self.cache = Tree()
+
+    # }}}
+
+    def setTrendVisible(  # {{{
+        self, tf: TimeFrame, term: Term, visible: bool
+    ) -> None:
+        # PERF: если не отрисованы эти линии, и приходит настройка
+        # visible=False - то ничего не делаем.
+        if not self.__isExist(tf, term) and not visible:
+            return
+
+        gtrends = self.getGTrends(tf, term)
+        gtrends.setVisible(visible)
+
+    # }}}
+    def getGTrends(self, tf, term) -> QtWidgets.QGraphicsItemGroup:  # {{{
+        # try find in cache
+        gtrends = self.cache[tf][term]
+        if gtrends:
+            return gtrends
+
+        # else -> create
+        # 1. get gchart
+        gchart = self.gasset.gchart(tf)
+
+        # 2. get elist
+        elist = gchart.chart.getInd(self.gindicator.indicator.name)
+        if elist is None:
+            gchart.addIndicator(self.gindicator)
+            elist = gchart.chart.getInd(self.gindicator.indicator.name)
+
+        # 3. get trends (historical)
+        Timer.start()
+        trends = elist.getAllTrends(term)
+        Timer.finish()
+        gtrends = self.__createGTrends(self.gchart, trends)
+
+        # 4. save in cache
+        self.cache[tf][term] = gtrends
+
+        # 5. add to group
+        self.addToGroup(gtrends)
+
+        # 6. connect signals
+        elist.new_extr.connect(self.__onNewExtr)
+        elist.upd_extr.connect(self.__onUpdExtr)
+
+        return gtrends
+
+    # }}}
+    def getInfo(self, tf: TimeFrame, x: float):  # {{{
+        string = ""
+        for term in Term:
+            if not self.__isExist(tf, term):
+                break
+
+            gtrends = self.getGTrends(tf, term)
+            for gtrend in gtrends.childItems():
+                if gtrend.isIn(x):
+                    string += gtrend.getTextInfo()
+
+        return string
+
+    # }}}
+
+    def __isExist(self, tf, term) -> bool:  # {{{
+        # try find in cache
+        gtrends = self.cache[tf][term]
+        return bool(gtrends)
+
+    # }}}
+    def __getGMove(self, tf, term) -> QtWidgets.QGraphicsItemGroup:  # {{{
+        pass
+
+    # }}}
+    def __createGTrends(  # {{{
+        self, gchart, trends
+    ) -> QtWidgets.QGraphicsItemGroup:
+        gtrends = QtWidgets.QGraphicsItemGroup()
+        for trend in trends:
+            # INFO: так как я делаю совмещения трендов с разных
+            # таймфреймов, на дневном графике будут бары допустим
+            # с 2020 г, а на 5М графике только с 2025г (последние 5000 баров)
+            # соответственно, если тренд не умещается на текущем графике
+            # пропускаем его.
+            if trend.begin.dt < self.gchart.chart.first.dt:
+                continue
+
+            gtrend = _GTrend(gchart, trend)
+            gtrends.addToGroup(gtrend)
+
+        return gtrends
+
+    # }}}
+
+    def __onNewExtr(self, extr: Extremum):
+        print("GExtremumIndicator - _Graphics - __onNewExtr")
+
+    def __onUpdExtr(self, extr: Extremum):
+        print("GExtremumIndicator - _Graphics - __onUpdExtr")
+
+
+# }}}
+class _GTrend(QtWidgets.QGraphicsItemGroup):  # {{{
+    WIDTH_1M = 0.5
+    WIDTH_5M = 1
+    WIDTH_1H = 2
+    WIDTH_D = 3
+    WIDTH_W = 4
+    WIDTH_M = 5
+
+    COLOR_T1 = Theme.Chart.TREND_T1
+    COLOR_T2 = Theme.Chart.TREND_T2
+    COLOR_T3 = Theme.Chart.TREND_T3
+    COLOR_T4 = Theme.Chart.TREND_T4
+    COLOR_T5 = Theme.Chart.TREND_T5
+
+    def __init__(  # {{{
+        self, gchart: GChart, trend: Trend, parent=None
+    ):
+        logger.debug(f"{self.__class__.__name__}.__init__()")
+        QtWidgets.QGraphicsItemGroup.__init__(self, parent)
+
+        self.gchart = gchart
+        self.trend = trend
+
+        self.__calcCoordinates()
+        self.__createLine()
+
+    # }}}
+
+    def getTextInfo(self) -> str:  # {{{
+        logger.debug(f"{self.__class__.__name__}.getTextInfo()")
+        # 󰜷 󰜮 󰁆 󰁞 󱦳 󱦲  󰁃󰁜  󱦴󱦷 󰧆󰦺    "
+
+        t = self.trend
+        tf = str(t.timeframe)
+        term = str(t.term)
+        typ = "" if t.isBull() else ""
+
+        p = t.period()
+        p_sz = TrendAnalytic.periodSize(t).simple()
+        d = t.deltaPercent()
+        d_sz = TrendAnalytic.deltaSize(t).simple()
+        s = t.speedPercent()
+        s_sz = TrendAnalytic.speedSize(t).simple()
+        v_total = f"{(t.volumeTotal() / 1_000_000):.2f}m"
+        v_total_sz = TrendAnalytic.volumeTotalSize(t).simple()
+        v_bear = f"{(t.volumeBear() / 1_000_000):.2f}m"
+        v_bear_sz = TrendAnalytic.volumeBearSize(t).simple()
+        v_bull = f"{(t.volumeBull() / 1_000_000):.2f}m"
+        v_bull_sz = TrendAnalytic.volumeBullSize(t).simple()
+
+        string = (
+            f"\n{tf:<2} "
+            f"{term:<2} "
+            f"{typ} "
+            f"p:{p_sz:<2} {p:<6} "
+            f"d:{d_sz:<2} {d:<6} "
+            f"s:{s_sz:<2} {s:<6} "
+            f"v:{v_total_sz:<2} {v_total:<6} "
+            f"(󰜷{v_bull_sz} {v_bull} 󰜮{v_bear_sz} {v_bear})"
+        )
+        return string
+
+    # }}}
+    def isIn(self, x: float) -> bool:  # {{{
+        if self.begin_pos.x() < x < self.end_pos.x():
+            return True
+
+        return False
+
+    # }}}
+
+    def __calcCoordinates(self):  # {{{
+        logger.debug(f"{self.__class__.__name__}.__calcCoordinates()")
+
+        # begin pos
+        x0 = self.gchart.xFromDatetime(self.trend.begin.dt)
+        x = x0 + GBar.WIDTH / 2
+        y = self.gchart.yFromPrice(self.trend.begin.price)
+        self.begin_pos = QtCore.QPointF(x, y)
+
+        # end pos
+        x0 = self.gchart.xFromDatetime(self.trend.end.dt)
+        x = x0 + GBar.WIDTH / 2
+        y = self.gchart.yFromPrice(self.trend.end.price)
+        self.end_pos = QtCore.QPointF(x, y)
+
+    # }}}
+    def __createLine(self):  # {{{
+        match str(self.trend.timeframe):
+            case "1M":
+                width = self.WIDTH_1M
+            case "5M":
+                width = self.WIDTH_5M
+            case "1H":
+                width = self.WIDTH_1H
+            case "D":
+                width = self.WIDTH_D
+            case "W":
+                width = self.WIDTH_W
+            case "M":
+                width = self.WIDTH_M
+            case _:
+                assert False, f"TODO_ME??? {self.trend.timeframe}"
+
+        match self.trend.term:
+            case Term.T1:
+                color = self.COLOR_T1
+                opacity = 0.2
+            case Term.T2:
+                color = self.COLOR_T2
+                opacity = 0.4
+            case Term.T3:
+                color = self.COLOR_T3
+                opacity = 0.6
+            case Term.T4:
+                color = self.COLOR_T4
+                opacity = 0.8
+            case Term.T5:
+                color = self.COLOR_T5
+                opacity = 1
+            case _:
+                assert False, f"TODO_ME??? {self.trend.term}"
+
+        self.line = QtWidgets.QGraphicsLineItem(
+            self.begin_pos.x(),
+            self.begin_pos.y(),
+            self.end_pos.x(),
+            self.end_pos.y(),
+        )
+        pen = QtGui.QPen(color, width)
+        self.line.setPen(pen)
+        self.line.setOpacity(opacity)
+
+        self.addToGroup(self.line)
+
+    # }}}
+
+
+# }}}
+
+
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    indicator = GExtremumIndicator()
+    w = _Settings(indicator)
+    w.show()
+    sys.exit(app.exec())

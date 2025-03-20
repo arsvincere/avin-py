@@ -14,7 +14,7 @@ from gui.chart.gcross import GCross
 from gui.chart.glabels import BarInfo, ChartLabels
 from gui.chart.gtest import GTradeList
 from gui.custom import Theme
-from gui.indicator._indicator import Indicator
+from gui.indicator._indicator import GIndicator
 
 
 class ChartScene(QtWidgets.QGraphicsScene):
@@ -182,22 +182,20 @@ class ChartScene(QtWidgets.QGraphicsScene):
 
     # }}}
 
-    def setIndList(self, ind_list) -> None:  # {{{
-        logger.debug(f"{self.__class__.__name__}.setIndList()")
+    def addIndicator(self, ind) -> None:  # {{{
+        logger.debug(f"{self.__class__.__name__}.addIndicator()")
 
         # add labels
-        for i in ind_list:
-            label = i.label()
-            self.top.add(label)
+        label = ind.label()
+        self.top.add(label)
 
         # add pinned indicators
-        for i in ind_list:
-            if i.position == Indicator.Position.FOOTER:
-                self.footer.append(i)
-            if i.position == Indicator.Position.LEFT:
-                self.left.append(i)
-            if i.position == Indicator.Position.RIGHT:
-                self.right.append(i)
+        if ind.position == GIndicator.Position.FOOTER:
+            self.footer.append(ind)
+        elif ind.position == GIndicator.Position.LEFT:
+            self.left.append(ind)
+        elif ind.position == GIndicator.Position.RIGHT:
+            self.right.append(ind)
 
     # }}}
     def removeIndicators(self) -> None:  # {{{
@@ -209,17 +207,15 @@ class ChartScene(QtWidgets.QGraphicsScene):
         self.left.clear()
         self.right.clear()
 
+        # пересоздаем график виджеты в левом верхнем углу
+        self.__createGraphicsWidgets()
+
     # }}}
 
     def removeAll(self) -> None:  # {{{
         self.removeGChart()
         self.removeGTrades()
         self.removeIndicators()
-        # self.clear()
-        # print("CLEAR BLYA")
-
-        # пересоздаем график виджеты в левом верхнем углу
-        self.__createGraphicsWidgets()
 
     # }}}
 

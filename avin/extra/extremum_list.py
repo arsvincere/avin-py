@@ -17,13 +17,13 @@ from avin.core.timeframe import TimeFrame
 from avin.extra.extremum import Extremum
 from avin.extra.term import Term
 from avin.extra.trend import Trend
-from avin.utils import UTC, Signal
+from avin.utils import UTC, Signal, Tree
 
 
 class ExtremumList(Indicator):
-    def __init__(self):  # {{{
-        self.__name = "ExtremumList"
+    name = "ExtremumList"
 
+    def __init__(self):  # {{{
         # data
         self.__schema = {
             "dt": pl.datatypes.Datetime("us", UTC),
@@ -34,29 +34,14 @@ class ExtremumList(Indicator):
         # signals
         self.upd_extr = Signal(Extremum)
         self.new_extr = Signal(Extremum)
+        self.upd_trend = Signal(Trend)
+        self.new_trend = Signal(Trend)
 
-        # # connect
-        # self.__chart.new_bar.connect(self.__updExtrT1)
-        #
-        # # calc extremums
-        # self.__t1_now = None
-        # self.__t2_now = None
-        # self.__t3_now = None
-        # self.__t4_now = None
-        # self.__t5_now = None
-        # self.__t1 = self.__calcExtrT1()
-        # self.__t2 = self.__calcExtrNext(self.__t1, "T2")
-        # self.__t3 = self.__calcExtrNext(self.__t2, "T3")
-        # self.__t4 = self.__calcExtrNext(self.__t3, "T4")
-        # self.__t5 = self.__calcExtrNext(self.__t4, "T5")
+        # cache
+        self.cache_trend = Tree()
 
     # }}}
 
-    @property  # name   # {{{
-    def name(self) -> str:
-        return self.__name
-
-    # }}}
     @property  # asset   # {{{
     def asset(self) -> Asset:
         return self.__chart.asset
@@ -150,32 +135,16 @@ class ExtremumList(Indicator):
 
     # }}}
     def trend(self, term: Term, n: int) -> Trend | None:  # {{{
-        assert n > 0
+        assert n >= 0
 
-        match term:
-            case Term.T1:
-                df = self.__t1
-            case Term.T2:
-                df = self.__t2
-            case Term.T3:
-                df = self.__t3
-            case Term.T4:
-                df = self.__t4
-            case Term.T5:
-                df = self.__t5
-            case _:
-                assert False, "TODO_ME"
+        e1 = self.extr(term, n + 1)
+        e2 = self.extr(term, n)
 
-        if n > len(df) - 1:
-            return None
+        if e1 is not None and e2 is not None:
+            t = Trend(e1, e2, self)
+            return t
 
-        e1_data = df.row(-n - 1, named=True)
-        e2_data = df.row(-n, named=True)
-        e1 = Extremum(e1_data, self)
-        e2 = Extremum(e2_data, self)
-
-        t = Trend(e1, e2, self)
-        return t
+        return None
 
     # }}}
     # def vawe(self, term: Term, n: int) -> Vawe | None:  # {{{
@@ -201,16 +170,22 @@ class ExtremumList(Indicator):
     #
     # # }}}
     def getAllTrends(self, term: Term) -> list[Trend]:  # {{{
-        all_trends = list()
+        # try find in cache
+        trends = self.cache_trend[term]
+        if trends:
+            return trends
 
+        all_trends = list()
         n = 1
         trend = self.trend(term, n)
         while trend is not None:
             all_trends.append(trend)
             n += 1
             trend = self.trend(term, n)
-
         all_trends.reverse()
+
+        self.cache_trend[term] = all_trends
+
         return all_trends
 
     # }}}
@@ -394,8 +369,8 @@ class ExtremumList(Indicator):
 
     # }}}
     def __updExtrT1(self, chart: Chart, bar: Bar):  # {{{
-        updated = False
-        new_extr = False
+        has_update = False
+        has_new_extr = False
         if self.__t1_now["type"] == "MAX":
             if bar.high > self.__t1_now["price"]:
                 self.__t1_now = {
@@ -404,7 +379,7 @@ class ExtremumList(Indicator):
                     "type": Extremum.Type.MAX.name,
                     "price": bar.high,
                 }
-                updated = True
+                has_update = True
             else:
                 self.__t1.extend(pl.DataFrame(self.__t1_now))
                 self.__t1_now = {
@@ -413,8 +388,8 @@ class ExtremumList(Indicator):
                     "type": Extremum.Type.MIN.name,
                     "price": bar.low,
                 }
-                updated = True
-                new_extr = True
+                has_update = True
+                has_new_extr = True
 
         elif self.__t1_now["type"] == "MIN":
             if bar.low < self.__t1_now["price"]:
@@ -424,7 +399,7 @@ class ExtremumList(Indicator):
                     "type": Extremum.Type.MIN.name,
                     "price": bar.low,
                 }
-                updated = True
+                has_update = True
             else:
                 self.__t1.extend(pl.DataFrame(self.__t1_now))
                 self.__t1_now = {
@@ -433,51 +408,60 @@ class ExtremumList(Indicator):
                     "type": Extremum.Type.MAX.name,
                     "price": bar.high,
                 }
-                updated = True
-                new_extr = True
+                has_update = True
+                has_new_extr = True
 
-        if new_extr:
-            self.new_extr.emit(self.extr(Term.T1, 1))
-        if updated:
+        if has_new_extr:
+            e = self.extr(Term.T1, 1)
+            t = self.trend(Term.T1, 1)
+            self.new_extr.emit(e)
+            self.new_trend.emit(t)
+
+            # update cache if exist
+            cached_trends = self.cache_trend[Term.T1]
+            if cached_trends:
+                cached_trends.append(t)
+
+        if has_update:
             self.upd_extr.emit(self.extr(Term.T1, 0))
+            self.upd_trend.emit(self.trend(Term.T1, 0))
 
-        return new_extr
+        return has_new_extr
 
     # }}}
     def __updExtrNext(  # {{{
         self, in_extr, out_extr, out_now, out_term
     ) -> None:
-        updated = False
-        new_extr = False
+        has_update = False
+        has_new_extr = False
 
         in_cur = in_extr.row(-1, named=True)
 
         # если текущий старший тип != текущий младший тип -> делать ничего
         if in_cur["type"] != out_now["type"]:
-            return new_extr
+            return has_new_extr
 
         if out_now["type"] == "MAX":
             if in_cur["price"] > out_now["price"]:
                 out_now = in_cur
-                updated = True
+                has_update = True
             else:
                 out_extr.extend(pl.DataFrame(out_now))
                 out_now = in_extr.row(-2, named=True)
-                updated = True
-                new_extr = True
+                has_update = True
+                has_new_extr = True
 
         elif out_now["type"] == "MIN":
             if in_cur["price"] < out_now["price"]:
                 out_now = in_cur
-                updated = True
+                has_update = True
             else:
                 out_extr.extend(pl.DataFrame(out_now))
                 out_now = in_extr.row(-2, named=True)
-                updated = True
-                new_extr = True
+                has_update = True
+                has_new_extr = True
 
         out_now["term"] = out_term.name
-
         match out_term:
             case Term.T2:
                 self.__t2 = out_extr
@@ -492,12 +476,22 @@ class ExtremumList(Indicator):
                 self.__t5 = out_extr
                 self.__t5_now = out_now
 
-        if new_extr:
-            self.new_extr.emit(self.extr(out_term, 1))
-        if updated:
-            self.upd_extr.emit(self.extr(out_term, 0))
+        if has_new_extr:
+            e = self.extr(Term.T1, 1)
+            t = self.trend(Term.T1, 1)
+            self.new_extr.emit(e)
+            self.new_trend.emit(t)
 
-        return new_extr
+            # update cache if exist
+            cached_trends = self.cache_trend[Term.T1]
+            if cached_trends:
+                cached_trends.append(t)
+
+        if has_update:
+            self.upd_extr.emit(self.extr(out_term, 0))
+            self.new_trend.emit(self.trend(out_term, 0))
+
+        return has_new_extr
 
     # }}}
 

@@ -6,12 +6,18 @@
 # LICENSE:      GNU GPLv3
 # ============================================================================
 
-from gui.indicator.extr import GExtremumIndicator
-from gui.indicator.hist import HistIndicator
-from gui.indicator.quant import QuantIndicator
+from abc import ABC, abstractmethod
 
-__all__ = (
-    "GExtremumIndicator",
-    "HistIndicator",
-    "QuantIndicator",
-)
+
+class Indicator(ABC):
+    name = "AbstractIndicator"
+
+    @abstractmethod
+    def __init__(self): ...
+
+    def __str__(self):
+        return f"Indicator={self.name}"
+
+
+if __name__ == "__main__":
+    ...

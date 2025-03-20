@@ -10,17 +10,14 @@
 """Abstract base class for user indicators"""
 
 
-class Indicator:  # {{{
+
+class GIndicator:
     class Position:  # {{{
         CHART = 0
         TOP = 1
         FOOTER = 2
         LEFT = 3
         RIGHT = 4
-
-
-# }}}
-
 
 # }}}
 

@@ -228,9 +228,10 @@ class Timer:  # {{{
 
     # }}}
     @staticmethod  # finish # {{{
-    def finish():
+    def finish(msg: str):
         Timer.__FINISH = timer.time()
-        print(":: Timer:", Timer.__FINISH - Timer.__START)
+        t = Timer.__FINISH - Timer.__START
+        print(f":: Timer {msg}: {t:.6f}")
 
     # }}}
 

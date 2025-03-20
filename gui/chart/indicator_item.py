@@ -22,11 +22,11 @@ class IndicatorItem(QtWidgets.QTreeWidgetItem):  # {{{
 
     # }}}
 
-    def __init__(self, indicator, parent=None):  # {{{
+    def __init__(self, indicator_class, parent=None):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
         QtWidgets.QTreeWidgetItem.__init__(self, parent)
 
-        self.indicator = indicator
+        self.indicator_class = indicator_class
 
         self.setFlags(
             Qt.ItemFlag.ItemIsUserCheckable
@@ -34,7 +34,7 @@ class IndicatorItem(QtWidgets.QTreeWidgetItem):  # {{{
             | Qt.ItemFlag.ItemIsEnabled
         )
         self.setCheckState(self.Column.Name, Qt.CheckState.Unchecked)
-        self.setText(self.Column.Name, indicator.name)
+        self.setText(self.Column.Name, indicator_class.name)
 
     # }}}
 

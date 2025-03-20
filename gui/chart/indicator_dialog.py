@@ -14,6 +14,7 @@ from PyQt6.QtCore import Qt
 
 from avin import logger
 from avin.utils import logger
+from gui.chart.indicator_item import IndicatorItem
 from gui.custom import (
     Css,
     Icon,
@@ -21,10 +22,7 @@ from gui.custom import (
     Spacer,
     ToolButton,
 )
-from gui.indicator.extr import ExtremumIndicator
-from gui.indicator.hist import HistIndicator
-from gui.indicator.posterior_delta import PosteriorDeltaIndicator
-from gui.indicator.quant import QuantIndicator
+from gui.indicator.extr import GExtremumIndicator
 
 
 class IndicatorSelectDialog(QtWidgets.QDialog):  # {{{
@@ -88,10 +86,10 @@ class IndicatorSelectDialog(QtWidgets.QDialog):  # {{{
 
         # full list of user indicators
         self.__indicators = [
-            ExtremumIndicator(),
-            HistIndicator(),
-            QuantIndicator(),
-            PosteriorDeltaIndicator(),
+            GExtremumIndicator,
+            # HistIndicator,
+            # QuantIndicator,
+            # PosteriorDeltaIndicator,
         ]
 
         # create items in tree
@@ -162,7 +160,7 @@ class _Tree(QtWidgets.QTreeWidget):  # {{{
     def addIndicator(self, indicator):  # {{{
         logger.debug(f"{self.__class__.__name__}.addIndicator()")
 
-        item = indicator.item()
+        item = IndicatorItem(indicator)
         self.addTopLevelItem(item)
 
     # }}}
@@ -172,7 +170,7 @@ class _Tree(QtWidgets.QTreeWidget):  # {{{
         selected = list()
         for item in self:
             if item.checkState(self.Column.Name) == Qt.CheckState.Checked:
-                selected.append(item.indicator)
+                selected.append(item.indicator_class)
 
         return selected
 

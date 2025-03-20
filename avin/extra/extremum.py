@@ -15,6 +15,7 @@ import polars as pl
 
 from avin.config import Usr
 from avin.extra.term import Term
+from avin.utils import logger
 
 ExtremumList = TypeVar("ExtremumList")
 
@@ -152,7 +153,16 @@ class Extremum:
 
         chart = e1.chart
         bars = chart.select(e1.dt, e2.dt)
-        return len(bars)
+
+        # dbg
+        period = len(bars)
+        if period == 0:
+            print(e1)
+            print(e2)
+            logger.critical("WTF????????")
+            exit(1)
+
+        return period
 
     # }}}
     @classmethod  # deltaPrice  # {{{

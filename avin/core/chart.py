@@ -13,6 +13,7 @@ import polars as pl
 from avin.const import ONE_DAY
 from avin.core.bar import Bar
 from avin.core.event import BarEvent, Event
+from avin.core.indicator import Indicator
 from avin.core.timeframe import TimeFrame
 from avin.data import Data
 from avin.utils import (
@@ -41,6 +42,7 @@ class Chart:
         self.__timeframe = timeframe
         self.__data = data
         self.__now = None
+        self.__indicators = list()
 
         # signals
         self.new_bar = Signal(Chart, Bar)
@@ -168,6 +170,41 @@ class Chart:
 
     # }}}
 
+    def addInd(self, ind: Indicator) -> None:  # {{{
+        for i in self.__indicators:
+            if i.name == ind.name:
+                logger.warning(f"{ind} already on {self}")
+                return
+
+        ind.setChart(self)
+        self.__indicators.append(ind)
+
+    # }}}
+    def getInd(self, name: str) -> Indicator | None:  # {{{
+        for i in self.__indicators:
+            if i.name == name:
+                return i
+
+        return None
+
+    # }}}
+    def getAllInd(self) -> list[Indicator]:  # {{{
+        return self.__indicators
+
+    # }}}
+    def removeInd(self, ind: Indicator) -> None:  # {{{
+        try:
+            self.__indicators.remove(ind)
+        except ValueError:
+            logger.exception(
+                f"Chart.removeInd(ind) failed: '{ind}' not in {self}"
+            )
+
+    # }}}
+    def removeAllInd(self) -> None:  # {{{
+        self.__indicators.clear()
+
+    # }}}
     def highestHigh(self):  # {{{
         return self.__data["high"].max()
 

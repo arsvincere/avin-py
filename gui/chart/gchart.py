@@ -339,7 +339,7 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
         self.__createGVols()
         self.__createGVolsLevels()
 
-        self.__indicators = list()
+        self.__gindicators = list()
 
     # }}}
 
@@ -417,41 +417,49 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
             gbar.clearGShapes()
 
     # }}}
-    def addIndicator(self, indicator: Indicator) -> None:  # {{{
+    def addIndicator(self, gindicator: GIndicator) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.addIndicator()")
 
-        for i in self.__indicators:
-            if i.name == indicator.name:
+        for i in self.__gindicators:
+            if i.name == gindicator.name:
                 return
 
-        gitem = indicator.graphics(self)
+        self.chart.addInd(gindicator.indicator)
+
+        gitem = gindicator.graphics(self)
         self.addToGroup(gitem)
-        self.__indicators.append(indicator)
+        self.__gindicators.append(gindicator)
+
+        gindicator.graphics_updated.connect(self.__onIndicatorUpdated)
 
     # }}}
-    def removeIndicator(self, indicator) -> None:  # {{{
-        for i in self.__indicators:
-            if i.name == indicator.name:
-                gitem = indicator.gitem
+    def removeIndicator(self, gindicator) -> None:  # {{{
+        for i in self.__gindicators:
+            if i.name == gindicator.name:
+                gitem = gindicator.gitem
                 gitem.setVisible(False)
                 self.removeFromGroup(gitem)
-                self.__indicators.remove(i)
+                self.__gindicators.remove(i)
+
+                # self.chart.removeInd(gindicator.indicator)
                 break
 
     # }}}
     def clearIndicators(self) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.clearIndicators()")
 
-        for indicator in self.__indicators:
+        for indicator in self.__gindicators:
             gitem = indicator.gitem
             gitem.setVisible(False)
             self.removeFromGroup(gitem)
 
-        self.__indicators.clear()
+        self.__gindicators.clear()
+
+        # self.chart.removeAllInd()
 
     # }}}
-    def getIndicators(self) -> list[Indicator]:  # {{{
-        return self.__indicators
+    def getIndicators(self) -> list[GIndicator]:  # {{{
+        return self.__gindicators
 
     # }}}
 
@@ -751,17 +759,17 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
         self.gbars.append(gbar)
         self.addToGroup(gbar)
 
-        # TODO: вот это надо сделать не кучей для всех, а по
-        # сигналу от индикатора.
-        # update indicators
-        for i in self.__indicators:
-            gitem = i.gitem
-            gitem.setVisible(False)
-            self.removeFromGroup(gitem)
+    # }}}
+    def __onIndicatorUpdated(self, new_gitem) -> None:  # {{{
+        print("GChart - __onIndicatorUpdated")
+        for i in self.__gindicators:
+            if i.name == new_gitem.gindicator.name:
+                old_gitem = i.gitem
+                old_gitem.setVisible(False)
+                self.removeFromGroup(old_gitem)
 
-            updated = i.graphics(self)
-            self.addToGroup(updated)
-            self.indicators_updated.emit()
+                self.addToGroup(new_gitem)
+                self.indicators_updated.emit()
 
     # }}}
 

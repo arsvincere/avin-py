@@ -15,12 +15,12 @@ from avin import Cfg, Cmd, DataType, Tics, TimeFrame, logger
 from gui.chart.gchart import GChart
 from gui.chart.indicator_item import IndicatorItem
 from gui.custom import Css, Icon, Label, Theme, ToolButton
-from gui.indicator._indicator import Indicator
+from gui.indicator._indicator import GIndicator
 
 
 class QuantIndicator:  # {{{
     name = "Quant"
-    position = Indicator.Position.LEFT
+    position = GIndicator.Position.LEFT
 
     def __init__(self):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")

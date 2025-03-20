@@ -21,12 +21,12 @@ from avin import (
 from gui.chart.gchart import GChart
 from gui.chart.indicator_item import IndicatorItem
 from gui.custom import Css, Icon, Label, Theme, ToolButton
-from gui.indicator._indicator import Indicator
+from gui.indicator._indicator import GIndicator
 
 
 class PosteriorDeltaIndicator:  # {{{
     name = "PosteriorDelta"
-    position = Indicator.Position.RIGHT
+    position = GIndicator.Position.RIGHT
 
     def __init__(self):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
