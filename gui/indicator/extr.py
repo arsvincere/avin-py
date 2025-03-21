@@ -26,10 +26,9 @@ from gui.custom import Css, Icon, Label, MonoLabel, Theme, ToolButton
 from gui.indicator._indicator import GIndicator
 
 
-class GExtremumIndicator(GIndicator):  # {{{
-    name = "Extremum"
+class GExtremumList(GIndicator):  # {{{
+    name = ExtremumList.name
     position = GIndicator.Position.CHART
-    graphics_updated = Signal(QtWidgets.QGraphicsItemGroup)
 
     def __init__(self):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
@@ -38,6 +37,9 @@ class GExtremumIndicator(GIndicator):  # {{{
         self.gitem = None
         self.__label = None
         self.__settings = None
+
+        # signal
+        self.graphics_updated = Signal(GIndicator)
 
     # }}}
 
@@ -350,9 +352,12 @@ class _Graphics(QtWidgets.QGraphicsItemGroup):  # {{{
         if gtrends:
             return gtrends
 
-        # get trends (historical)
+        # create historical trends
         trends = self.elist.getAllTrends(term)
-        gtrends = self.__createGTrends(self.gchart, trends)
+        gtrends = QtWidgets.QGraphicsItemGroup()
+        for trend in trends:
+            gtrend = _GTrend(self.gchart, trend, "historical")
+            gtrends.addToGroup(gtrend)
 
         # save in cache
         self.cache_trend[term] = gtrends
@@ -369,9 +374,9 @@ class _Graphics(QtWidgets.QGraphicsItemGroup):  # {{{
         if gtrend_now:
             return gtrend_now
 
-        # get trend now
+        # create trend now
         trend = self.elist.trend(term, 0)
-        gtrend = _GTrend(self.gchart, trend)
+        gtrend = _GTrend(self.gchart, trend, "now")
 
         # save in cache
         self.cache_now[term] = gtrend
@@ -407,33 +412,14 @@ class _Graphics(QtWidgets.QGraphicsItemGroup):  # {{{
         pass
 
     # }}}
-    def __createGTrends(  # {{{
-        self, gchart, trends
-    ) -> QtWidgets.QGraphicsItemGroup:
-        gtrends = QtWidgets.QGraphicsItemGroup()
-        for trend in trends:
-            # INFO: так как я делаю совмещения трендов с разных
-            # таймфреймов, на дневном графике будут бары допустим
-            # с 2020 г, а на 5М графике только с 2025г (последние 5000 баров)
-            # соответственно, если тренд не умещается на текущем графике
-            # пропускаем его.
-            if trend.begin.dt < self.gchart.chart.first.dt:
-                continue
 
-            gtrend = _GTrend(gchart, trend)
-            gtrends.addToGroup(gtrend)
-
-        return gtrends
-
-    # }}}
-
-    def __onNewTrend(self, trend: Trend):
+    def __onNewTrend(self, trend: Trend):  # {{{
         assert isinstance(trend, Trend)
         if not self.__isExist(trend.term):
             return
 
         # create new
-        new_gtrend = _GTrend(self.gchart, trend)
+        new_gtrend = _GTrend(self.gchart, trend, "historical")
 
         # # set visible
         # state = self.state[trend.term]
@@ -443,7 +429,8 @@ class _Graphics(QtWidgets.QGraphicsItemGroup):  # {{{
         gtrends = self.cache_trend[trend.term]
         gtrends.addToGroup(new_gtrend)
 
-    def __onUpdTrend(self, trend: Trend):
+    # }}}
+    def __onUpdTrend(self, trend: Trend):  # {{{
         assert isinstance(trend, Trend)
         if not self.__isExist(trend.term):
             return
@@ -454,7 +441,7 @@ class _Graphics(QtWidgets.QGraphicsItemGroup):  # {{{
         self.removeFromGroup(old_gtrend)
 
         # create new
-        new_gtrend = _GTrend(self.gchart, trend)
+        new_gtrend = _GTrend(self.gchart, trend, "now")
 
         # # set visible
         # state = self.state[trend.term]
@@ -464,7 +451,9 @@ class _Graphics(QtWidgets.QGraphicsItemGroup):  # {{{
         self.cache_now[trend.term] = new_gtrend
         self.addToGroup(new_gtrend)
 
-    # }}}
+
+# }}}
+# }}}
 
 
 class _GTrend(QtWidgets.QGraphicsItemGroup):  # {{{
@@ -482,13 +471,14 @@ class _GTrend(QtWidgets.QGraphicsItemGroup):  # {{{
     COLOR_T5 = Theme.Chart.TREND_T5
 
     def __init__(  # {{{
-        self, gchart: GChart, trend: Trend, parent=None
+        self, gchart: GChart, trend: Trend, typ: str, parent=None
     ):
         logger.debug(f"{self.__class__.__name__}.__init__()")
         QtWidgets.QGraphicsItemGroup.__init__(self, parent)
 
         self.gchart = gchart
         self.trend = trend
+        self.type = typ
 
         self.__calcCoordinates()
         self.__createLine()
@@ -598,13 +588,20 @@ class _GTrend(QtWidgets.QGraphicsItemGroup):  # {{{
             case _:
                 assert False, f"TODO_ME??? {self.trend.term}"
 
+        match self.type:
+            case "now":
+                style = QtCore.Qt.PenStyle.DashLine
+            case "historical":
+                style = QtCore.Qt.PenStyle.SolidLine
+
         self.line = QtWidgets.QGraphicsLineItem(
             self.begin_pos.x(),
             self.begin_pos.y(),
             self.end_pos.x(),
             self.end_pos.y(),
         )
-        pen = QtGui.QPen(color, width)
+
+        pen = QtGui.QPen(color, width, style)
         self.line.setPen(pen)
         self.line.setOpacity(opacity)
 

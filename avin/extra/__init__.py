@@ -19,10 +19,10 @@ from avin.extra.trend import Trend
 from avin.extra.vawe import Vawe
 
 __all__ = (
+    "BlackSwan",
     "Extremum",
     "ExtremumList",
     "Move",
-    "BlackSwan",
     "SimpleSize",
     "Size",
     "Term",

@@ -6,7 +6,6 @@
 # LICENSE:      GNU GPLv3
 # ============================================================================
 
-import tinkoff.invest as ti
 from PyQt6 import QtCore, QtWidgets
 from PyQt6.QtCore import Qt
 
@@ -65,18 +64,33 @@ class TicWidget(QtWidgets.QWidget):  # {{{
     def setAsset(self, asset: Asset) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.setAsset()")
 
-        if self.__data_stream is None:
-            self.__asset = asset
-            return
-
-        if self.__asset is not None:
-            tic_subscription = ti.TradeInstrument(figi=self.__asset.figi)
-            self.__data_stream.trades.unsubscribe([tic_subscription])
-
         self.__asset = asset
-        tic_subscription = ti.TradeInstrument(figi=self.__asset.figi)
-        self.__data_stream.trades.subscribe([tic_subscription])
-        self.__tic_tree.clear()
+
+        # TODO:
+        # не те и не там занимаются... метод установить ассет
+        # должен установить ассет... а не подписываться и отписывать
+        # на данные...
+        # сейчас еще чарт виджет подписывается на бари и тики...
+        # это вообще должен делать какой то отдельный модуль, типо
+        # DataServer
+        # DataServer - должен получать к себе брокеров (пока одного)
+        # а на выходе выдавать бары, тики... кому че надо. Он один.
+        # он заведует всеми подписками и отписками.
+        # пока просто закоменчу - помни этой хуйней сейчас занимается
+        # чарт виджет
+
+        # if self.__data_stream is None:
+        #     self.__asset = asset
+        #     return
+        #
+        # if self.__asset is not None:
+        #     tic_subscription = ti.TradeInstrument(figi=self.__asset.figi)
+        #     self.__data_stream.trades.unsubscribe([tic_subscription])
+        #
+        # self.__asset = asset
+        # tic_subscription = ti.TradeInstrument(figi=self.__asset.figi)
+        # self.__data_stream.trades.subscribe([tic_subscription])
+        # self.__tic_tree.clear()
 
     # }}}
     def setClient(self, client) -> None:  # {{{
@@ -128,6 +142,7 @@ class TicWidget(QtWidgets.QWidget):  # {{{
         logger.debug(f"{self.__class__.__name__}.__connect()")
 
     # }}}
+
     @QtCore.pyqtSlot(TicEvent)  # __onNewTic  # {{{
     def __onNewTic(self, tic_event: TicEvent) -> None:
         logger.debug(f"{self.__class__.__name__}.__onNewTic()")

@@ -430,8 +430,6 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
         self.addToGroup(gitem)
         self.__gindicators.append(gindicator)
 
-        gindicator.graphics_updated.connect(self.__onIndicatorUpdated)
-
     # }}}
     def removeIndicator(self, gindicator) -> None:  # {{{
         for i in self.__gindicators:
@@ -758,18 +756,6 @@ class GChart(QtWidgets.QGraphicsItemGroup):  # {{{
         gbar = GBar(new_bar, n, self)
         self.gbars.append(gbar)
         self.addToGroup(gbar)
-
-    # }}}
-    def __onIndicatorUpdated(self, new_gitem) -> None:  # {{{
-        print("GChart - __onIndicatorUpdated")
-        for i in self.__gindicators:
-            if i.name == new_gitem.gindicator.name:
-                old_gitem = i.gitem
-                old_gitem.setVisible(False)
-                self.removeFromGroup(old_gitem)
-
-                self.addToGroup(new_gitem)
-                self.indicators_updated.emit()
 
     # }}}
 

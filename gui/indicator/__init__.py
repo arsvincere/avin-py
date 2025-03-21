@@ -6,12 +6,10 @@
 # LICENSE:      GNU GPLv3
 # ============================================================================
 
-from gui.indicator.extr import GExtremumIndicator
-from gui.indicator.hist import HistIndicator
-from gui.indicator.quant import QuantIndicator
+from gui.indicator.extr import GExtremumList
+from gui.indicator.posterior_delta import GPosteriorDelta
 
 __all__ = (
-    "GExtremumIndicator",
-    "HistIndicator",
-    "QuantIndicator",
+    "GExtremumList",
+    "GPosteriorDelta",
 )

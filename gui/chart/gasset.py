@@ -57,10 +57,13 @@ class GAsset:
         if gchart is not None:
             return gchart
 
-        # create gchart
+        # load chart
         bars = self.__loadHistoricalBars(tf)
         bars = self.__getNewBarsFromBroker(bars, tf)
         chart = Chart(self.__asset, tf, bars)
+        self.asset.setChart(chart)
+
+        # create gchart
         gchart = GChart(chart, self)
         self.__gcharts_cache[tf] = gchart
 
@@ -81,6 +84,16 @@ class GAsset:
                 assert False, f"TODO_ME: Event={e}"
 
     # }}}
+    def clearAll(self) -> None:
+        # stop data stream
+        for tf in TimeFrame.ALL:
+            gchart = self.__gcharts_cache.get(tf, None)
+            if gchart is not None:
+                self.__unsubscibeBar(tf)
+                self.__unsubscibeTic()
+
+        self.__gcharts_cache.clear() 
+        self.asset.clearCache() 
 
     def __loadHistoricalBars(self, tf: TimeFrame) -> pl.DataFrame:  # {{{
         logger.debug(f"{self.__class__.__name__}.__drawChart()")

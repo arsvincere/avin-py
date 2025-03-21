@@ -67,14 +67,23 @@ class ChartWidget(QtWidgets.QWidget):
     def setAsset(self, asset: Asset) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.setAsset()")
 
-        # clear all & draw chart
+        # clear asset (data stream, gcharts, charts)
+        if self.__gasset is not None:
+            self.__gasset.clearAll()
+            self.__gasset = None
+
+        # clear all: toolbar, scene, indicators, view reset transformation...
         self.clearAll()
+
+        # set new asset
         self.__toolbar.setAsset(asset)
         self.__gasset = GAsset(asset)
         self.__gasset.setClient(self.__client)
         self.__gasset.setDataThread(self.__data_thread)
 
+        # draw chart
         self.__drawChart()
+        self.__drawIndicators()
 
     # }}}
     def setTradeList(self, trade_list: TradeList) -> None:  # {{{
@@ -94,14 +103,15 @@ class ChartWidget(QtWidgets.QWidget):
     def clearAll(self) -> None:  # {{{
         logger.debug(f"{self.__class__.__name__}.clearAll()")
 
+        # clear indicators
         gchart = self.__scene.currentGChart()
         if gchart is not None:
             gchart.clearIndicators()
 
-        self.__mark_list.clear()
         self.__scene.removeAll()
         self.__view.resetTransform()
         self.__toolbar.resetSecondTimeFrames()
+        self.__mark_list.clear()
 
     # }}}
 

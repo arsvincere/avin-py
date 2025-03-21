@@ -22,7 +22,8 @@ from gui.custom import (
     Spacer,
     ToolButton,
 )
-from gui.indicator.extr import GExtremumIndicator
+from gui.indicator.extr import GExtremumList
+from gui.indicator.posterior_delta import GPosteriorDelta
 
 
 class IndicatorSelectDialog(QtWidgets.QDialog):  # {{{
@@ -86,10 +87,10 @@ class IndicatorSelectDialog(QtWidgets.QDialog):  # {{{
 
         # full list of user indicators
         self.__indicators = [
-            GExtremumIndicator,
+            GExtremumList,
+            GPosteriorDelta,
             # HistIndicator,
             # QuantIndicator,
-            # PosteriorDeltaIndicator,
         ]
 
         # create items in tree

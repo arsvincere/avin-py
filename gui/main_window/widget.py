@@ -42,6 +42,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data_stream = client.create_market_data_stream()
         self.data_thread = TDataStream(self.data_stream)
         self.data_thread.start()
+        self.current_asset = None
 
         # create main window
         self.__splash()
@@ -452,6 +453,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tic_widget.widget.setClient(self.client)
             self.tic_widget.widget.setStream(self.data_stream)
             self.tic_widget.widget.setDataThread(self.data_thread)
+            self.tic_widget.widget.setAsset(self.current_asset)
 
             area = Qt.DockWidgetArea.RightDockWidgetArea
             self.addDockWidget(area, self.tic_widget)
@@ -494,6 +496,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if self.tic_widget is not None:
             self.tic_widget.widget.setAsset(asset)
+
+        self.current_asset = asset
 
     # }}}
     @pyqtSlot(Test)  # __onTestChanged # {{{

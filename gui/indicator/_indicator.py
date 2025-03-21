@@ -6,9 +6,7 @@
 # LICENSE:      GNU GPLv3
 # ============================================================================
 
-
-"""Abstract base class for user indicators"""
-
+"""Abstract base class for user gui indicators"""
 
 
 class GIndicator:
@@ -18,6 +16,7 @@ class GIndicator:
         FOOTER = 2
         LEFT = 3
         RIGHT = 4
+
 
 # }}}
 

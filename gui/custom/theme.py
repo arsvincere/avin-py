@@ -75,6 +75,7 @@ class Theme:
         # Posterior
         POSTERIOR_BULL = QtGui.QColor("#98BB6C")
         POSTERIOR_BEAR = QtGui.QColor("#FF5D62")
+        POSTERIOR_NOW = QtGui.QColor("#848388")
 
         # TODO: delete it
         # common color
