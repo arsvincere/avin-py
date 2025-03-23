@@ -13,6 +13,7 @@ from typing import TypeVar
 import polars as pl
 
 from avin.config import Usr
+from avin.core.bar import Bar
 from avin.core.direction import Direction
 from avin.core.timeframe import TimeFrame
 from avin.utils import UTC, DateTime, logger, next_dt
@@ -190,8 +191,10 @@ class Tics:  # {{{
         """  # }}}
 
         dts = list()
-        buys = list()
-        sells = list()
+        buy_amount = list()
+        sell_amount = list()
+        buy_lots = list()
+        sell_lots = list()
 
         parts = self.split(tf)
         for part in parts:
@@ -199,19 +202,25 @@ class Tics:  # {{{
                 continue
 
             dt = part.item(0, "dt")
-            buy = part.filter(direction="B")["amount"].sum()
-            sell = part.filter(direction="S")["amount"].sum()
+            b_amount = part.filter(direction="B")["amount"].sum()
+            s_amount = part.filter(direction="S")["amount"].sum()
+            b_lots = part.filter(direction="B")["lots"].sum()
+            s_lots = part.filter(direction="S")["lots"].sum()
 
             dts.append(dt.replace(second=0, microsecond=0))
-            buys.append(buy)
-            sells.append(sell)
+            buy_amount.append(b_amount)
+            sell_amount.append(s_amount)
+            buy_lots.append(b_lots)
+            sell_lots.append(s_lots)
 
         # create df histogram
         df_hist = pl.DataFrame(
             {
                 "dt": dts,
-                "buy": buys,
-                "sell": sells,
+                "buy_amount": buy_amount,
+                "sell_amount": sell_amount,
+                "buy_lots": buy_lots,
+                "sell_lots": sell_lots,
             }
         )
 
@@ -270,6 +279,63 @@ class Tics:  # {{{
             quants[dt] = quant
 
         return quants
+
+    # }}}
+
+    def getTics(self, bar: Bar) -> pl.DataFrame:  # {{{
+        begin = bar.dt
+        end = next_dt(begin, bar.timeframe)
+
+        condition = (begin <= pl.col("dt")) & (pl.col("dt") < end)
+        selected = self.__df.filter(condition)
+
+        return selected
+
+    # }}}
+    def getHist(self, bar: Bar) -> dict:  # {{{
+        df = self.getTics(bar)
+
+        buy_amount = df.filter(direction="B")["amount"].sum()
+        sell_amount = df.filter(direction="S")["amount"].sum()
+        buy_lots = df.filter(direction="B")["lots"].sum()
+        sell_lots = df.filter(direction="S")["lots"].sum()
+
+        hist = {
+            "dt": bar.dt,
+            "buy_amount": buy_amount,
+            "sell_amount": sell_amount,
+            "buy_lots": buy_lots,
+            "sell_lots": sell_lots,
+        }
+        return hist
+
+    # }}}
+    def getQuant(self, bar: Bar) -> dict:  # {{{
+        df = self.getTics(bar)
+
+        price_values = list()
+        buy_values = list()
+        sell_values = list()
+        unique_prices = df["price"].unique()
+        for price in unique_prices:
+            selected = df.filter(price=price)
+            buy = selected.filter(direction="B")["amount"].sum()
+            sell = selected.filter(direction="S")["amount"].sum()
+
+            price_values.append(price)
+            buy_values.append(buy)
+            sell_values.append(sell)
+
+        data = pl.DataFrame(
+            {
+                "price": price_values,
+                "buy": buy_values,
+                "sell": sell_values,
+            }
+        )
+        quant = {bar.dt: data}
+
+        return quant
 
     # }}}
 
