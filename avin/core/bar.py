@@ -122,6 +122,11 @@ class Bar:
         return self.__chart
 
     # }}}
+    @property  # timeframe  # {{{
+    def timeframe(self):
+        return self.__chart.timeframe
+
+    # }}}
 
     def setChart(self, chart) -> None:  # {{{
         self.__chart = chart
