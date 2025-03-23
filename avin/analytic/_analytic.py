@@ -19,6 +19,9 @@ from avin.utils import Cmd, logger
 
 
 class Analytic(ABC):
+    def __init__(self):
+        pass
+
     @classmethod  # save  # {{{
     def save(
         cls, asset: Asset, analyse_name: str, data_frame: pl.DataFrame
@@ -85,6 +88,34 @@ class Analytic(ABC):
             return BlackSwan.BLACKSWAN_SMALL
         if value > sizes.item(-1, "begin"):
             return BlackSwan.BLACKSWAN_BIG
+
+        # INFO:
+        # сюда попадаем например при анализе объемов по индексу, там всегда
+        # нули так что возвращаем None
+        logger.warning(
+            f"Analytic: fail to identify size:\nvalue={value}\nsizes={sizes}"
+        )
+        return None
+
+    # }}}
+    @classmethod  # _identifySimpleSize  # {{{
+    def _identifySimpleSize(cls, value, sizes: pl.DataFrame) -> Size | None:
+        # try find size
+        result = sizes.filter(
+            (value >= pl.col("begin")),
+            (value < pl.col("end")),
+        )
+
+        # ok - return size
+        if len(result) == 1:
+            size = SimpleSize.fromStr(result.item(0, "size"))
+            return size
+
+        # else - BLACKSWAN
+        if value < sizes.item(0, "begin"):
+            return BlackSwan.XXS
+        if value > sizes.item(-1, "begin"):
+            return BlackSwan.XXL
 
         # INFO:
         # сюда попадаем например при анализе объемов по индексу, там всегда

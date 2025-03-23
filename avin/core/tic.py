@@ -217,10 +217,10 @@ class Tics:  # {{{
         df_hist = pl.DataFrame(
             {
                 "dt": dts,
-                "buy_amount": buy_amount,
-                "sell_amount": sell_amount,
-                "buy_lots": buy_lots,
-                "sell_lots": sell_lots,
+                "b_amount": buy_amount,
+                "s_amount": sell_amount,
+                "b_lots": buy_lots,
+                "s_lots": sell_lots,
             }
         )
 
@@ -256,24 +256,24 @@ class Tics:  # {{{
                 continue
 
             price_values = list()
-            buy_values = list()
-            sell_values = list()
+            buy_amount = list()
+            sell_amount = list()
             unique_prices = part["price"].unique()
             for price in unique_prices:
                 selected = part.filter(price=price)
-                buy = selected.filter(direction="B")["amount"].sum()
-                sell = selected.filter(direction="S")["amount"].sum()
+                b_amount = selected.filter(direction="B")["amount"].sum()
+                s_amount = selected.filter(direction="S")["amount"].sum()
 
                 price_values.append(price)
-                buy_values.append(buy)
-                sell_values.append(sell)
+                buy_amount.append(b_amount)
+                sell_amount.append(s_amount)
 
             dt = part.item(0, "dt").replace(second=0)
             quant = pl.DataFrame(
                 {
                     "price": price_values,
-                    "buy": buy_values,
-                    "sell": sell_values,
+                    "b_amount": buy_amount,
+                    "s_amount": sell_amount,
                 }
             )
             quants[dt] = quant
@@ -302,10 +302,10 @@ class Tics:  # {{{
 
         hist = {
             "dt": bar.dt,
-            "buy_amount": buy_amount,
-            "sell_amount": sell_amount,
-            "buy_lots": buy_lots,
-            "sell_lots": sell_lots,
+            "b_amount": buy_amount,
+            "s_amount": sell_amount,
+            "b_lots": buy_lots,
+            "s_lots": sell_lots,
         }
         return hist
 
@@ -314,23 +314,32 @@ class Tics:  # {{{
         df = self.getTics(bar)
 
         price_values = list()
-        buy_values = list()
-        sell_values = list()
+        buy_amount = list()
+        sell_amount = list()
+        buy_lots = list()
+        sell_lots = list()
+
         unique_prices = df["price"].unique()
         for price in unique_prices:
             selected = df.filter(price=price)
-            buy = selected.filter(direction="B")["amount"].sum()
-            sell = selected.filter(direction="S")["amount"].sum()
+            b_amount = selected.filter(direction="B")["amount"].sum()
+            s_amount = selected.filter(direction="S")["amount"].sum()
+            b_lots = selected.filter(direction="B")["lots"].sum()
+            s_lots = selected.filter(direction="S")["lots"].sum()
 
             price_values.append(price)
-            buy_values.append(buy)
-            sell_values.append(sell)
+            buy_amount.append(b_amount)
+            sell_amount.append(s_amount)
+            buy_lots.append(b_lots)
+            sell_lots.append(s_lots)
 
         data = pl.DataFrame(
             {
                 "price": price_values,
-                "buy": buy_values,
-                "sell": sell_values,
+                "b_amount": buy_amount,
+                "s_amount": sell_amount,
+                "b_lots": buy_lots,
+                "s_lots": sell_lots,
             }
         )
         quant = {bar.dt: data}

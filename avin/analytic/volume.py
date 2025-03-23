@@ -27,6 +27,7 @@ class VolumeAnalytic(Analytic):
 
     class Analyse(enum.Enum):  # {{{
         SIZE = 1
+        SIMPLE_SIZE = 2
 
         def __str__(self):
             return self.name.lower()
@@ -42,6 +43,15 @@ class VolumeAnalytic(Analytic):
 
         # load
         sizes = cls.load(asset, tf, cls.Analyse.SIZE)
+        return sizes
+
+    # }}}
+    @classmethod  # getSimpleSizes  # {{{
+    def getSimpleSizes(
+        cls, asset: Asset, tf: TimeFrame
+    ) -> pl.DataFrame | None:
+        # load
+        sizes = cls.load(asset, tf, cls.Analyse.SIMPLE_SIZE)
         return sizes
 
     # }}}
@@ -78,9 +88,7 @@ class VolumeAnalytic(Analytic):
     # }}}
 
     @classmethod  # analyse  #  {{{
-    async def analyse(
-        cls, asset: Asset, tf: TimeFrame, analyse: VolumeAnalytic.Analyse
-    ) -> None:
+    async def analyse(cls, asset: Asset, tf: TimeFrame) -> None:
         logger.info(f":: {cls.name} analyse {asset.ticker}-{tf}")
 
         chart = await cls.__loadChart(asset, tf)
@@ -102,8 +110,7 @@ class VolumeAnalytic(Analytic):
 
         for asset in assets:
             for tf in timeframes:
-                for a in cls.Analyse:
-                    await cls.analyse(asset, tf, a)
+                await cls.analyse(asset, tf)
 
     # }}}
     @classmethod  # load  # {{{
@@ -166,9 +173,14 @@ class VolumeAnalytic(Analytic):
         logger.info("   classify sizes")
         sizes = super()._classifySizes(volumes)
 
+        logger.info("   classify simple sizes")
+        simple_sizes = super()._classifySimpleSizes(volumes)
+
         logger.info("   save analyse")
         name = f"{cls.name} {chart.timeframe} {cls.Analyse.SIZE}"
         super().save(chart.asset, name, sizes)
+        name = f"{cls.name} {chart.timeframe} {cls.Analyse.SIMPLE_SIZE}"
+        super().save(chart.asset, name, simple_sizes)
 
     # }}}
 
@@ -178,11 +190,12 @@ async def main():  # {{{
     await VolumeAnalytic.analyseAll()
     return
 
-    asset = await Asset.fromStr("MOEX SHARE AFKS")
-    tf = TimeFrame("1M")
+    asset = await Asset.fromStr("MOEX SHARE GAZP")
+    tf = TimeFrame("W")
     analyse = VolumeAnalytic.Analyse.SIZE
+    analyse = VolumeAnalytic.Analyse.SIMPLE_SIZE
 
-    await VolumeAnalytic.analyse(asset, tf, analyse)
+    await VolumeAnalytic.analyse(asset, tf)
 
     # df = VolumeAnalytic.load(asset, tf, analyse)
     # print(df)

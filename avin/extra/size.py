@@ -222,10 +222,15 @@ class SimpleSize(enum.Enum):  # {{{
 
 # }}}
 class BlackSwan(enum.Enum):  # {{{
-    BLACKSWAN_SMALL = Range(-100500, 0)
-    BLACKSWAN_BIG = Range(100, 100500)
     XXS = Range(-100500, 0)
     XXL = Range(100, 100500)
+    BLACKSWAN_SMALL = Range(-100500, 0)
+    BLACKSWAN_BIG = Range(100, 100500)
+
+    def __str__(self):  # {{{
+        return self.name
+
+    # }}}
 
     @property
     def short_name(self):
