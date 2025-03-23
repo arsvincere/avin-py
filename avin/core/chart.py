@@ -268,7 +268,7 @@ class Chart:
         assert False, "TODO_ME"
 
     # }}}
-    def selectBarsOfDay(self, dt: DateTime) -> list[Bar]:  # {{{
+    def selectBarsOfDay(self, dt: DateTime) -> pl.DataFrame:  # {{{
         """Return df with day the same, as day of argument 'dt'"""
 
         if self.__timeframe >= TimeFrame("D"):
@@ -280,7 +280,7 @@ class Chart:
         return self.__selectHalfClosed(b, e)
 
     # }}}
-    def selectBarsOfHour(self, dt: DateTime) -> list[Bar]:  # {{{
+    def selectBarsOfHour(self, dt: DateTime) -> pl.DataFrame:  # {{{
         """Return df with hour the same, as hour of argument 'dt'"""
 
         if self.__timeframe >= TimeFrame("1H"):
