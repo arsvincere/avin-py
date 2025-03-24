@@ -30,7 +30,7 @@ class Tic:  # {{{
         lots: int,
         asset: Optional[Asset] = None,
     ):
-        self.__dt = dt
+        self.__dt = dt.replace(microsecond=0)
         self.__direction = direction
         self.__price = price
         self.__lots = lots
@@ -79,12 +79,12 @@ class Tic:  # {{{
         self.__asset = asset
 
     # }}}
-    def amount(self) -> int | None:  # {{{
+    def amount(self) -> float | None:  # {{{
         if self.__asset is None:
             return None
 
         amount = self.__price * self.__lots * self.__asset.lot
-        return int(amount)
+        return amount
 
     # }}}
     def isBuy(self) -> bool:  # {{{
@@ -110,7 +110,7 @@ class Tics:  # {{{
             "direction": str,
             "price": float,
             "lots": int,
-            "amount": float,
+            "amount": int,
         }
 
         if tics is None:
@@ -136,13 +136,18 @@ class Tics:  # {{{
 
         tic.setAsset(self.__asset)
 
-        self.__df.loc[len(self.__df)] = [
-            tic.dt,
-            tic.direction.short_name,
-            tic.price,
-            tic.lots,
-            tic.amount(),
-        ]
+        df = pl.DataFrame(
+            {
+                "dt": tic.dt.replace(microsecond=0),
+                "direction": tic.direction.short_name,
+                "price": tic.price,
+                "lots": tic.lots,
+                "amount": tic.amount(),
+            }
+        )
+        df = df.cast({"dt": pl.datatypes.Datetime("ns", UTC)})
+
+        self.__df.extend(df)
 
     # }}}
 
@@ -302,8 +307,8 @@ class Tics:  # {{{
 
         hist = {
             "dt": bar.dt,
-            "b_amount": buy_amount,
-            "s_amount": sell_amount,
+            "b_amount": float(buy_amount),
+            "s_amount": float(sell_amount),
             "b_lots": buy_lots,
             "s_lots": sell_lots,
         }

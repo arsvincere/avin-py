@@ -13,6 +13,7 @@ from typing import Optional, Union
 
 import polars as pl
 
+from avin.config import Usr
 from avin.core.chart import Chart
 from avin.core.event import BarEvent, Event, TicEvent
 from avin.core.tic import Tics
@@ -20,7 +21,7 @@ from avin.core.timeframe import TimeFrame
 from avin.data import Data, DataType, Exchange, Instrument
 from avin.exceptions import AssetError
 from avin.keeper import Keeper
-from avin.utils import DateTime, Signal, logger, now
+from avin.utils import Cmd, Date, DateTime, Signal, logger, now
 
 
 class Asset(Instrument, ABC):  # {{{
@@ -44,6 +45,9 @@ class Asset(Instrument, ABC):  # {{{
         self.chart_updated = Signal(Asset, Chart)
         self.tics_updated = Signal(Asset)
 
+        # TODO: говнокод
+        self.__tryLoadTics()
+
     # }}}
 
     @property  # tics  # {{{
@@ -54,6 +58,14 @@ class Asset(Instrument, ABC):  # {{{
     def tics(self, tics: Tics) -> None:
         assert isinstance(tics, Tics)
         self.__tics = tics
+
+    # }}}
+    @property  # path  # {{{
+    def path(self) -> str:
+        dir_path = Cmd.path(
+            Usr.DATA, self.exchange.name, self.type.name, self.ticker
+        )
+        return dir_path
 
     # }}}
 
@@ -266,6 +278,17 @@ class Asset(Instrument, ABC):  # {{{
         self.tics_updated.emit(self)
 
     # }}}
+    def __tryLoadTics(self) -> None:
+        dir_path = Cmd.path(self.path, DataType.TIC.name)
+
+        date = Date.today()
+        file_name = f"{date} tic.parquet"
+
+        file_path = Cmd.path(dir_path, file_name)
+
+        if Cmd.isExist(file_path):
+            df = pl.read_parquet(file_path)
+            self.__tics = Tics(self, df)
 
     @classmethod  # __formatArgs# {{{
     def __formatArgs(

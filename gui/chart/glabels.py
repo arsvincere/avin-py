@@ -58,8 +58,8 @@ class BarInfo(QtWidgets.QWidget):  # {{{
             f"H: {bar.high:<6} "
             f"L: {bar.low:<6} "
             f"C: {bar.close:<6} "
-            f"[Full: {full_pct:.2f}% Body: {body_pct:.2f}%] "
-            f"Vol: {value}"
+            f"Vol: {value}   "
+            f"[Full: {full_pct:.2f}% Body: {body_pct:.2f}%]"
         )
 
     # }}}

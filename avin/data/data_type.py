@@ -22,8 +22,8 @@ class DataType(enum.Enum):
     BAR_D = "D"
     BAR_W = "W"
     BAR_M = "M"
-    TIC = "tic"
-    BOOK = "book"
+    TIC = "TIC"
+    BOOK = "BOOK"
 
     def __str__(self):  # {{{
         return self.value

@@ -364,6 +364,7 @@ class Chart:
         assert e.timeframe == self.__timeframe
 
         new_bar = e.bar
+        new_bar.setChart(self)
 
         # 1. first real-time bar, in chart only historical bars
         if self.__now is None:

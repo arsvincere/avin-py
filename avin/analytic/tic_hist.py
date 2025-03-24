@@ -16,7 +16,7 @@ from avin.core.bar import Bar
 from avin.core.chart import Chart
 from avin.core.indicator import Indicator
 from avin.core.timeframe import TimeFrame
-from avin.utils import UTC, DateTime, Signal, TimeDelta
+from avin.utils import UTC, DateTime, Signal, TimeDelta, now
 
 
 class Hist(Indicator):
@@ -68,6 +68,7 @@ class Hist(Indicator):
         self.__calcHist()
         self.__calcHistNow()
         self.__calcHistSizes()
+        self.__calcHistFill()
 
         # connect
         self.__chart.upd_bar.connect(self.__onRealTimeBar)
@@ -100,12 +101,7 @@ class Hist(Indicator):
 
     # }}}
     def __calcHist(self) -> None:  # {{{
-        #### dbg begin
-        dt = DateTime(2025, 3, 19, tzinfo=UTC)
-        df = self.__chart.selectBarsOfDay(dt)
-        #### dbg end
-
-        # df = self.__chart.selectTodayBars()
+        df = self.__chart.selectTodayBars()
         for row in df.iter_rows(named=True):
             bar = Bar(row, self.__chart)
             hist_of_bar = self.__tics.getHist(bar)
@@ -120,7 +116,43 @@ class Hist(Indicator):
             self.__hist_now = None
             return
 
-        self.__hist_now = self.__tics.getHist(self.__chart.now)
+        hist = self.__tics.getHist(self.__chart.now)
+
+        # identify size
+        b_lots = hist["b_lots"]
+        s_lots = hist["s_lots"]
+        b_lots_ssize = str(Analytic._identifySimpleSize(b_lots, self.__sizes))
+        s_lots_ssize = str(Analytic._identifySimpleSize(s_lots, self.__sizes))
+        if b_lots_ssize == "XXS":
+            b_lots_ssize = "XS"
+        if b_lots_ssize == "XXL":
+            b_lots_ssize = "XL"
+        if s_lots_ssize == "XXS":
+            s_lots_ssize = "XS"
+        if s_lots_ssize == "XXL":
+            s_lots_ssize = "XL"
+        hist["b_lots_ssize"] = b_lots_ssize
+        hist["s_lots_ssize"] = s_lots_ssize
+
+        # b fill
+        size = self.__sizes.row(
+            by_predicate=(pl.col("size") == b_lots_ssize), named=True
+        )
+        begin = size["begin"]
+        end = size["end"]
+        b_fill = (b_lots - begin) / end
+        hist["b_fill"] = b_fill
+
+        # s fill
+        size = self.__sizes.row(
+            by_predicate=(pl.col("size") == s_lots_ssize), named=True
+        )
+        begin = size["begin"]
+        end = size["end"]
+        s_fill = (s_lots - begin) / end
+        hist["s_fill"] = s_fill
+
+        self.__hist_now = hist
 
     # }}}
     def __calcHistSizes(self) -> None:  # {{{
@@ -128,7 +160,7 @@ class Hist(Indicator):
             self.__hist["b_lots"]
             .map_elements(
                 lambda x: str(Analytic._identifySimpleSize(x, self.__sizes)),
-                return_dtype=pl.Object,  # type = avin.Size
+                return_dtype=pl.String,
             )
             .alias("b_lots_ssize"),
         )
@@ -136,29 +168,145 @@ class Hist(Indicator):
             self.__hist["s_lots"]
             .map_elements(
                 lambda x: str(Analytic._identifySimpleSize(x, self.__sizes)),
-                return_dtype=pl.Object,  # type = avin.Size
+                return_dtype=pl.String,
             )
             .alias("s_lots_ssize"),
         )
 
     # }}}
-    def __onRealTimeBar(self, bar: Bar):  # {{{
+    def __calcHistFill(self) -> None:  # {{{
+        # TODO: говнокод версия 0.0
+        # дублирующийся код убери и имена получше придумай
+        fill_list = list()
+        for row in self.__hist.iter_rows(named=True):
+            b_lots = row["b_lots"]
+            b_lots_ssize = row["b_lots_ssize"]
+            if b_lots_ssize == "XXS":
+                b_lots_ssize = "XS"
+            if b_lots_ssize == "XXL":
+                b_lots_ssize = "XL"
+            size = self.__sizes.row(
+                by_predicate=(pl.col("size") == b_lots_ssize), named=True
+            )
+            begin = size["begin"]
+            end = size["end"]
+
+            fill = (b_lots - begin) / end
+            fill_list.append(fill)
+
+        s = pl.Series("b_fill", fill_list)
+        self.__hist = self.__hist.with_columns(s)
+
+        fill_list = list()
+        for row in self.__hist.iter_rows(named=True):
+            s_lots = row["s_lots"]
+            s_lots_ssize = row["s_lots_ssize"]
+            if s_lots_ssize == "XXS":
+                s_lots_ssize = "XS"
+            if s_lots_ssize == "XXL":
+                s_lots_ssize = "XL"
+            size = self.__sizes.row(
+                by_predicate=(pl.col("size") == s_lots_ssize), named=True
+            )
+            begin = size["begin"]
+            end = size["end"]
+
+            fill = (s_lots - begin) / end
+            fill_list.append(fill)
+
+        s = pl.Series("s_fill", fill_list)
+        self.__hist = self.__hist.with_columns(s)
+
+    # }}}
+    def __onRealTimeBar(self, chart: Chart, bar: Bar):  # {{{
         time = now()
         if time - self.__last_update < self.delay:
             return
 
+        # identify size
         hist = self.__tics.getHist(bar)
+        b_lots = hist["b_lots"]
+        s_lots = hist["s_lots"]
+        b_lots_ssize = str(Analytic._identifySimpleSize(b_lots, self.__sizes))
+        s_lots_ssize = str(Analytic._identifySimpleSize(s_lots, self.__sizes))
+        if b_lots_ssize == "XXS":
+            b_lots_ssize = "XS"
+        if b_lots_ssize == "XXL":
+            b_lots_ssize = "XL"
+        if s_lots_ssize == "XXS":
+            s_lots_ssize = "XS"
+        if s_lots_ssize == "XXL":
+            s_lots_ssize = "XL"
+        hist["b_lots_ssize"] = b_lots_ssize
+        hist["s_lots_ssize"] = s_lots_ssize
+
+        # b fill
+        size = self.__sizes.row(
+            by_predicate=(pl.col("size") == b_lots_ssize), named=True
+        )
+        begin = size["begin"]
+        end = size["end"]
+        b_fill = (b_lots - begin) / end
+        hist["b_fill"] = b_fill
+
+        # s fill
+        size = self.__sizes.row(
+            by_predicate=(pl.col("size") == s_lots_ssize), named=True
+        )
+        begin = size["begin"]
+        end = size["end"]
+        s_fill = (s_lots - begin) / end
+        hist["s_fill"] = s_fill
+
         self.__hist_now = hist
         self.__last_update = time
 
         self.upd_hist.emit(bar, hist)
 
     # }}}
-    def __onHistoricalBar(self, bar: Bar):  # {{{
-        new_hist = self.__tics.getHist(bar)
-        self.__hist.extend(pl.DataFrame(new_hist))
+    def __onHistoricalBar(self, chart: Chart, bar: Bar):  # {{{
+        # identify size
+        hist = self.__tics.getHist(bar)
+        b_lots = hist["b_lots"]
+        s_lots = hist["s_lots"]
+        b_lots_ssize = str(Analytic._identifySimpleSize(b_lots, self.__sizes))
+        s_lots_ssize = str(Analytic._identifySimpleSize(s_lots, self.__sizes))
+        if b_lots_ssize == "XXS":
+            b_lots_ssize = "XS"
+        if b_lots_ssize == "XXL":
+            b_lots_ssize = "XL"
+        if s_lots_ssize == "XXS":
+            s_lots_ssize = "XS"
+        if s_lots_ssize == "XXL":
+            s_lots_ssize = "XL"
+        hist["b_lots_ssize"] = str(b_lots_ssize)
+        hist["s_lots_ssize"] = str(s_lots_ssize)
 
-        self.new_hist.emit(bar, new_hist)
+        # b fill
+        size = self.__sizes.row(
+            by_predicate=(pl.col("size") == b_lots_ssize), named=True
+        )
+        begin = size["begin"]
+        end = size["end"]
+        b_fill = (b_lots - begin) / end
+        hist["b_fill"] = b_fill
+
+        # s fill
+        size = self.__sizes.row(
+            by_predicate=(pl.col("size") == s_lots_ssize), named=True
+        )
+        begin = size["begin"]
+        end = size["end"]
+        s_fill = (s_lots - begin) / end
+        hist["s_fill"] = s_fill
+
+        print(hist)
+        print(pl.DataFrame(hist))
+        print(self.__hist)
+        input(1)
+
+        self.__hist.extend(pl.DataFrame(hist))
+        self.new_hist.emit(bar, hist)
 
     # }}}
 

@@ -23,6 +23,7 @@ from gui.custom import (
     ToolButton,
 )
 from gui.indicator.extr import GExtremumList
+from gui.indicator.hist import GHist
 from gui.indicator.posterior_delta import GPosteriorDelta
 
 
@@ -89,7 +90,7 @@ class IndicatorSelectDialog(QtWidgets.QDialog):  # {{{
         self.__indicators = [
             GExtremumList,
             GPosteriorDelta,
-            # HistIndicator,
+            GHist,
             # QuantIndicator,
         ]
 

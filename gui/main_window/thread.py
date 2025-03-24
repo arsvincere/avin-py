@@ -13,7 +13,6 @@ from avin import (
     BarEvent,
     TicEvent,
     Tinkoff,
-    logger,
 )
 
 
@@ -45,8 +44,6 @@ class TDataStream(QtCore.QThread):  # {{{
                 bar = Tinkoff.ti_to_av(response.candle)
                 event = BarEvent(figi, timeframe, bar)
                 self.new_bar.emit(event)
-
-                logger.info(event)
 
     # }}}
 

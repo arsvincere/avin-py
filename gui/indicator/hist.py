@@ -10,44 +10,33 @@ from __future__ import annotations
 
 import sys
 
-import pandas as pd
 from PyQt6 import QtCore, QtWidgets
 
-from avin import Cfg, logger
+from avin import Cfg, Hist, logger
 from gui.chart.gchart import GChart
-from gui.chart.indicator_item import IndicatorItem
 from gui.custom import Css, Icon, Label, Theme, ToolButton
 from gui.indicator._indicator import GIndicator
 
 
-class HistIndicator(GIndicator):  # {{{
-    name = "Hist"
+class GHist(GIndicator):  # {{{
+    name = Hist.name
     position = GIndicator.Position.FOOTER
 
     def __init__(self):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
 
+        self.indicator = Hist()
         self.gitem = None
-        self.__item = None
         self.__label = None
         self.__settings = None
 
     # }}}
 
-    def item(self):  # {{{
-        logger.debug(f"{self.__class__.__name__}.item()")
-
-        if self.__item is None:
-            self.__item = IndicatorItem(self)
-
-        return self.__item
-
-    # }}}
     def label(self):  # {{{
         logger.debug(f"{self.__class__.__name__}.label()")
 
         if self.__label is None:
-            self.__label = _HistLabel(self)
+            self.__label = _Label(self)
 
         return self.__label
 
@@ -56,10 +45,10 @@ class HistIndicator(GIndicator):  # {{{
         logger.debug(f"{self.__class__.__name__}.graphics()")
 
         self.gchart = gchart
-        self.gitem = _HistGraphics(self)
+        self.gitem = _Graphics(self)
 
         if self.__settings is None:
-            self.__settings = _HistSettings(self)
+            self.__settings = _Settings(self)
         self.__settings.configureSilent(self.gitem)
 
         return self.gitem
@@ -69,7 +58,7 @@ class HistIndicator(GIndicator):  # {{{
         logger.debug(f"{self.__class__.__name__}.configure()")
 
         if self.__settings is None:
-            self.__settings = _HistSettings(self)
+            self.__settings = _Settings(self)
 
         self.__settings.configure(self.gitem)
 
@@ -77,7 +66,7 @@ class HistIndicator(GIndicator):  # {{{
 
 
 # }}}
-class _HistLabel(QtWidgets.QWidget):  # {{{
+class _Label(QtWidgets.QWidget):  # {{{
     def __init__(self, indicator, parent=None):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
         QtWidgets.QWidget.__init__(self, parent)
@@ -89,8 +78,8 @@ class _HistLabel(QtWidgets.QWidget):  # {{{
 
     # }}}
 
-    @property  # indicator  # {{{
-    def indicator(self):
+    @property  # gindicator  # {{{
+    def gindicator(self):
         return self.__indicator
 
     # }}}
@@ -137,16 +126,16 @@ class _HistLabel(QtWidgets.QWidget):  # {{{
     def __onSettings(self):
         logger.debug(f"{self.__class__.__name__}.__onSettings()")
 
-        self.indicator.configure()
+        self.gindicator.configure()
 
     # }}}
 
 
 # }}}
-class _HistSettings(QtWidgets.QDialog):  # {{{
-    def __init__(self, indicator, parent=None):  # {{{
+class _Settings(QtWidgets.QDialog):  # {{{
+    def __init__(self, gindicator, parent=None):  # {{{
         QtWidgets.QDialog.__init__(self, parent)
-        self.__indicator = indicator
+        self.__indicator = gindicator
 
         self.__config()
         self.__createWidgets()
@@ -156,13 +145,13 @@ class _HistSettings(QtWidgets.QDialog):  # {{{
 
     # }}}
 
-    @property  # indicator  # {{{
-    def indicator(self):
+    @property  # gindicator  # {{{
+    def gindicator(self):
         return self.__indicator
 
     # }}}
 
-    def configureSilent(self, gextr: _HistGraphics):  # {{{
+    def configureSilent(self, gitem: _Graphics):  # {{{
         logger.debug(f"{self.__class__.__name__}.configure")
 
     # }}}
@@ -182,7 +171,9 @@ class _HistSettings(QtWidgets.QDialog):  # {{{
     def __createWidgets(self):  # {{{
         logger.debug(f"{self.__class__.__name__}.__createWidgets()")
 
-        self.title_label = Label("| Extremum settings:", parent=self)
+        self.title_label = Label(
+            f"| {self.gindicator.name} settings:", parent=self
+        )
         self.title_label.setStyleSheet(Css.TITLE)
 
         self.ok_btn = ToolButton(Icon.OK)
@@ -216,47 +207,33 @@ class _HistSettings(QtWidgets.QDialog):  # {{{
 
 
 # }}}
-class _HistGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
-    HEIGHT = 150
-    INDENT = Cfg.Chart.BAR_INDENT
-    WIDTH = Cfg.Chart.BAR_WIDTH
+class _Graphics(QtWidgets.QGraphicsItemGroup):  # {{{
+    HEIGHT = 100
+    WIDTH = Cfg.Chart.BAR_WIDTH - 2 * Cfg.Chart.BAR_INDENT
+    Y0 = -HEIGHT / 2
+    SEGMENT = HEIGHT / 10
+
+    B_COLOR = Theme.Chart.BULL
+    S_COLOR = Theme.Chart.BEAR
 
     flags = QtWidgets.QGraphicsItem.GraphicsItemFlag
     ignore_transformation = flags.ItemIgnoresTransformations
 
-    def __init__(self, indicator: HistIndicator, parent=None):  # {{{
+    def __init__(self, gindicator: HistIndicator, parent=None):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
         QtWidgets.QGraphicsItemGroup.__init__(self, parent)
 
-        self.indicator = indicator
-        self.gchart = indicator.gchart
+        self.gindicator = gindicator
+        self.gchart = gindicator.gchart
+        self.hist = self.gchart.chart.getInd(self.gindicator.indicator.name)
+        self.now_gitem = None
+        self.historical_gitem = list()
 
-        self.__getTics()
-        self.__calcMaxAmount()
         self.__createFrame()
-        self.__createHist()
-
-        # TODO: здесь надо только одну ось игнорить...
-        # self.setFlag(self.ignore_transformation)
+        self.__createGraphics()
 
     # }}}
 
-    def __getTics(self) -> None:  # {{{
-        asset = self.gchart.chart.asset
-        self.hist = asset.tics.hist(self.gchart.chart.timeframe)
-
-    # }}}
-    def __calcMaxAmount(self) -> None:  # {{{
-        logger.debug(f"{self.__class__.__name__}.__calcCoordinates()")
-
-        if self.hist is None:
-            return
-
-        max_amount_buy = self.hist["buy"].max()
-        max_amount_sell = self.hist["sell"].max()
-        self.max_amount = float(max(max_amount_buy, max_amount_sell))
-
-    # }}}
     def __createFrame(self) -> None:  # {{{
         x0 = 0
         y0 = -self.HEIGHT
@@ -269,74 +246,160 @@ class _HistGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
         self.addToGroup(self.frame)
 
     # }}}
-    def __createHist(self) -> None:  # {{{
-        hist = self.hist
-        if hist is None:
-            return
+    def __createGraphics(self) -> None:  # {{{
+        # create historical
+        df = self.hist.historicalHist()
+        for data in df.iter_rows(named=True):
+            gitem = self.__createHistBar(data)
+            self.addToGroup(gitem)
+            self.historical_gitem.append(gitem)
 
-        for i, row in hist.iterrows():
-            self.__createHistBar(row)
+        # create real time
+        data = self.hist.nowHist()
+        gitem = self.__createHistBar(data)
+        self.addToGroup(gitem)
+        self.now_gitem = gitem
 
     # }}}
-    def __createHistBar(self, hist_bar: pd.Series) -> None:  # {{{
+    def __createHistBar(self, hist_bar: dict) -> None:  # {{{
+        gitem = QtWidgets.QGraphicsItemGroup()
+        if hist_bar is None:
+            return gitem
+
         # alias
         gchart = self.gchart
         dt = hist_bar["dt"]
-        buy = hist_bar["buy"]
-        sell = hist_bar["sell"]
+        b_size = hist_bar["b_lots_ssize"]
+        s_size = hist_bar["s_lots_ssize"]
+        b_fill = hist_bar["b_fill"]
+        s_fill = hist_bar["s_fill"]
 
-        # coordinate
+        # coordinate x0
         gbar = gchart.gbarFromDatetime(dt)
         x0 = gbar.x0_cundle
-        x1 = gbar.x1_cundle
-        width = x1 - x0
-
-        y0 = -self.HEIGHT / 2
-        height_buy = float(buy) / self.max_amount * self.HEIGHT / 2
-        height_sell = float(sell) / self.max_amount * self.HEIGHT / 2
 
         # graphics item
-        buy_body = QtWidgets.QGraphicsRectItem(x0, y0, width, -height_buy)
-        buy_body.setPen(Theme.Chart.BULL)
-        buy_body.setBrush(Theme.Chart.BULL)
+        b_bar = self.__hist("buy", b_size, b_fill, x0)
+        s_bar = self.__hist("sell", s_size, s_fill, x0)
 
-        sell_body = QtWidgets.QGraphicsRectItem(x0, y0, width, height_sell)
-        sell_body.setPen(Theme.Chart.BEAR)
-        sell_body.setBrush(Theme.Chart.BEAR)
+        gitem.addToGroup(b_bar)
+        gitem.addToGroup(s_bar)
 
-        self.addToGroup(buy_body)
-        self.addToGroup(sell_body)
+        return gitem
 
     # }}}
+    def __hist(  # {{{
+        self, typ: str, size: str, fill: float, x0: float
+    ) -> QtWidgets.QGraphicsItemGroup:
+        """algorithm# {{{
+        Если размер XS
+            - рисуем кубик XS по масштабу
+        Если размер S
+            - рисуем кубик XS полный
+            - рисуем кубик S по масштабу
+        Если размер М
+            - рисуем кубик XS полный
+            - рисуем кубик S полный
+            - рисуем кубик М по масштабу
+                - определить % кубика
+                - определить y1 = % * y0_M
 
-    # def __loadHist(self) -> None:  # {{{
-    #     """self.hist = DataFrame
-    #                          dt          buy         sell
-    #     0   2025-03-06 06:59:34    8421750.0    5790060.0
-    #     """
-    #
-    #     # XXX: говнокод, график должен все таки ссылаться на Asset
-    #     # а не на Instrument, и через Asset надо загружать тики
-    #     # но пока похую, и не раскидывать тут детали в духе .parquet
-    #     # мало ли как еще переименую файлы...
-    #     last_date = self.gchart.chart.now.dt.date()
-    #     file_name = f"{last_date} tic.parquet"
-    #     file_path = Cmd.path(
-    #         self.gchart.chart.asset.path,
-    #         DataType.TIC.name,
-    #         file_name,
-    #     )
-    #     if not Cmd.isExist(file_path):
-    #         self.hist = None
-    #         logger.warning(f"Tic data not found: {file_path}")
-    #         return
-    #
-    #     df = pd.read_parquet(file_path)
-    #     tics = Tics(self.gchart.chart.asset, df)
-    #     tf = self.gchart.chart.timeframe
-    #     self.hist = tics.hist(tf)
-    #
-    # # }}}
+        Пусть размеры например такие:
+            XS  0       100
+            S   100     1_000
+            M   1_000   100_000
+
+            например объем приходит 75
+            значит нужно сделать 75% процентов от первого кубика
+
+            например объем приходит 200
+            значит нужно взять первый кубик полный
+            а второй получается
+                1000 - 100 = 900 это максимум
+                200 / 900 = это заполненное количество
+
+            например объем приходит 90_000
+            1 кубик полный
+            2 кубик полный
+            3 кубик
+                100_000 - 1_000 = 99_000 это максимум
+                90_000 / 99_000 = это заполненное количество
+        """  # }}}
+
+        match typ:
+            case "buy":
+                color = self.B_COLOR
+                k = 1
+            case "sell":
+                color = self.S_COLOR
+                k = -1
+
+        match size:
+            case "XXS":
+                quad1 = self.__quad(color, 1, k, x0, fill=fill)
+                quad2 = None
+                quad3 = None
+                quad4 = None
+                quad5 = None
+            case "XS":
+                quad1 = self.__quad(color, 1, k, x0, fill=fill)
+                quad2 = None
+                quad3 = None
+                quad4 = None
+                quad5 = None
+            case "S":
+                quad1 = self.__quad(color, 1, k, x0, fill=1)
+                quad2 = self.__quad(color, 2, k, x0, fill=fill)
+                quad3 = None
+                quad4 = None
+                quad5 = None
+            case "M":
+                quad1 = self.__quad(color, 1, k, x0, fill=1)
+                quad2 = self.__quad(color, 2, k, x0, fill=1)
+                quad3 = self.__quad(color, 3, k, x0, fill=fill)
+                quad4 = None
+                quad5 = None
+            case "L":
+                quad1 = self.__quad(color, 1, k, x0, fill=1)
+                quad2 = self.__quad(color, 2, k, x0, fill=1)
+                quad3 = self.__quad(color, 3, k, x0, fill=1)
+                quad4 = self.__quad(color, 4, k, x0, fill=fill)
+                quad5 = None
+            case "XL":
+                quad1 = self.__quad(color, 1, k, x0, fill=1)
+                quad2 = self.__quad(color, 2, k, x0, fill=1)
+                quad3 = self.__quad(color, 3, k, x0, fill=1)
+                quad4 = self.__quad(color, 4, k, x0, fill=1)
+                quad5 = self.__quad(color, 5, k, x0, fill=fill)
+            case "XXL":
+                quad1 = self.__quad(color, 1, k, x0, fill=1)
+                quad2 = self.__quad(color, 2, k, x0, fill=1)
+                quad3 = self.__quad(color, 3, k, x0, fill=1)
+                quad4 = self.__quad(color, 4, k, x0, fill=1)
+                quad5 = self.__quad(color, 5, k, x0, fill=fill)
+
+        group = QtWidgets.QGraphicsItemGroup()
+        for i in (quad1, quad2, quad3, quad4, quad5):
+            if i is not None:
+                group.addToGroup(i)
+
+        return group
+
+    # }}}
+    def __quad(  # {{{
+        self, color, n, k, x0, fill
+    ) -> QtWidgets.QGraphicsRectItem:
+        y0 = self.Y0 - (n - 1) * self.SEGMENT
+        y1 = y0 + fill * self.SEGMENT
+        height = y1 - y0
+
+        quad = QtWidgets.QGraphicsRectItem(x0, y0, self.WIDTH, height)
+        quad.setPen(color)
+        quad.setBrush(color)
+
+        return quad
+
+    # }}}
 
 
 # }}}
@@ -344,7 +407,7 @@ class _HistGraphics(QtWidgets.QGraphicsItemGroup):  # {{{
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    indicator = ExtremumIndicator()
-    w = _HistSettings(indicator)
+    indicator = GHist()
+    w = _Settings(indicator)
     w.show()
     sys.exit(app.exec())
