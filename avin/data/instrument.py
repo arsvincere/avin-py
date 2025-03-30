@@ -25,7 +25,6 @@ class Instrument:
     """
 
     class Type(enum.Enum):  # {{{
-        UNDEFINE = 0
         CASH = 1
         INDEX = 2
         SHARE = 3
