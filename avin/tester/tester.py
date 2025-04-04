@@ -8,6 +8,8 @@
 
 from __future__ import annotations
 
+import polars as pl
+
 from avin.core import Chart
 from avin.tester.test import Test
 from avin.tester.virtual_broker import VirtualBroker
@@ -53,8 +55,7 @@ class Tester:
 
         self.__broker = VirtualBroker
         self.__broker.setTest(self.__test)
-        self.__broker.new_bar.aconnect(self.__onBarEvent)
-        self.__broker.bar_changed.aconnect(self.__onBarEvent)
+        self.__broker.bar_event.aconnect(self.__onBarEvent)
 
     # }}}
     def __setAccount(self) -> None:  # {{{
@@ -69,7 +70,7 @@ class Tester:
 
         Chart.MAX_BARS_COUNT = 2000
         for timeframe in self.__test.strategy.timeframes():
-            bars = list()
+            bars = pl.DataFrame()
             chart = Chart(self.__test.asset, timeframe, bars)
             self.__test.asset.setChart(chart)
 

@@ -8,25 +8,28 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
 from datetime import UTC, datetime
 
 from avin.const import DAY_BEGIN, ONE_MINUTE
 from avin.core import (
     Asset,
     Bar,
+    BarEvent,
     TimeFrame,
     TimeFrameList,
 )
+from avin.data import Data
 from avin.keeper import Keeper
-from avin.utils import Date, logger
+from avin.utils import Date, DateTime, logger
 
-# TODO: подумать как бы всетаки отправлять еще progress
-# никто кроме стрима сейчас не может знать его
-# как варинта - передавать сюда не бегин энд, а сам тест
-# из него дергать бегин энд
-# и тогда (я сейчас перенес сигнал progress в класс Test)
-# можно будет от сюда дергать этот сигнал.
+# WARN:
+# я сейчас переделал BarEvent... нет разделения на исторический и
+# текущий, теперь стрим не правильно работает. Он выдает бары
+# в правильном порядке, но они ставятся в график не правильно...
+# чем больше таймфрейм тем больше задержка, и выплевывает стрим
+# исторический бар часовой, а в график он ставится как текущий...
+# тут надо мерджить бары из 1М постоянно и постоянно их отправлять
+# чтобы часовик обновлялся текущий каждую минуту.
 
 """BarStream - выдает бары по очереди в хронологическом порядке
 
@@ -125,9 +128,7 @@ class BarStream:
     def __init__(self):  # {{{
         logger.debug(f"{self.__class__.__name__}.__init__()")
 
-        self.__subscriptions: defaultdict[Asset, TimeFrameList] = defaultdict(
-            TimeFrameList
-        )
+        self.__timeframes = TimeFrameList()
         self.__bars = dict()
         self.__asset = None
         self.__begin = None
@@ -146,55 +147,62 @@ class BarStream:
                 if time < bars[0].dt + timeframe:
                     continue
 
-                # send new historical bar
-                last_bar = bars.pop(0)
+                # send new bar
+                bar = bars.pop(0)
                 figi = self.__asset.figi
-                historical = NewHistoricalBarEvent(figi, timeframe, last_bar)
-                yield historical
+                e = BarEvent(figi, timeframe, bar)
+                yield e
 
-                # send now bar
-                if not bars:
-                    continue
-                now_bar = bars[0]
-                now_changed = BarChangedEvent(figi, timeframe, now_bar)
-                yield now_changed
+                # # send new historical bar
+                # last_bar = bars.pop(0)
+                # figi = self.__asset.figi
+                # historical = NewHistoricalBarEvent(figi, timeframe, last_bar)
+                # yield historical
+                #
+                # # send now bar
+                # if not bars:
+                #     continue
+                # now_bar = bars[0]
+                # now_changed = BarChangedEvent(figi, timeframe, now_bar)
+                # yield now_changed
 
             time += ONE_MINUTE
 
     # }}}
-    def subscribe(self, asset, timeframe) -> None:  # {{{
-        self.__subscriptions[asset].add(timeframe)
+    def setAsset(self, asset: Asset) -> None:  # {{{
+        self.__asset = asset
 
-        if self.__asset is None:
-            self.__asset = asset  # сохраняем ассет от первой подписки
-        else:
-            # NOTE:
-            # пока можно подписываться только на один и тот же ассет
-            # на разные таймфреймы. Выдача баров по нескольким активам
-            # одновременно не реализована.
-            # Чтобы не забыть - впилю тут асерт
-            assert self.__asset == asset
+    # }}}
+    def subscribe(self, timeframe) -> None:  # {{{
+        assert self.__asset is not None
+
+        self.__timeframes.add(timeframe)
 
     # }}}
     async def loadData(self, begin: Date, end: Date):  # {{{
         logger.debug(f"{self.__class__.__name__}.loadData()")
         assert isinstance(begin, Date)
         assert isinstance(end, Date)
+        begin = DateTime.combine(begin, DAY_BEGIN, tzinfo=UTC)
+        end = DateTime.combine(end, DAY_BEGIN, tzinfo=UTC)
 
         self.__bars.clear()
         self.__begin = datetime.combine(begin, DAY_BEGIN, UTC)
         self.__end = datetime.combine(end, DAY_BEGIN, UTC)
 
-        for asset, tflist in self.__subscriptions.items():
-            for timeframe in tflist:
-                bars = await Keeper.get(
-                    Bar,
-                    instrument=asset,
-                    timeframe=timeframe,
-                    begin=begin,
-                    end=end,
-                )
-                self.__bars[timeframe] = bars
+        for timeframe in self.__timeframes:
+            bars = list()
+            records = await Data.request(
+                instrument=self.__asset,
+                data_type=timeframe.toDataType(),
+                begin=begin,
+                end=end,
+            )
+            for r in records:
+                bar = Bar.fromRecord(r)
+                bars.append(bar)
+
+            self.__bars[timeframe] = bars
 
     # }}}
 

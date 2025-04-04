@@ -16,8 +16,6 @@ async def test_BarStream():
     stream = BarStream()
 
     afks = await Asset.fromTicker(Exchange.MOEX, Asset.Type.SHARE, "AFKS")
-    aflt = await Asset.fromTicker(Exchange.MOEX, Asset.Type.SHARE, "AFLT")
-    alrs = await Asset.fromTicker(Exchange.MOEX, Asset.Type.SHARE, "ALRS")
     stream.subscribe(afks, TimeFrame("1M"))
     stream.subscribe(afks, TimeFrame("D"))
     stream.subscribe(afks, TimeFrame("5M"))
@@ -35,7 +33,7 @@ async def test_BarStream():
 async def test_Test():
     test = Test("_unittest_test")
     assert test.name == "_unittest_test"
-    asset = await Asset.fromStr("MOEX-SHARE-SBER")
+    asset = await Asset.fromStr("MOEX SHARE SBER")
     strategy = await Strategy.load("Every", "day")
     test.strategy = strategy
     test.asset = asset
@@ -75,7 +73,7 @@ async def test_Test():
 async def test_TestList():
     # create Test
     test = Test("_unittest_test")
-    asset = await Asset.fromStr("MOEX-SHARE-SBER")
+    asset = await Asset.fromStr("MOEX SHARE SBER")
     strategy = await Strategy.load("Every", "day")
     test.strategy = strategy
     test.asset = asset

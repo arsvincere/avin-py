@@ -14,6 +14,7 @@ from avin.core import (
     Account,
     Asset,
     Bar,
+    BarEvent,
     Broker,
     Direction,
     Event,
@@ -36,8 +37,7 @@ from avin.utils import AsyncSignal, logger
 class VirtualBroker(Broker):
     name = "_VirtualBroker"
 
-    # new_bar = AsyncSignal(NewHistoricalBarEvent)
-    # bar_changed = AsyncSignal(BarChangedEvent)
+    bar_event = AsyncSignal(BarEvent)
     new_transaction = AsyncSignal(TransactionEvent)
 
     __test: Optional[Test] = None
@@ -68,10 +68,9 @@ class VirtualBroker(Broker):
         cls.__stop_orders = list()
 
         # сброс конектов к сигналам...
-        # TODO: а может сделать прямо new_bar.disconnect(slot) ??
-        # и new_bar.disconnectAll() ??
-        cls.new_bar = AsyncSignal(NewHistoricalBarEvent)
-        cls.bar_changed = AsyncSignal(BarChangedEvent)
+        # TODO: а может сделать прямо bar_event.disconnect(slot) ??
+        # и bar_event.disconnectAll() ??
+        cls.bar_event = AsyncSignal(NewHistoricalBarEvent)
         cls.new_transaction = AsyncSignal(TransactionEvent)
 
     # }}}
@@ -258,11 +257,9 @@ class VirtualBroker(Broker):
 
     @classmethod  # createBarStream  # {{{
     def createBarStream(cls, timeframe: TimeFrame) -> None:
-        logger.debug(f"{cls.__name__}.createBarStream({asset}, {timeframe})")
-
         if not cls.__data_stream:
             cls.__data_stream = BarStream()
-            cls.__data_stream.setAsset(self.__current_asset)
+            cls.__data_stream.setAsset(cls.__current_asset)
 
         cls.__data_stream.subscribe(timeframe)
 
@@ -274,9 +271,9 @@ class VirtualBroker(Broker):
         await cls.__data_stream.loadData(cls.__test.begin, cls.__test.end)
 
         for event in cls.__data_stream:
-            if event.type == Event.Type.NEW_HISTORICAL_BAR:
-                await cls.new_bar.aemit(event)
-            if event.type == Event.Type.BAR_CHANGED:
+            # if event.type == Event.Type.NEW_HISTORICAL_BAR:
+            #     await cls.new_bar.aemit(event)
+            if event.type == Event.Type.BAR:
                 # NOTE:
                 # перед приходом нового реал тайм бара, до отправки
                 # этого события, проверям сначала сработку ордеров
@@ -285,8 +282,8 @@ class VirtualBroker(Broker):
                 # Аккаунт выставляет ордер. Он попадаем в виртуал
                 # брокера сюда в соответствующий список маркет, лимит, стоп
                 # ордеров. Ставится статус - POSTED.
-                # Все это происходит в ответ на предыдущий эвент -
-                # Event.NEW_HISTORICAL_BAR, которые все стратегии и
+                # Все это происходит в ответ на предыдущий эвент,
+                # которые все стратегии и
                 # используют сейчас. Я дожидаюсь полного завершения
                 # обработки этого эвента всеми, все свои ордера поставят.
                 # И только потом вот здесь - чекаю ордера.
@@ -297,11 +294,15 @@ class VirtualBroker(Broker):
                 # просто отправляем его сигналом
                 # А если 1М то беру бар из текущего графика, а не новый
                 # из эвента.
+                # XXX: здесь походу вообще сейчас все не так...
+                # когда объединил бар эвент в один (исторический и реал-тайм)
+                # вот тут логику не переделал до конца... тут полу старая,
+                # полу нерабочая логика.
                 if event.timeframe == "1M":
                     bar = cls.__current_asset.chart("1M").now
                     await cls.__checkOrders(bar)
                 # Теперь отправляем новый реал тайм бар всем.
-                await cls.bar_changed.aemit(event)
+                await cls.bar_event.aemit(event)
 
     # }}}
 

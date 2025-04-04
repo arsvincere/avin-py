@@ -47,6 +47,19 @@ class Chart:
         # signals
         self.new_bar = Signal(Chart, Bar)
         self.upd_bar = Signal(Chart, Bar)
+        self.anew_bar = AsyncSignal(Chart, Bar)
+        self.aupd_bar = AsyncSignal(Chart, Bar)
+
+        self.__schema = {
+            "dt": DateTime,
+            "open": float,
+            "high": float,
+            "low": float,
+            "close": float,
+            "volume": int,
+        }
+        if self.__data.is_empty():
+            self.__data = pl.DataFrame(schema=self.__schema)
 
     # }}}
     def __getitem__(self, index: int):  # {{{
