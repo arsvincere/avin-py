@@ -489,7 +489,7 @@ class ExtremumList(Indicator):
 
         if has_update:
             self.upd_extr.emit(self.extr(out_term, 0))
-            self.new_trend.emit(self.trend(out_term, 0))
+            self.upd_trend.emit(self.trend(out_term, 0))
 
         return has_new_extr
 
