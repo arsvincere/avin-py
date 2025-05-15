@@ -431,7 +431,7 @@ class ExtremumList(Indicator):
     # }}}
     def __updExtrNext(  # {{{
         self, in_extr, out_extr, out_now, out_term
-    ) -> None:
+    ) -> bool:
         has_update = False
         has_new_extr = False
 

@@ -134,6 +134,11 @@ def code_counter(dir_path):  # {{{
                 text = Cmd.loadText(file_path)
                 count_str += len(text)
                 count_files += 1
+            if file.endswith(".rs"):
+                file_path = Cmd.path(root, file)
+                text = Cmd.loadText(file_path)
+                count_str += len(text)
+                count_files += 1
     return count_files, count_str
 
 
