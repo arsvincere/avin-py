@@ -1,3 +1,6 @@
+## Unmantained!
+Было принято решение переписать все на Rust -> https://github.com/arsvincere/avin
+
 # AVIN - Open source cross-platform trading system
 
 AVIN (лат. Ars Vincere  -  искусство побеждать)  —  это кросплатформенная
