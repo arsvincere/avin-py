@@ -1,0 +1,27 @@
+# Distribution / packaging
+*.spec
+.venv/
+arch/
+build/
+dist/
+target/
+venv/
+
+# Byte-compiled / optimized / DLL files
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+
+# tmp files
+*.bak
+*.tmp
+1.*
+2.*
+3.*
+4.*
+5.*
+bak/
+log/
+tmp/
+usr/
