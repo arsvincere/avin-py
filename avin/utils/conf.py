@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta as TimeDelta
 from pathlib import Path
 
 __all__ = ("CFG",)
@@ -34,10 +35,11 @@ class CFG:
         pass
 
     class Usr:
-        pass
+        offset = TimeDelta(hours=3)
+        dt_fmt = "%Y-%m-%d %H:%M:%S"
 
     class Log:
-        history = 5
+        history = 5  # days
         debug = True
         info = True
 
