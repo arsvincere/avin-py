@@ -25,6 +25,9 @@ class Range:
         self.__start = start
         self.__finish = finish
 
+    def __str__(self):
+        return f"Range[{self.__start}, {self.__finish}]"
+
     def __getitem__(self, slice_) -> Range:
         """Return part of range.
 
@@ -68,8 +71,8 @@ class Range:
 
         return self.min() <= price <= self.max()
 
-    def __str__(self):
-        return f"Range[{self.__start}, {self.__finish}]"
+    def __eq__(self, other) -> bool:
+        return self.start == other.start and self.finish == other.finish
 
     @property
     def start(self):
