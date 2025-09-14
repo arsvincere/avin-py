@@ -44,7 +44,7 @@ class Bar:
 
     def __str__(self):
         s = (
-            f"Bar: dt={self.dt_local} "
+            f"Bar: dt={self.dt_local()} "
             f"o={self.o} h={self.h} l={self.l} c={self.c} v={self.v}"
         )
 
