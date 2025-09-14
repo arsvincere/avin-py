@@ -120,10 +120,11 @@ class Cmd:
         return list_dirs
 
     @staticmethod
-    def find_file(file_name: str, dir_path: str) -> str | None:
+    def find_file(file_name: str, dir_path: Path) -> Path | None:
         for root, _dirs, files in os.walk(dir_path):
             if file_name in files:
-                return os.path.join(root, file_name)
+                p = os.path.join(root, file_name)
+                return Path(p)
 
         return None
 
@@ -149,13 +150,13 @@ class Cmd:
         return selected
 
     @staticmethod
-    def rename(old_path: str, new_path: str) -> None:
+    def rename(old_path: Path, new_path: Path) -> None:
         """Переименовывает old_path в new_path"""
 
         os.rename(old_path, new_path)
 
     @staticmethod
-    def replace(src: str, dest: str, create_dirs=True) -> None:
+    def replace(src: Path, dest: Path, create_dirs=True) -> None:
         """Перемещает src в dest"""
 
         if create_dirs:
@@ -164,29 +165,29 @@ class Cmd:
         os.replace(src, dest)
 
     @staticmethod
-    def copy(src_file: str, dest_file: str) -> None:
+    def copy(src_file: Path, dest_file: Path) -> None:
         """Копирует src в dest"""
 
         shutil.copy(src_file, dest_file)
 
     @staticmethod
-    def copy_dir(src: str, dest: str) -> None:
+    def copy_dir(src: Path, dest: Path) -> None:
         """Копирует src в dest"""
 
         shutil.copytree(src, dest)
 
     @staticmethod
-    def delete(file_path: str) -> None:
+    def delete(file_path: Path) -> None:
         """Удаляет файла по указанному пути"""
 
         os.remove(file_path)
 
     @staticmethod
-    def delete_dir(path: str) -> None:
+    def delete_dir(path: Path) -> None:
         shutil.rmtree(path)
 
     @staticmethod
-    def extract(archive_path: str, dest_dir: str) -> None:
+    def extract(archive_path: Path, dest_dir: Path) -> None:
         with zipfile.ZipFile(archive_path, "r") as file:
             file.extractall(dest_dir)
 
@@ -200,7 +201,7 @@ class Cmd:
         return string
 
     @staticmethod
-    def write(string: str, file_path: str, create_dirs=True) -> None:
+    def write(string: str, file_path: Path, create_dirs=True) -> None:
         """Write string in file (overwrite)"""
         if create_dirs:
             Cmd.__create_dirs_for_filepath(file_path)
@@ -209,7 +210,7 @@ class Cmd:
             file.write(string)
 
     @staticmethod
-    def append(text: list[str], file_path: str) -> None:
+    def append(text: list[str], file_path: Path) -> None:
         """Append text in file"""
 
         with open(file_path, "a", encoding="utf-8") as file:
@@ -217,7 +218,7 @@ class Cmd:
                 file.write(line)
 
     @staticmethod
-    def get_tail(file_path: str, n: int) -> list[str]:
+    def get_tail(file_path: Path, n: int) -> list[str]:
         # Читает весь файл построчно и добавляет его в
         # очередь, у которой максимальная длина n... таким образом
         # дойдя до конца файла в очереди останется n последних строк
@@ -239,7 +240,9 @@ class Cmd:
         return text
 
     @staticmethod
-    def write_text(text: list[str], file_path: str, create_dirs=True) -> None:
+    def write_text(
+        text: list[str], file_path: Path, create_dirs=True
+    ) -> None:
         if create_dirs:
             Cmd.__create_dirs_for_filepath(file_path)
 
@@ -248,7 +251,7 @@ class Cmd:
                 file.write(line)
 
     @staticmethod
-    def read_json(file_path: str, decoder=None):
+    def read_json(file_path: Path, decoder=None):
         with open(file_path, encoding="utf-8") as file:
             obj = json.load(
                 fp=file,
@@ -259,7 +262,7 @@ class Cmd:
 
     @staticmethod
     def write_json(
-        obj, file_path, encoder=None, indent=4, create_dirs=True
+        obj, file_path: Path, encoder=None, indent=4, create_dirs=True
     ) -> None:
         if create_dirs:
             Cmd.__create_dirs_for_filepath(file_path)
