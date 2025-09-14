@@ -11,8 +11,7 @@ requirements: .venv ## Install/Update Python project requirements
 	$(VENV)/bin/python -m pip install --upgrade -r requirements.txt
 
 dev: .venv  ## Activate venv & start neovim for this project
-	source .venv/bin/activate
-	nvim -c AvinDev
+	source .venv/bin/activate && nvim -c AvinDevPy
 
 check: ## Run ruff, mypy clippy
 	ruff check avin/** --select I --fix
