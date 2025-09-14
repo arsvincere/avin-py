@@ -30,7 +30,7 @@ pre-commit: ## Make check, fmt, test
 	$(MAKE) test
 
 build: .venv ## Build the project
-	echo todo!
+	flit build --no-use-vcs
 
 publish: ## Publish pypi.org
 	echo todo!

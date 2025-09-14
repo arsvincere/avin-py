@@ -12,7 +12,7 @@ from pathlib import Path
 from avin.core.category import Category
 from avin.core.exchange import Exchange
 from avin.core.ticker import Ticker
-from avin.utils import Cmd, cfg
+from avin.utils import CFG, Cmd
 
 
 class Iid:
@@ -71,7 +71,7 @@ class Iid:
 
     def path(self) -> Path:
         path = Cmd.path(
-            cfg.data,
+            CFG.Dir.data,
             self.exchange().name,
             self.category().name,
             self.ticker(),

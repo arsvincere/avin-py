@@ -34,7 +34,7 @@ def test_is_dir():
 
 
 def test_make_dirs():
-    p = Cmd.path("/home", "alex", "AVIN", "__tmp_dir__")
+    p = Cmd.path("/home", "alex", "avin", "__tmp_dir__")
 
     Cmd.make_dirs(p)
     assert Cmd.is_exist(p)
@@ -43,7 +43,7 @@ def test_make_dirs():
 
 
 def test_name():
-    p = Cmd.path("/home", "alex", "AVIN", "README.md")
+    p = Cmd.path("/home", "alex", "avin", "README.md")
 
     name = Cmd.name(p)
     assert name == "README"
@@ -53,17 +53,17 @@ def test_name():
 
 
 def test_dir_name():
-    p = Cmd.path("/home", "alex", "AVIN", "README.md")
+    p = Cmd.path("/home", "alex", "avin", "README.md")
 
     name = Cmd.dir_name(p)
-    assert name == "AVIN"
+    assert name == "avin"
 
 
 def test_dir_path():
-    p = Cmd.path("/home", "alex", "AVIN", "README.md")
+    p = Cmd.path("/home", "alex", "avin", "README.md")
 
     dir_path = Cmd.dir_path(p)
-    assert str(dir_path) == "/home/alex/AVIN"
+    assert str(dir_path) == "/home/alex/avin"
 
 
 def test_content():
