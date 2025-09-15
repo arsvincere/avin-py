@@ -55,7 +55,7 @@ class Iid:
         return Category.from_str(self.__info["category"])
 
     def ticker(self) -> Ticker:
-        return self.__info["ticker"]
+        return Ticker(self.__info["ticker"])
 
     def figi(self) -> str:
         return self.__info["figi"]
@@ -74,7 +74,7 @@ class Iid:
             CFG.Dir.data,
             self.exchange().name,
             self.category().name,
-            self.ticker(),
+            self.ticker().name,
         )
         return path
 
