@@ -10,10 +10,11 @@ from __future__ import annotations
 
 import polars as pl
 import tinkoff.invest as ti
-from avin_data.manager.category import Category
-from avin_data.manager.iid_cache import IidCache
-from avin_data.manager.source import Source
-from avin_data.utils import Cmd, cfg, dt_to_ts, log
+
+from avin.core import Category
+from avin.data.iid_cache import IidCache
+from avin.data.source import Source
+from avin.utils import CFG, Cmd, dt_to_ts, log
 
 SOURCE = Source.TINKOFF
 TARGET = ti.constants.INVEST_GRPC_API
@@ -71,7 +72,7 @@ class SourceTinkoff:
             return
 
         # check file with token
-        token_path = cfg.tinkoff_token
+        token_path = CFG.Connect.tinkoff_token
         if not Cmd.is_exist(token_path):
             log.error(
                 "Tinkoff not exist token file, operations with market data "

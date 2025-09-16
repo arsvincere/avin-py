@@ -7,8 +7,11 @@
 # ============================================================================
 
 import click
-from avin_data.manager import Manager, MarketData, Source
-from avin_data.utils import (
+
+from avin.core import MarketData
+from avin.data.source import Source
+from avin.manager import Manager
+from avin.utils import (
     CategoryNotFound,
     SourceNotFound,
     TickerNotFound,

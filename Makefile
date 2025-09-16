@@ -1,6 +1,7 @@
 .DEFAULT_GOAL:=help
 SHELL=bash
 VENV=.venv
+APP=~/.local/bin/avin-data
 
 .venv: ## Create python virtual environment & install requirements
 	python3 -m venv $(VENV)
@@ -29,13 +30,19 @@ pre-commit: ## Make check, fmt, test
 	$(MAKE) test
 
 build: .venv ## Build the project
-	flit build --no-use-vcs
+	source .venv/bin/activate && flit build --no-use-vcs
+	source .venv/bin/activate && pyinstaller avin/bin/avin_data_cli.py \
+		--onefile \
+		--specpath build \
+		--name avin-data
 
 publish: ## Publish pypi.org
-	echo todo!
+	echo "todo!"
 
 install: build ## Install the project
-	echo todo!
+	rm -rf $(APP)
+	install -Dm755 dist/avin-data $(APP)
+	install -Dm644 res/config.toml ~/.config/avin/config.toml
 
 clean: ## Clean up caches, build artifacts, and the venv
 	ruff clean

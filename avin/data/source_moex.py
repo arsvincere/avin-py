@@ -294,7 +294,7 @@ class SourceMoex:
 
         while attempt < MAX_ATTEMPT:
             try:
-                moex_ticker = moexalgo.Ticker(iid.ticker())
+                moex_ticker = moexalgo.Ticker(iid.ticker().name)
                 return moex_ticker
 
             except httpx.ConnectError as e:
@@ -315,15 +315,15 @@ class SourceMoex:
         cls, market_data: MarketData
     ) -> moexalgo.CandlePeriod:
         moex_periods = {
-            "1M": moexalgo.CandlePeriod.ONE_MINUTE,
-            "10M": moexalgo.CandlePeriod.TEN_MINUTES,
-            "1H": moexalgo.CandlePeriod.ONE_HOUR,
-            "D": moexalgo.CandlePeriod.ONE_DAY,
-            "W": moexalgo.CandlePeriod.ONE_WEEK,
-            "M": moexalgo.CandlePeriod.ONE_MONTH,
+            MarketData.BAR_1M: moexalgo.CandlePeriod.ONE_MINUTE,
+            MarketData.BAR_10M: moexalgo.CandlePeriod.TEN_MINUTES,
+            MarketData.BAR_1H: moexalgo.CandlePeriod.ONE_HOUR,
+            MarketData.BAR_D: moexalgo.CandlePeriod.ONE_DAY,
+            MarketData.BAR_W: moexalgo.CandlePeriod.ONE_WEEK,
+            MarketData.BAR_M: moexalgo.CandlePeriod.ONE_MONTH,
         }
 
-        period = moex_periods[market_data.value]
+        period = moex_periods[market_data]
 
         return period
 

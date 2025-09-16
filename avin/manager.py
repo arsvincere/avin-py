@@ -13,15 +13,13 @@ from datetime import datetime as Date
 from datetime import datetime as DateTime
 from pathlib import Path
 
-from avin_data.connect import SourceMoex, SourceTinkoff
-from avin_data.manager.category import Category
-from avin_data.manager.data_file_bar import DataFileBar
-from avin_data.manager.data_file_tic import DataFileTic
-from avin_data.manager.exchange import Exchange
-from avin_data.manager.iid import Iid
-from avin_data.manager.market_data import MarketData
-from avin_data.manager.source import Source
-from avin_data.utils import Cmd, cfg, log, now, ts_to_dt
+from avin.core import Category, Exchange, Iid, MarketData
+from avin.data.data_bar import DataBar
+from avin.data.data_tic import DataTic
+from avin.data.source import Source
+from avin.data.source_moex import SourceMoex
+from avin.data.source_tinkoff import SourceTinkoff
+from avin.utils import CFG, Cmd, log, now, ts_to_dt
 
 
 class Manager:
@@ -63,9 +61,9 @@ class Manager:
 
         match market_data:
             case MarketData.TIC:
-                cls.__download_tics(source, iid, market_data)
+                _download_tics(source, iid, market_data)
             case _:  # bars
-                cls.__download_bars(source, iid, market_data, year)
+                _download_bars(source, iid, market_data, year)
 
     @classmethod
     def update(
@@ -82,7 +80,7 @@ class Manager:
 
         match market_data:
             case MarketData.TIC:
-                cls.__update_tics(source, iid, market_data)
+                _update_tics(source, iid, market_data)
             case MarketData.TRADE_STATS:
                 log.error(f"Not implemented: {market_data}")
             case MarketData.ORDER_STATS:
@@ -90,7 +88,7 @@ class Manager:
             case MarketData.OB_STATS:
                 log.error(f"Not implemented: {market_data}")
             case _:  # bars
-                cls.__update_bars(source, iid, market_data)
+                _update_bars(source, iid, market_data)
 
     @classmethod
     def update_all(
@@ -99,7 +97,7 @@ class Manager:
         log.info("Update all market data")
 
         # check data dir
-        data_dir = cfg.data
+        data_dir = CFG.Dir.data
         if not Cmd.is_exist(data_dir):
             log.error(f"Data dir not found: {data_dir}")
             exit(1)
@@ -125,103 +123,90 @@ class Manager:
 
                         cls.update(Source.MOEX, iid, md)
 
-    # private
-    @classmethod
-    def __download_bars(
-        cls, source: Source, iid: Iid, market_data: MarketData, year
-    ):
-        if year is None:
-            cls.__download_bars_all_availible(source, iid, market_data)
-        else:
-            cls.__download_bars_one_year(source, iid, market_data, year)
 
-    @classmethod
-    def __download_bars_all_availible(
-        cls, source: Source, iid: Iid, market_data: MarketData
-    ) -> None:
-        year = 1997
-        end = now().year
-        while year <= end:
-            cls.__download_bars_one_year(source, iid, market_data, year)
-            year += 1
+def _download_bars(source: Source, iid: Iid, md: MarketData, year):
+    if year is None:
+        _download_bars_all(source, iid, md)
+    else:
+        _download_bars_year(source, iid, md, year)
 
-    @classmethod
-    def __download_bars_one_year(
-        cls, source: Source, iid: Iid, market_data: MarketData, year: int
-    ) -> None:
-        assert source == Source.MOEX
 
-        b = DateTime(year, 1, 1, tzinfo=UTC)
-        e = DateTime(year + 1, 1, 1, tzinfo=UTC)
+def _download_bars_all(source: Source, iid: Iid, md: MarketData):
+    year = 1997
+    end = now().year
+    while year <= end:
+        _download_bars_year(source, iid, md, year)
+        year += 1
 
-        df = SourceMoex.get_market_data(iid, market_data, begin=b, end=e)
-        if df.is_empty():
-            log.info(f"{year} no data")
-            return
 
-        file = DataFileBar(iid, market_data, df)
-        DataFileBar.save(file)
+def _download_bars_year(source: Source, iid: Iid, md: MarketData, year: int):
+    assert source == Source.MOEX
 
-    @classmethod
-    def __download_tics(
-        cls, source: Source, iid: Iid, market_data: MarketData
-    ) -> None:
-        assert source == Source.MOEX
-        assert market_data == MarketData.TIC
+    b = DateTime(year, 1, 1, tzinfo=UTC)
+    e = DateTime(year + 1, 1, 1, tzinfo=UTC)
 
-        df = SourceMoex.get_market_data(iid, market_data)
-        if df.is_empty():
-            log.info(f"{Date.today()} no data")
-            return
+    df = SourceMoex.get_market_data(iid, md, begin=b, end=e)
+    if df.is_empty():
+        log.info(f"{year} no data")
+        return
 
-        file = DataFileTic(iid, market_data, df)
-        DataFileTic.save(file)
+    file = DataBar(iid, md, df)
+    DataBar.save(file)
 
-    @classmethod
-    def __update_bars(
-        cls, source: Source, iid: Iid, market_data: MarketData
-    ) -> None:
-        # load last
-        last_data = DataFileBar.load_last(iid, market_data)
 
-        # get last datetime
-        ts = last_data.df().item(-1, "ts_nanos")
-        dt = ts_to_dt(ts)
+def _download_tics(source: Source, iid: Iid, md: MarketData) -> None:
+    assert source == Source.MOEX
+    assert md == MarketData.TIC
 
-        # request [last, now()]
-        df = SourceMoex.get_market_data(iid, market_data, begin=dt, end=now())
-        df = df[1:]  # remove first duplicate item
+    df = SourceMoex.get_market_data(iid, md)
+    if df.is_empty():
+        log.info(f"{Date.today()} no data")
+        return
 
-        if df.is_empty():
-            log.info("no new bars")
-        else:
-            log.info(f"receved {len(df)} bars")
-            last_data.add(df)
-            DataFileBar.save(last_data)
+    file = DataTic(iid, md, df)
+    DataTic.save(file)
 
-    @classmethod
-    def __update_tics(
-        cls, source: Source, iid: Iid, market_data: MarketData
-    ) -> None:
-        # check today tics
-        last_data = DataFileTic.load(iid, market_data, now().date())
-        if last_data is None:
-            cls.download(source, iid, market_data)
-            return
 
-        # get last tradeno
-        n = last_data.df().item(-1, "tradeno")
+def _update_bars(source: Source, iid: Iid, md: MarketData) -> None:
+    # load last
+    last_data = DataBar.load_last(iid, md)
 
-        # request from trade n
-        df = SourceMoex.get_market_data(iid, market_data, tradeno=n)
-        df = df[1:]  # remove first duplicate item
+    # get last datetime
+    ts = last_data.df.item(-1, "ts_nanos")
+    dt = ts_to_dt(ts)
 
-        if df.is_empty():
-            log.info("no new tics")
-        else:
-            log.info(f"receved {len(df)} tics")
-            last_data.add(df)
-            DataFileTic.save(last_data)
+    # request [last, now()]
+    df = SourceMoex.get_market_data(iid, md, begin=dt, end=now())
+    df = df[1:]  # remove first duplicate item
+
+    if df.is_empty():
+        log.info("no new bars")
+    else:
+        log.info(f"receved {len(df)} bars")
+        last_data.add(df)
+        DataBar.save(last_data)
+
+
+def _update_tics(source: Source, iid: Iid, md: MarketData) -> None:
+    # check today tics
+    last_data = DataTic.load(iid, md, now().date())
+    if last_data is None:
+        Manager.download(source, iid, md)
+        return
+
+    # get last tradeno
+    n = last_data.df.item(-1, "tradeno")
+
+    # request from trade n
+    df = SourceMoex.get_market_data(iid, md, tradeno=n)
+    df = df[1:]  # remove first duplicate item
+
+    if df.is_empty():
+        log.info("no new tics")
+    else:
+        log.info(f"receved {len(df)} tics")
+        last_data.add(df)
+        DataTic.save(last_data)
 
 
 if __name__ == "__main__":

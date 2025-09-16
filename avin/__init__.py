@@ -7,4 +7,5 @@
 
 from avin.core import *
 from avin.data import *
+from avin.manager import Manager
 from avin.utils import *

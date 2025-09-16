@@ -41,18 +41,18 @@ class MarketData(enum.Enum):
 
     def timedelta(self) -> TimeDelta:
         periods = {
-            "1M": TimeDelta(minutes=1),
-            "5M": TimeDelta(minutes=5),
-            "10M": TimeDelta(minutes=10),
-            "1H": TimeDelta(hours=1),
-            "D": TimeDelta(days=1),
-            "W": TimeDelta(weeks=1),
+            "BAR_1M": TimeDelta(minutes=1),
+            "BAR_5M": TimeDelta(minutes=5),
+            "BAR_10M": TimeDelta(minutes=10),
+            "BAR_1H": TimeDelta(hours=1),
+            "BAR_D": TimeDelta(days=1),
+            "BAR_W": TimeDelta(weeks=1),
             # "M": TimeDelta(days=30),  # don't use it! it dangerous
             "TRADE_STATS": TimeDelta(minutes=5),
             "ORDER_STATS": TimeDelta(minutes=5),
             "OB_STATS": TimeDelta(minutes=5),
         }
-        return periods[self.value]
+        return periods[self.name]
 
     def prev_dt(self, dt: DateTime) -> DateTime:
         match self:

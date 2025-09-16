@@ -104,7 +104,7 @@ class Cmd:
         return Cmd.__get_files_in_dir(dir_path, full_path)
 
     @staticmethod
-    def get_dirs(dir_path: str, full_path=False) -> list[Path]:
+    def get_dirs(dir_path: Path, full_path=False) -> list[Path]:
         """Возвращает список папок в 'dir_path' без обхода подпапок"""
         names = os.listdir(dir_path)
 
