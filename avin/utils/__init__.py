@@ -25,6 +25,7 @@ from avin.utils.const import (
 from avin.utils.exceptions import (
     CategoryNotFound,
     ConfigNotFound,
+    DataNotFound,
     ExchangeNotFound,
     InvalidMarketData,
     SourceNotFound,
@@ -33,6 +34,7 @@ from avin.utils.exceptions import (
 from avin.utils.logger import log
 from avin.utils.misc import (
     dt_to_ts,
+    filter_dt,
     next_month,
     now,
     now_local,
@@ -49,6 +51,7 @@ __all__ = (
     "ConfigNotFound",
     "DAY_BEGIN",
     "DAY_END",
+    "DataNotFound",
     "ExchangeNotFound",
     "FIVE_MINUTE",
     "InvalidMarketData",
@@ -64,6 +67,7 @@ __all__ = (
     "TickerNotFound",
     "WeekDays",
     "dt_to_ts",
+    "filter_dt",
     "log",
     "next_month",
     "now",

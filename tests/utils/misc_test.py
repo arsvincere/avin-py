@@ -8,6 +8,8 @@
 from datetime import UTC
 from datetime import datetime as DateTime
 
+import polars as pl
+
 from avin import *
 
 
@@ -62,3 +64,22 @@ def test_utc_to_local():
     local = utc_to_local(dt)
     expected = "2025-09-14 15:39:22"
     assert local == expected
+
+
+def test_filter_dt():
+    dt1 = DateTime(2025, 1, 16, 17, 43, 00, tzinfo=UTC)
+    dt2 = DateTime(2025, 1, 16, 17, 44, 00, tzinfo=UTC)  # begin
+    dt3 = DateTime(2025, 1, 16, 17, 45, 00, tzinfo=UTC)
+    dt4 = DateTime(2025, 1, 16, 17, 46, 00, tzinfo=UTC)  # end
+    dt5 = DateTime(2025, 1, 16, 17, 47, 00, tzinfo=UTC)
+
+    ts1 = dt_to_ts(dt1)
+    ts2 = dt_to_ts(dt2)
+    ts3 = dt_to_ts(dt3)
+    ts4 = dt_to_ts(dt4)
+    ts5 = dt_to_ts(dt5)
+
+    df = pl.DataFrame({"ts_nanos": [ts1, ts2, ts3, ts4, ts5]})
+
+    df = filter_dt(dt2, dt4, df)
+    assert len(df) == 2

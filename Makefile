@@ -1,7 +1,7 @@
 .DEFAULT_GOAL:=help
 SHELL=bash
 VENV=.venv
-APP=~/.local/bin/avin-data
+AVIN_DATA=~/.local/bin/avin-data
 
 .venv: ## Create python virtual environment & install requirements
 	python3 -m venv $(VENV)
@@ -14,7 +14,7 @@ requirements: .venv ## Install/Update Python project requirements
 dev: .venv  ## Activate venv & start neovim for this project
 	source .venv/bin/activate && nvim -c AvinDevPy
 
-check: ## Run ruff, mypy clippy
+check: ## Run ruff, mypy
 	ruff check avin/** --select I --fix
 	mypy avin
 
@@ -40,8 +40,8 @@ publish: ## Publish pypi.org
 	echo "todo!"
 
 install: build ## Install the project
-	rm -rf $(APP)
-	install -Dm755 dist/avin-data $(APP)
+	rm -rf $(AVIN_DATA)
+	install -Dm755 dist/avin-data $(AVIN_DATA)
 	install -Dm644 res/config.toml ~/.config/avin/config.toml
 
 clean: ## Clean up caches, build artifacts, and the venv

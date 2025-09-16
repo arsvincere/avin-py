@@ -30,3 +30,7 @@ class TickerNotFound(Exception):
 
 class InvalidMarketData(Exception):
     """Invalid market data name exception."""
+
+
+class DataNotFound(Exception):
+    """Data not found exception."""

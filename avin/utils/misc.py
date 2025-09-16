@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # ============================================================================
 # URL:          http://avin.info
 # AUTHOR:       Alex Avin
@@ -10,6 +9,8 @@ from datetime import UTC
 from datetime import datetime as DateTime
 from datetime import timedelta as TimeDelta
 from datetime import timezone as TimeZone
+
+import polars as pl
 
 from avin.utils.conf import CFG
 
@@ -101,6 +102,18 @@ def ts_to_dt(ts_nanos: int) -> DateTime:
 
 def utc_to_local(dt: DateTime) -> str:
     return (dt + CFG.Usr.offset).strftime(CFG.Usr.dt_fmt)
+
+
+def filter_dt(begin: DateTime, end: DateTime, df: pl.DataFrame):
+    b = dt_to_ts(begin)
+    e = dt_to_ts(end)
+
+    df = df.filter(
+        pl.col("ts_nanos") >= b,
+        pl.col("ts_nanos") < e,
+    )
+
+    return df
 
 
 if __name__ == "__main__":

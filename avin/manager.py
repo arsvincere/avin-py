@@ -13,14 +13,26 @@ from datetime import datetime as Date
 from datetime import datetime as DateTime
 from pathlib import Path
 
+import polars as pl
+
 from avin.core import Category, Exchange, Iid
 from avin.data.data_bar import DataBar
 from avin.data.data_tic import DataTic
 from avin.data.market_data import MarketData
+from avin.data.schema import bar_schema, tic_schema
 from avin.data.source import Source
 from avin.data.source_moex import SourceMoex
 from avin.data.source_tinkoff import SourceTinkoff
-from avin.utils import CFG, Cmd, log, now, ts_to_dt
+from avin.utils import (
+    CFG,
+    ONE_DAY,
+    Cmd,
+    DataNotFound,
+    filter_dt,
+    log,
+    now,
+    ts_to_dt,
+)
 
 
 class Manager:
@@ -124,6 +136,32 @@ class Manager:
 
                         cls.update(Source.MOEX, iid, md)
 
+    @classmethod
+    def load(
+        cls, iid: Iid, market_data: MarketData, begin: DateTime, end: DateTime
+    ) -> pl.DataFrame:
+        match market_data:
+            case MarketData.BAR_1M:
+                return _load_bars(iid, market_data, begin, end)
+            case MarketData.BAR_10M:
+                return _load_bars(iid, market_data, begin, end)
+            case MarketData.BAR_1H:
+                return _load_bars(iid, market_data, begin, end)
+            case MarketData.BAR_D:
+                return _load_bars(iid, market_data, begin, end)
+            case MarketData.BAR_W:
+                return _load_bars(iid, market_data, begin, end)
+            case MarketData.BAR_M:
+                return _load_bars(iid, market_data, begin, end)
+            case MarketData.TIC:
+                return _load_tics(iid, begin, end)
+            case MarketData.TRADE_STATS:
+                raise NotImplementedError()
+            case MarketData.ORDER_STATS:
+                raise NotImplementedError()
+            case MarketData.OB_STATS:
+                raise NotImplementedError()
+
 
 def _download_bars(source: Source, iid: Iid, md: MarketData, year):
     if year is None:
@@ -208,6 +246,52 @@ def _update_tics(source: Source, iid: Iid, md: MarketData) -> None:
         log.info(f"receved {len(df)} tics")
         last_data.add(df)
         DataTic.save(last_data)
+
+
+def _load_bars(
+    iid: Iid, md: MarketData, b: DateTime, e: DateTime
+) -> pl.DataFrame:
+    # create empty df
+    df = pl.DataFrame(schema=bar_schema())
+
+    # load data by years
+    year = b.year
+    end_year = e.year
+    while year <= end_year:
+        data = DataBar.load(iid, md, year)
+        if data is not None:
+            df.extend(data.df)
+
+        year += 1
+
+    # filter & check empty
+    df = filter_dt(b, e, df)
+    if df.is_empty():
+        raise DataNotFound(f"{iid} {md}")
+
+    return df
+
+
+def _load_tics(iid: Iid, b: DateTime, e: DateTime) -> pl.DataFrame:
+    # create empty df
+    df = pl.DataFrame(schema=tic_schema())
+
+    # load data by days
+    day = b.date()
+    end = e.date()
+    while day <= end:
+        data = DataTic.load(iid, MarketData.TIC, day)
+        if data is not None:
+            df.extend(data.df)
+
+        day += ONE_DAY
+
+    # filter & check empty
+    df = filter_dt(b, e, df)
+    if df.is_empty():
+        raise DataNotFound(f"{iid} {MarketData.TIC}")
+
+    return df
 
 
 if __name__ == "__main__":

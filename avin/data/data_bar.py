@@ -1,4 +1,3 @@
-#!/usr/bin/env  python3
 # ============================================================================
 # URL:          http://avin.info
 # AUTHOR:       Alex Avin
@@ -16,7 +15,7 @@ import polars as pl
 
 from avin.core.iid import Iid
 from avin.data.market_data import MarketData
-from avin.utils import Cmd, dt_to_ts, log, ts_to_dt
+from avin.utils import Cmd, DataNotFound, dt_to_ts, log, ts_to_dt
 
 
 class DataBar:
@@ -65,10 +64,19 @@ class DataBar:
             year += 1
 
     @classmethod
-    def load(cls, iid: Iid, market_data: MarketData, year: int) -> DataBar:
-        path = _create_file_path(iid, market_data, year)
+    def load(
+        cls,
+        iid: Iid,
+        md: MarketData,
+        year: int,
+    ) -> DataBar | None:
+        path = Cmd.path(iid.path(), md.name, f"{year}.parquet")
+
+        if not Cmd.is_exist(path):
+            return None
+
         df = Cmd.read_pqt(path)
-        data = DataBar(iid, market_data, df)
+        data = DataBar(iid, md, df)
 
         return data
 
@@ -77,13 +85,11 @@ class DataBar:
         dir_path = _create_dir_path(iid, market_data)
 
         if not Path(dir_path).exists():
-            log.error(f"Data not found: {iid} {market_data} ({dir_path})")
-            exit(1)
+            raise DataNotFound(f"{iid} {market_data} {dir_path}")
 
         files = sorted(Cmd.get_files(dir_path, full_path=True))
         if len(files) == 0:
-            log.error(f"Data not found: {iid} {market_data} ({dir_path})")
-            exit(1)
+            raise DataNotFound(f"{iid} {market_data} {dir_path}")
 
         last_file = files[-1]
 

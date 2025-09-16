@@ -43,19 +43,14 @@ class DataTic:
         log.info(f"Save tics: {path}")
 
     @classmethod
-    def load(
-        cls, iid: Iid, market_data: MarketData, date: Date
-    ) -> DataTic | None:
-        assert isinstance(iid, Iid)
-        assert isinstance(market_data, MarketData)
-        assert isinstance(date, Date)
+    def load(cls, iid: Iid, md: MarketData, day: Date) -> DataTic | None:
+        path = Cmd.path(iid.path(), md.name, str(day.year), f"{day}.parquet")
 
-        path = _create_file_path(iid, market_data, date)
         if not Cmd.is_exist(path):
             return None
 
         df = Cmd.read_pqt(path)
-        data = DataTic(iid, market_data, df)
+        data = DataTic(iid, md, df)
 
         return data
 
