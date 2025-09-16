@@ -32,7 +32,13 @@ class CFG:
         icon = root / "res" / "icon"
 
     class Connect:
-        pass
+        # Path to tinkoff token
+        tinkoff_token = Path.home() / "trading/usr/connect/tinkoff/token.txt"
+
+        # Path to moex account
+        moex_account = Path.home() / "trading/usr/connect/moex/account.txt"
+        # Path to moex api key
+        moex_token = Path.home() / "trading/usr/connect/moex/token.txt"
 
     class Usr:
         offset = TimeDelta(hours=3)

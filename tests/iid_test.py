@@ -26,6 +26,7 @@ def test_from_str():
     assert iid.exchange() == Exchange.MOEX
     assert iid.category() == Category.SHARE
     assert iid.ticker() == Ticker("SBER")
+    assert iid.figi() == "BBG004730N88"
     assert iid.name() == "Сбер Банк"
     assert iid.lot() == 1
     assert iid.step() == 0.01

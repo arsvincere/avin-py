@@ -96,7 +96,7 @@ class Cmd:
 
     @staticmethod
     def get_files(
-        dir_path: str, full_path=False, include_sub_dir=False
+        dir_path: Path, full_path=False, include_sub_dir=False
     ) -> list[str]:
         if include_sub_dir:
             return Cmd.__get_files_in_dir_include_subdir(dir_path, full_path)

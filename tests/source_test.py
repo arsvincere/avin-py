@@ -8,11 +8,15 @@
 from avin import *
 
 
-def test_name():
-    moex = Exchange.MOEX
-    assert moex.name == "MOEX"
+def test_source():
+    src = Source.TINKOFF
+    assert src.name == "TINKOFF"
 
+    src = Source.MOEX
+    assert src.name == "MOEX"
 
-def test_from_str():
-    assert Exchange.from_str("MOEX") == Exchange.MOEX
-    assert Exchange.from_str("SPB") == Exchange.SPB
+    from_str = Source.from_str("MOEX")
+    assert from_str == Source.MOEX
+
+    from_str = Source.from_str("TINKOFF")
+    assert from_str == Source.TINKOFF

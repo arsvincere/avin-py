@@ -1,3 +1,4 @@
+#!/usr/bin/env  python3
 # ============================================================================
 # URL:          http://avin.info
 # AUTHOR:       Alex Avin
@@ -5,6 +6,6 @@
 # LICENSE:      MIT
 # ============================================================================
 
-from avin.core import *
-from avin.data import *
-from avin.utils import *
+from avin.data.source import Source
+
+__all__ = ("Source",)
