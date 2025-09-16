@@ -12,6 +12,7 @@ import enum
 from datetime import datetime as DateTime
 from datetime import timedelta as TimeDelta
 
+from avin.core import TimeFrame
 from avin.utils import InvalidMarketData, log
 
 
@@ -190,6 +191,22 @@ class MarketData(enum.Enum):
         raise InvalidMarketData(
             f"Invalid name. Choice from {MarketData._member_names_}"
         )
+
+    @classmethod
+    def from_timeframe(cls, tf: TimeFrame) -> MarketData:
+        match tf:
+            case TimeFrame.M1:
+                return MarketData.BAR_1M
+            case TimeFrame.M10:
+                return MarketData.BAR_10M
+            case TimeFrame.H1:
+                return MarketData.BAR_1H
+            case TimeFrame.DAY:
+                return MarketData.BAR_D
+            case TimeFrame.WEEK:
+                return MarketData.BAR_W
+            case TimeFrame.MONTH:
+                return MarketData.BAR_M
 
 
 if __name__ == "__main__":

@@ -37,15 +37,6 @@ def test_nanos():
     assert TimeFrame.MONTH.nanos() == 30 * 24 * 60 * 60 * 1_000_000_000
 
 
-def test_market_data():
-    assert TimeFrame.M1.market_data() == MarketData.BAR_1M
-    assert TimeFrame.M10.market_data() == MarketData.BAR_10M
-    assert TimeFrame.H1.market_data() == MarketData.BAR_1H
-    assert TimeFrame.DAY.market_data() == MarketData.BAR_D
-    assert TimeFrame.WEEK.market_data() == MarketData.BAR_W
-    assert TimeFrame.MONTH.market_data() == MarketData.BAR_M
-
-
 def test_next_ts():
     dt = str_to_utc("2025-09-15 16:02")
     ts = dt_to_ts(dt)

@@ -8,7 +8,7 @@
 
 import click
 
-from avin.core import MarketData
+from avin.data.market_data import MarketData
 from avin.data.source import Source
 from avin.manager import Manager
 from avin.utils import (

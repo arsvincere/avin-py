@@ -10,7 +10,6 @@ from __future__ import annotations
 import enum
 from datetime import timedelta as TimeDelta
 
-from avin.core.market_data import MarketData
 from avin.utils import dt_to_ts, next_month, ts_to_dt
 
 
@@ -70,21 +69,6 @@ class TimeFrame(enum.Enum):
                 return 7 * 24 * 60 * 60 * 1_000_000_000
             case TimeFrame.MONTH:
                 return 30 * 24 * 60 * 60 * 1_000_000_000
-
-    def market_data(self) -> MarketData:
-        match self:
-            case TimeFrame.M1:
-                return MarketData.BAR_1M
-            case TimeFrame.M10:
-                return MarketData.BAR_10M
-            case TimeFrame.H1:
-                return MarketData.BAR_1H
-            case TimeFrame.DAY:
-                return MarketData.BAR_D
-            case TimeFrame.WEEK:
-                return MarketData.BAR_W
-            case TimeFrame.MONTH:
-                return MarketData.BAR_M
 
     def next_ts(self, ts: int) -> int:
         dt = ts_to_dt(ts)

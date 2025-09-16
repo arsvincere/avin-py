@@ -13,9 +13,10 @@ from datetime import datetime as Date
 from datetime import datetime as DateTime
 from pathlib import Path
 
-from avin.core import Category, Exchange, Iid, MarketData
+from avin.core import Category, Exchange, Iid
 from avin.data.data_bar import DataBar
 from avin.data.data_tic import DataTic
+from avin.data.market_data import MarketData
 from avin.data.source import Source
 from avin.data.source_moex import SourceMoex
 from avin.data.source_tinkoff import SourceTinkoff

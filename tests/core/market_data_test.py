@@ -29,6 +29,16 @@ def test_from_str():
     assert MarketData.from_str("OB_STATS") == MarketData.OB_STATS
 
 
+def test_from_timeframe():
+    assert MarketData.from_timeframe(TimeFrame.M1) == MarketData.BAR_1M
+    assert MarketData.from_timeframe(TimeFrame.M1) == MarketData.BAR_1M
+    assert MarketData.from_timeframe(TimeFrame.M10) == MarketData.BAR_10M
+    assert MarketData.from_timeframe(TimeFrame.H1) == MarketData.BAR_1H
+    assert MarketData.from_timeframe(TimeFrame.DAY) == MarketData.BAR_D
+    assert MarketData.from_timeframe(TimeFrame.WEEK) == MarketData.BAR_W
+    assert MarketData.from_timeframe(TimeFrame.MONTH) == MarketData.BAR_M
+
+
 def test_next_prev():
     dt = DateTime(2025, 6, 5, 12, 57, 12)
     assert MarketData.BAR_1M.prev_dt(dt) == DateTime(2025, 6, 5, 12, 57, 0)
