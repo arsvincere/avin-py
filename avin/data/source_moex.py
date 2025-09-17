@@ -18,9 +18,8 @@ import httpx
 import moexalgo
 import polars as pl
 
-from avin.core import Category, Iid
+from avin.core import Category, Iid, MarketData
 from avin.data.iid_cache import IidCache
-from avin.data.market_data import MarketData
 from avin.data.source import Source
 from avin.utils import (
     CFG,

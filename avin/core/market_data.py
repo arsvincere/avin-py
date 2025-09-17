@@ -12,7 +12,7 @@ import enum
 from datetime import datetime as DateTime
 from datetime import timedelta as TimeDelta
 
-from avin.core import TimeFrame
+from avin.core.timeframe import TimeFrame
 from avin.utils import InvalidMarketData, log
 
 

@@ -15,10 +15,9 @@ from pathlib import Path
 
 import polars as pl
 
-from avin.core import Category, Exchange, Iid
+from avin.core import Category, Exchange, Iid, MarketData
 from avin.data.data_bar import DataBar
 from avin.data.data_tic import DataTic
-from avin.data.market_data import MarketData
 from avin.data.schema import bar_schema, tic_schema
 from avin.data.source import Source
 from avin.data.source_moex import SourceMoex
@@ -161,6 +160,8 @@ class Manager:
                 raise NotImplementedError()
             case MarketData.OB_STATS:
                 raise NotImplementedError()
+
+        raise NotImplementedError()
 
 
 def _download_bars(source: Source, iid: Iid, md: MarketData, year):

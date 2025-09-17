@@ -13,8 +13,7 @@ from pathlib import Path
 
 import polars as pl
 
-from avin.core.iid import Iid
-from avin.data.market_data import MarketData
+from avin.core import Iid, MarketData
 from avin.utils import Cmd, log, ts_to_dt
 
 
@@ -44,7 +43,7 @@ class DataTic:
 
     @classmethod
     def load(cls, iid: Iid, md: MarketData, day: Date) -> DataTic | None:
-        path = Cmd.path(iid.path(), md.name, str(day.year), f"{day}.parquet")
+        path = _create_file_path(iid, md, day)
 
         if not Cmd.is_exist(path):
             return None

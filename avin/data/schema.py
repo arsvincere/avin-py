@@ -16,13 +16,13 @@ def bar_schema() -> dict:
     """
 
     schema = {
-        "ts_nanos": pl.Int32,
+        "ts_nanos": pl.Int64,
         "open": pl.Float64,
         "high": pl.Float64,
         "low": pl.Float64,
         "close": pl.Float64,
-        "volume": pl.Int32,
-        "value": pl.Int32,
+        "volume": pl.Int64,
+        "value": pl.Float64,
     }
 
     return schema

@@ -14,7 +14,7 @@ from avin import *
 
 
 def test_dt_ts():
-    dt = DateTime(2025, 9, 14, 12, 0, 0, tzinfo=UTC)
+    dt = DateTime(2025, 9, 14, 12, 5, 7, tzinfo=UTC)
 
     ts = dt_to_ts(dt)
     from_ts = ts_to_dt(ts)

@@ -13,8 +13,7 @@ from pathlib import Path
 
 import polars as pl
 
-from avin.core.iid import Iid
-from avin.data.market_data import MarketData
+from avin.core import Iid, MarketData
 from avin.utils import Cmd, DataNotFound, dt_to_ts, log, ts_to_dt
 
 
@@ -70,7 +69,7 @@ class DataBar:
         md: MarketData,
         year: int,
     ) -> DataBar | None:
-        path = Cmd.path(iid.path(), md.name, f"{year}.parquet")
+        path = _create_file_path(iid, md, year)
 
         if not Cmd.is_exist(path):
             return None
