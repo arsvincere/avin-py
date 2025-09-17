@@ -15,10 +15,14 @@ from pathlib import Path
 
 import polars as pl
 
-from avin.core import Category, Exchange, Iid, MarketData
+from avin.core.bar import Bar
+from avin.core.category import Category
+from avin.core.exchange import Exchange
+from avin.core.iid import Iid
+from avin.core.market_data import MarketData
 from avin.data.data_bar import DataBar
 from avin.data.data_tic import DataTic
-from avin.data.schema import bar_schema, tic_schema
+from avin.data.schema import TIC_SCHEMA
 from avin.data.source import Source
 from avin.data.source_moex import SourceMoex
 from avin.data.source_tinkoff import SourceTinkoff
@@ -253,7 +257,7 @@ def _load_bars(
     iid: Iid, md: MarketData, b: DateTime, e: DateTime
 ) -> pl.DataFrame:
     # create empty df
-    df = pl.DataFrame(schema=bar_schema())
+    df = pl.DataFrame(schema=Bar.schema())
 
     # load data by years
     year = b.year
@@ -275,7 +279,7 @@ def _load_bars(
 
 def _load_tics(iid: Iid, b: DateTime, e: DateTime) -> pl.DataFrame:
     # create empty df
-    df = pl.DataFrame(schema=tic_schema())
+    df = pl.DataFrame(schema=TIC_SCHEMA)
 
     # load data by days
     day = b.date()

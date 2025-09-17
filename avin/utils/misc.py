@@ -84,9 +84,9 @@ def prev_month(dt: DateTime) -> DateTime:
 def str_to_utc(s: str) -> DateTime:
     """Get UTC datetime from naive string with Moscow date/datetime"""
 
-    tz = TimeZone(TimeDelta(hours=3), "MSK")
-
     dt = DateTime.fromisoformat(s)
+
+    tz = TimeZone(TimeDelta(hours=3), "MSK")
     dt = dt.replace(tzinfo=tz)
     dt = dt.astimezone(UTC)
 

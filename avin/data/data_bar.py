@@ -13,7 +13,8 @@ from pathlib import Path
 
 import polars as pl
 
-from avin.core import Iid, MarketData
+from avin.core.iid import Iid
+from avin.core.market_data import MarketData
 from avin.utils import Cmd, DataNotFound, dt_to_ts, log, ts_to_dt
 
 

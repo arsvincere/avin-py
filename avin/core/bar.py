@@ -58,6 +58,16 @@ class Bar:
         """
         return self.l <= price <= self.h
 
+    def __eq__(self, other):
+        return (
+            self.ts == other.ts
+            and self.o == other.o
+            and self.h == other.h
+            and self.l == other.l
+            and self.c == other.c
+            and self.v == other.v
+        )
+
     @classmethod
     def from_ohlcv(
         cls,
@@ -67,6 +77,7 @@ class Bar:
         low: float,
         close: float,
         vol: int,
+        value: int | None = None,
     ) -> Bar:
         """Create Bar from OHLCV.
 
@@ -76,12 +87,12 @@ class Bar:
 
         ## Пример датафрейма внутри
         ```text
-        ┌─────────────────────┬────────┬────────┬────────┬────────┬──────────┐
-        │ ts_nanos            ┆ open   ┆ high   ┆ low    ┆ close  ┆ volume   │
-        │ ---                 ┆ ---    ┆ ---    ┆ ---    ┆ ---    ┆ ---      │
-        │ i64                 ┆ f64    ┆ f64    ┆ f64    ┆ f64    ┆ i64      │
-        ╞═════════════════════╪════════╪════════╪════════╪════════╪══════════╡
-        │ 1735851600000000000 ┆ 280.0  ┆ 280.41 ┆ 271.8  ┆ 272.25 ┆ 43086870 │
+        ┌───────────┬────────┬────────┬────────┬────────┬───────────┬────────┐
+        │ ts_nanos  ┆ open   ┆ high   ┆ low    ┆ close  ┆ volume    ┆ value  │
+        │ ---       ┆ ---    ┆ ---    ┆ ---    ┆ ---    ┆ ---       ┆ ---    │
+        │ i64       ┆ f64    ┆ f64    ┆ f64    ┆ f64    ┆ i64       ┆ f64    │
+        ╞═══════════╪════════╪════════╪════════╪════════╪═══════════╪════════╡
+        │ 173585... ┆ 280.0  ┆ 280.41 ┆ 271.8  ┆ 272.25 ┆ 43086870  ┆ ...    │
         """
 
         df = pl.DataFrame(
@@ -92,6 +103,7 @@ class Bar:
                 "low": low,
                 "close": close,
                 "volume": vol,
+                "value": value,
             }
         )
 
@@ -120,33 +132,60 @@ class Bar:
                 "low": low,
                 "close": close,
                 "volume": vol,
+                "value": None,
             }
         )
 
         return Bar(df)
 
+    @classmethod
+    def schema(cls) -> dict:
+        """Polars dataframe schema for bars"""
+
+        bar_schema = {
+            "ts_nanos": pl.Int64,
+            "open": pl.Float64,
+            "high": pl.Float64,
+            "low": pl.Float64,
+            "close": pl.Float64,
+            "volume": pl.Int64,
+            "value": pl.Float64,
+        }
+
+        return bar_schema
+
     @property
-    def ts(self):
+    def df(self) -> pl.DataFrame:
+        return self.__data
+
+    @property
+    def ts(self) -> int:
+        """Bar timestamp"""
         return self.__data.item(0, "ts_nanos")
 
     @property
-    def o(self):
+    def o(self) -> float:
+        """Bar open"""
         return self.__data.item(0, "open")
 
     @property
-    def h(self):
+    def h(self) -> float:
+        """Bar high"""
         return self.__data.item(0, "high")
 
     @property
-    def l(self):
+    def l(self) -> float:
+        """Bar low"""
         return self.__data.item(0, "low")
 
     @property
-    def c(self):
+    def c(self) -> float:
+        """Bar close"""
         return self.__data.item(0, "close")
 
     @property
-    def v(self):
+    def v(self) -> int:
+        """Bar volume"""
         return self.__data.item(0, "volume")
 
     def dt(self) -> DateTime:
