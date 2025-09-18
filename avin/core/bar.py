@@ -37,10 +37,10 @@ class Bar:
         DODJI = 0
         BEAR = -1
 
-    def __init__(self, df: pl.DataFrame):
-        assert len(df) == 1
+    def __init__(self, data: pl.DataFrame):
+        assert len(data) == 1
 
-        self.__data = df
+        self.__data = data
 
     def __str__(self):
         s = (
@@ -156,31 +156,38 @@ class Bar:
 
     @property
     def df(self) -> pl.DataFrame:
+        """Bar data as dataframe"""
+
         return self.__data
 
     @property
     def ts(self) -> int:
         """Bar timestamp"""
+
         return self.__data.item(0, "ts_nanos")
 
     @property
     def o(self) -> float:
         """Bar open"""
+
         return self.__data.item(0, "open")
 
     @property
     def h(self) -> float:
         """Bar high"""
+
         return self.__data.item(0, "high")
 
     @property
     def l(self) -> float:
         """Bar low"""
+
         return self.__data.item(0, "low")
 
     @property
     def c(self) -> float:
         """Bar close"""
+
         return self.__data.item(0, "close")
 
     @property

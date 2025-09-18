@@ -34,3 +34,7 @@ class InvalidMarketData(Exception):
 
 class DataNotFound(Exception):
     """Data not found exception."""
+
+
+class InvalidDirection(Exception):
+    """Invalid direction name exception."""

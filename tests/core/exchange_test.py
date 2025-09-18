@@ -15,4 +15,3 @@ def test_name():
 
 def test_from_str():
     assert Exchange.from_str("MOEX") == Exchange.MOEX
-    assert Exchange.from_str("SPB") == Exchange.SPB

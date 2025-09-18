@@ -10,16 +10,6 @@ import polars as pl
 from avin import *
 
 IID = Manager.find("moex_share_sber")
-BARS = pl.DataFrame(
-    {
-        "ts_nanos": [1, 2, 3, 4, 5],
-        "open": [11.0, 22.0, 33.0, 44.0, 55.0],
-        "high": [11.0, 22.0, 33.0, 44.0, 55.0],
-        "low": [11.0, 22.0, 33.0, 44.0, 55.0],
-        "close": [11.0, 22.0, 33.0, 44.0, 55.0],
-        "volume": [111, 222, 333, 444, 555],
-    }
-)
 
 
 # data for testing chart.add_bar(...)
@@ -49,15 +39,25 @@ def bars_data_list() -> list:
 
 
 def test_chart():
+    bars = pl.DataFrame(
+        {
+            "ts_nanos": [1, 2, 3, 4, 5],
+            "open": [11.0, 22.0, 33.0, 44.0, 55.0],
+            "high": [11.0, 22.0, 33.0, 44.0, 55.0],
+            "low": [11.0, 22.0, 33.0, 44.0, 55.0],
+            "close": [11.0, 22.0, 33.0, 44.0, 55.0],
+            "volume": [111, 222, 333, 444, 555],
+        }
+    )
     tf = TimeFrame.DAY
-    chart = Chart(IID, tf, BARS)
+    chart = Chart(IID, tf, bars)
 
     assert chart.iid() == IID
     assert chart.ticker() == Ticker("SBER")
     assert chart.tf() == tf
     # assert chart.bars() == BARS  # хз, дф одинаковые но TypeError..
-    assert chart.first() == Bar(BARS[0])
-    assert chart.last() == Bar(BARS[-1])
+    assert chart.first() == Bar(bars[0])
+    assert chart.last() == Bar(bars[-1])
     assert chart.now() is None
     assert chart.last_price() == 55.0
 

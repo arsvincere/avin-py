@@ -7,18 +7,6 @@
 
 import polars as pl
 
-"""Polars dataframe schema for tics"""
-TIC_SCHEMA = {
-    "ts_nanos": pl.Int64,
-    "direction": pl.String,
-    "lots": pl.Int64,
-    "price": pl.Float64,
-    "value": pl.Float64,
-    "session": pl.Int8,
-    "tradeno": pl.Int64,
-}
-
-
 """Polars dataframe schema for trades stat (SuperCandle)"""
 TRADES_SCHEMA = {
     "ts_nanos": pl.Int64,

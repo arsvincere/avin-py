@@ -18,6 +18,10 @@ class Ticker:
     def __eq__(self, other):
         return self.__ticker == other.__ticker
 
+    @classmethod
+    def from_str(cls, string: str) -> Ticker:
+        return Ticker(string)
+
     @property
     def name(self) -> str:
         return self.__ticker

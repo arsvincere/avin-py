@@ -20,9 +20,9 @@ from avin.core.category import Category
 from avin.core.exchange import Exchange
 from avin.core.iid import Iid
 from avin.core.market_data import MarketData
+from avin.core.tic import Tic
 from avin.data.data_bar import DataBar
 from avin.data.data_tic import DataTic
-from avin.data.schema import TIC_SCHEMA
 from avin.data.source import Source
 from avin.data.source_moex import SourceMoex
 from avin.data.source_tinkoff import SourceTinkoff
@@ -58,8 +58,8 @@ class Manager:
     def find(cls, s: str) -> Iid:
         """Find instrument id"""
 
-        iid_opt = SourceMoex.find(s)
-        return iid_opt
+        iid = SourceMoex.find(s)
+        return iid
 
     @classmethod
     def download(
@@ -279,7 +279,7 @@ def _load_bars(
 
 def _load_tics(iid: Iid, b: DateTime, e: DateTime) -> pl.DataFrame:
     # create empty df
-    df = pl.DataFrame(schema=TIC_SCHEMA)
+    df = pl.DataFrame(schema=Tic.schema())
 
     # load data by days
     day = b.date()

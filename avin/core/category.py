@@ -40,5 +40,6 @@ class Category(enum.Enum):
             return attr
 
         raise CategoryNotFound(
-            f"Category not found. Choice from {Category._member_names_}"
+            f"Can't found category '{string}'. "
+            f"Choice from {Category._member_names_}"
         )

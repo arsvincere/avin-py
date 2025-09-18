@@ -4,7 +4,7 @@
 
 <div align="center">
 
-  [![lines](https://sloc.xyz/github/arsvincere/avin-rs/?badge-bg-color=E82424&lower=true&label=lines)](https://github.com/arsvincere/avin)
+  [![lines](https://sloc.xyz/github/arsvincere/avin-py/?badge-bg-color=E82424&lower=true&label=lines)](https://github.com/arsvincere/avin)
 
 </div>
 

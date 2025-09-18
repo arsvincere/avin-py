@@ -19,8 +19,10 @@ import moexalgo
 import polars as pl
 
 from avin.core.category import Category
+from avin.core.exchange import Exchange
 from avin.core.iid import Iid
 from avin.core.market_data import MarketData
+from avin.core.ticker import Ticker
 from avin.data.iid_cache import IidCache
 from avin.data.source import Source
 from avin.utils import (
@@ -96,20 +98,21 @@ class SourceMoex:
             TickerNotFound if not exists.
         """
         # parse str
-        exchange_str, category_str, ticker_str = s.upper().split("_")
-        assert exchange_str == "MOEX", (
-            f"Not supported {exchange_str}, only MOEX"
-        )
-        category = Category.from_str(category_str)
+        e, c, t = s.upper().split("_")
+        exchange = Exchange.from_str(e)
+        category = Category.from_str(c)
+        ticker = Ticker.from_str(t)
+
+        assert exchange == Exchange.MOEX
 
         # load cache
         cache = IidCache.load(SOURCE, category)
         df = cache.df()
 
         # try find ticker
-        df = df.filter(pl.col("ticker") == ticker_str)
+        df = df.filter(pl.col("ticker") == ticker.name)
         if len(df) != 1:
-            raise TickerNotFound(f"Cannot find ticker {ticker_str}")
+            raise TickerNotFound(f"Can't find ticker '{ticker}'")
 
         match category:
             case Category.SHARE:
@@ -123,15 +126,15 @@ class SourceMoex:
                 step = 10 ** -float(df.item(0, "decimals"))
             case _:
                 raise CategoryNotFound(
-                    f"Not implemented category {category_str}, {df}"
+                    f"Not implemented category {category}, {df}"
                 )
 
         # NOTE: MOEX not provide figi... using unique fake value
         info = {
-            "exchange": exchange_str,
-            "category": category_str,
-            "ticker": ticker_str,
-            "figi": f"figi_MOEX_{category_str}_{ticker_str}",
+            "exchange": exchange.name,
+            "category": category.name,
+            "ticker": ticker.name,
+            "figi": f"figi_MOEX_{category}_{ticker}",
             "name": df.item(0, "shortname"),
             "lot": lotsize,
             "step": step,

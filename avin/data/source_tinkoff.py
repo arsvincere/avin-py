@@ -11,7 +11,7 @@ from __future__ import annotations
 import polars as pl
 import tinkoff.invest as ti
 
-from avin.core import Category
+from avin.core.category import Category
 from avin.data.iid_cache import IidCache
 from avin.data.source import Source
 from avin.utils import CFG, Cmd, dt_to_ts, log

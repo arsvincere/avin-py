@@ -24,6 +24,9 @@ class TimeFrame(enum.Enum):
     def __str__(self):
         return self.name
 
+    # def __hash__(self):
+    #     return hash(str(self))
+
     @property
     def name(self):
         match self:

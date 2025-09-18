@@ -18,7 +18,7 @@ class Exchange(enum.Enum):
     """All exchanges enum."""
 
     MOEX = 1
-    SPB = 2
+    # SPB = 2
 
     @classmethod
     def from_str(cls, string: str) -> Exchange:
@@ -37,7 +37,8 @@ class Exchange(enum.Enum):
             return attr
 
         raise ExchangeNotFound(
-            f"Exchange not found. Choice from {Exchange._member_names_}"
+            f"Can't found exchange '{string}'. "
+            f"Choice from {Exchange._member_names_}"
         )
 
     def morning(self) -> tuple[Time, Time]:

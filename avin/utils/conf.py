@@ -53,7 +53,7 @@ class CFG:
         pass
 
     class Core:
-        pass
+        default_bars_count = 5000
 
     class Tester:
         pass
