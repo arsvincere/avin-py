@@ -83,13 +83,12 @@ class SourceMoex:
 
     @classmethod
     def find(
-        cls,
-        s: str,
+        cls, exchange: Exchange, category: Category, ticker: Ticker
     ) -> Iid:
-        """Get instrument id from str.
+        """Get instrument id.
 
         Args:
-            s: search querry. Example: "moex_share_sber", "moex_index_imoex2".
+            ...
 
         Returns:
             Iid.
@@ -97,17 +96,12 @@ class SourceMoex:
         Raises:
             TickerNotFound if not exists.
         """
-        # parse str
-        e, c, t = s.upper().split("_")
-        exchange = Exchange.from_str(e)
-        category = Category.from_str(c)
-        ticker = Ticker.from_str(t)
 
         assert exchange == Exchange.MOEX
 
         # load cache
         cache = IidCache.load(SOURCE, category)
-        df = cache.df()
+        df = cache.df
 
         # try find ticker
         df = df.filter(pl.col("ticker") == ticker.name)

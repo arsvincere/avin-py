@@ -12,9 +12,18 @@ import polars as pl
 import tinkoff.invest as ti
 
 from avin.core.category import Category
+from avin.core.exchange import Exchange
+from avin.core.iid import Iid
+from avin.core.ticker import Ticker
 from avin.data.iid_cache import IidCache
 from avin.data.source import Source
-from avin.utils import CFG, Cmd, dt_to_ts, log
+from avin.utils import (
+    CFG,
+    Cmd,
+    TickerNotFound,
+    dt_to_ts,
+    log,
+)
 
 SOURCE = Source.TINKOFF
 TARGET = ti.constants.INVEST_GRPC_API
@@ -63,6 +72,48 @@ class SourceTinkoff:
             cache = IidCache(SOURCE, category, df)
 
             IidCache.save(cache)
+
+    @classmethod
+    def find(
+        cls, exchange: Exchange, category: Category, ticker: Ticker
+    ) -> Iid:
+        assert exchange == Exchange.MOEX
+        assert category == Category.SHARE
+
+        # load cache
+        cache = IidCache.load(SOURCE, category)
+        df = cache.df
+
+        # try find ticker
+        df = df.filter(pl.col("ticker") == ticker.name)
+        if len(df) != 1:
+            raise TickerNotFound(f"Can't find ticker '{ticker}'")
+
+        info = {
+            "exchange": df.item(0, "exchange"),
+            "exchange_specific": df.item(0, "exchange_specific"),
+            "category": df.item(0, "category"),
+            "ticker": df.item(0, "ticker"),
+            "figi": df.item(0, "figi"),
+            "country": df.item(0, "country"),
+            "currency": df.item(0, "currency"),
+            "sector": df.item(0, "sector"),
+            "class_code": df.item(0, "class_code"),
+            "isin": df.item(0, "isin"),
+            "uid": df.item(0, "uid"),
+            "name": df.item(0, "name"),
+            "lot": df.item(0, "lot"),
+            "step": df.item(0, "step"),
+            "long": df.item(0, "long"),
+            "short": df.item(0, "short"),
+            "long_qual": df.item(0, "long_qual"),
+            "short_qual": df.item(0, "short_qual"),
+            "first_1m": df.item(0, "first_1m"),
+            "first_d": df.item(0, "first_d"),
+        }
+        iid = Iid(info)
+
+        return iid
 
     # private
     @classmethod
@@ -155,7 +206,7 @@ class SourceTinkoff:
         if hasattr(i, "sector"):
             info["sector"] = i.sector
 
-        # # set standart instrument category
+        # set standart instrument category
         if isinstance(i, ti.Share):
             info["category"] = Category.SHARE.name
         elif isinstance(i, ti.Bond):

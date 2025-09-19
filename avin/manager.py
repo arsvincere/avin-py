@@ -21,6 +21,7 @@ from avin.core.exchange import Exchange
 from avin.core.iid import Iid
 from avin.core.market_data import MarketData
 from avin.core.tic import Tic
+from avin.core.ticker import Ticker
 from avin.data.data_bar import DataBar
 from avin.data.data_tic import DataTic
 from avin.data.source import Source
@@ -39,7 +40,6 @@ from avin.utils import (
 
 
 class Manager:
-    # public
     @classmethod
     def cache(cls, source: Source) -> None:
         """Make cache of instruments info"""
@@ -58,7 +58,21 @@ class Manager:
     def find(cls, s: str) -> Iid:
         """Find instrument id"""
 
-        iid = SourceMoex.find(s)
+        e, c, t = s.upper().split("_")
+        exchange = Exchange.from_str(e)
+        category = Category.from_str(c)
+        ticker = Ticker.from_str(t)
+
+        assert exchange == Exchange.MOEX
+
+        match category:
+            case Category.INDEX:
+                iid = SourceMoex.find(exchange, category, ticker)
+            case Category.SHARE:
+                iid = SourceTinkoff.find(exchange, category, ticker)
+            case _:
+                raise NotImplementedError()
+
         return iid
 
     @classmethod

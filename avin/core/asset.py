@@ -19,6 +19,7 @@ from avin.core.event import BarEvent, TicEvent
 from avin.core.exchange import Exchange
 from avin.core.iid import Iid
 from avin.core.market_data import MarketData
+from avin.core.tic import Tic
 from avin.core.ticker import Ticker
 from avin.core.timeframe import TimeFrame
 from avin.manager import Manager
@@ -152,7 +153,7 @@ class Share(Asset):
     def __init__(self, iid: Iid):
         Asset.__init__(self, iid)
         self.__charts: dict[TimeFrame, Chart] = dict()
-        self.__tics = pl.DataFrame()
+        self.__tics = pl.DataFrame(schema=Tic.schema())
         # self.__footprints: dict[TimeFrame, Footprint] = dict()
 
     @classmethod
@@ -201,8 +202,7 @@ class Share(Asset):
         # shares dir path
         dir_path = CFG.Dir.data / "MOEX" / "SHARE"
         if not Cmd.is_exist(dir_path):
-            log.error("Data dir not found")
-            raise FileNotFoundError()
+            raise FileNotFoundError("Data dir not found")
 
         # shares dirs: dir name == ticker
         dirs = Cmd.get_dirs(dir_path)
@@ -320,6 +320,7 @@ class Share(Asset):
         тестером и трейдером при получении нового тика из стрима данных.
         Не предназначена для прямого использования пользователем.
         """
+
         self.__tics.extend(e.tic.df)
 
 

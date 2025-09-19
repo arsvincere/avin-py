@@ -23,7 +23,7 @@ def test_find():
     assert iid.exchange() == Exchange.MOEX
     assert iid.category() == Category.SHARE
     assert iid.ticker() == Ticker("SBER")
-    assert iid.name() == "Сбербанк"
+    assert iid.name() == "Сбер Банк"
     assert iid.lot() == 1
     assert iid.step() == 0.01
     assert iid.path() == Path("/home/alex/avin/usr/data/MOEX/SHARE/SBER")

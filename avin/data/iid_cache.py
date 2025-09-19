@@ -32,7 +32,7 @@ class IidCache:
         assert isinstance(cache, IidCache)
 
         path = cache.path()
-        df = cache.df()
+        df = cache.df
         Cmd.write_pqt(df, Path(path))
 
         log.info(f"Cache save: {path}")
@@ -45,12 +45,15 @@ class IidCache:
 
         return cache
 
+    @property
     def source(self) -> Source:
         return self.__source
 
+    @property
     def category(self) -> Category:
         return self.__category
 
+    @property
     def df(self) -> pl.DataFrame:
         return self.__iid_df
 

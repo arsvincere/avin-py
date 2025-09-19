@@ -46,6 +46,8 @@ class Tic:
         lots: int,
         price: float,
         value: float,
+        session: int | None = None,
+        tradeno: int | None = None,
     ):
         df = pl.DataFrame(
             {
@@ -54,6 +56,8 @@ class Tic:
                 "lots": lots,
                 "price": price,
                 "value": value,
+                "session": session,
+                "tradeno": session,
             }
         )
 
