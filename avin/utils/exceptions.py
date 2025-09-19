@@ -8,6 +8,10 @@
 """Custom exceptions."""
 
 
+class AvinError(Exception):
+    """Any error"""
+
+
 class ConfigNotFound(Exception):
     """Config not found exception."""
 

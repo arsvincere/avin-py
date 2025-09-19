@@ -6,6 +6,7 @@
 # ============================================================================
 
 from avin.core.asset import Asset, Share
+from avin.core.asset_list import AssetList
 from avin.core.bar import Bar
 from avin.core.category import Category
 from avin.core.chart import Chart
@@ -21,6 +22,7 @@ from avin.core.timeframe import TimeFrame
 
 __all__ = (
     "Asset",
+    "AssetList",
     "Bar",
     "BarEvent",
     "Category",

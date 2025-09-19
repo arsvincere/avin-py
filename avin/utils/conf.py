@@ -25,6 +25,7 @@ class CFG:
         usr = root / "usr"
 
         # User data
+        asset = usr / "asset"
         data = usr / "data"
         log = usr / "log"
 

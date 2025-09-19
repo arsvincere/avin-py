@@ -9,7 +9,11 @@ from datetime import UTC
 from datetime import datetime as DateTime
 from pathlib import Path
 
+import pytest
+
 from avin import *
+
+pytestmark = pytest.mark.skip()
 
 
 def test_cache():

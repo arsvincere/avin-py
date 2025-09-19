@@ -23,6 +23,7 @@ from avin.utils.const import (
     WeekDays,
 )
 from avin.utils.exceptions import (
+    AvinError,
     CategoryNotFound,
     ConfigNotFound,
     DataNotFound,
@@ -46,6 +47,7 @@ from avin.utils.misc import (
 )
 
 __all__ = (
+    "AvinError",
     "CFG",
     "CategoryNotFound",
     "Cmd",
