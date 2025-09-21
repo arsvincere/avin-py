@@ -65,7 +65,7 @@ class Tic:
 
     @classmethod
     def schema(self) -> dict:
-        """Polars dataframe schema for tics"""
+        """Polars dataframe schema for tic"""
 
         tic_schema = {
             "ts_nanos": pl.Int64,

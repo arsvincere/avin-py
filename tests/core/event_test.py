@@ -10,12 +10,10 @@ from avin import *
 
 def test_bar_event():
     figi = "BBG004730N88"
-    tf = TimeFrame.M1
     bar = Bar.from_ohlcv(100500, 10, 20, 5, 15, 100)
-    e = BarEvent(figi, tf, bar)
+    e = BarEvent(figi, bar)
 
     assert e.figi == figi
-    assert e.tf == tf
     assert e.bar == bar
 
 

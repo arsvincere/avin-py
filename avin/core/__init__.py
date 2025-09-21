@@ -15,6 +15,7 @@ from avin.core.event import BarEvent, TicEvent
 from avin.core.exchange import Exchange
 from avin.core.iid import Iid
 from avin.core.market_data import MarketData
+from avin.core.quant import Quant
 from avin.core.range import Range
 from avin.core.tic import Tic
 from avin.core.ticker import Ticker
@@ -31,6 +32,7 @@ __all__ = (
     "Exchange",
     "Iid",
     "MarketData",
+    "Quant",
     "Range",
     "Share",
     "Tic",

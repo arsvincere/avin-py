@@ -37,6 +37,8 @@ from avin.utils import (
     ts_to_dt,
 )
 
+__all__ = ("Manager",)
+
 
 class Manager:
     @classmethod

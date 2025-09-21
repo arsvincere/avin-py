@@ -96,7 +96,8 @@ select = [
 ]
 ignore = [
     "I001", # Import block is un-sorted or un-formatted (when use *)
-    "E743", # W Ambiguous function name: `l` Ruff (E743) [61, 9]
+    "E743", # W Ambiguous function name: `l` Ruff (E743)
+    "E741", # Ambiguous variable name: `l` Ruff (E741)
     "F403", # import *
     "F405", # may be undefined, or defined from star imports
     "F821", # undefine name (не смотря на __future__.annotation)

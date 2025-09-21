@@ -9,17 +9,15 @@ from __future__ import annotations
 
 from avin.core.bar import Bar
 from avin.core.tic import Tic
-from avin.core.timeframe import TimeFrame
 
 
 class BarEvent:
-    def __init__(self, figi: str, tf: TimeFrame, bar: Bar):
+    def __init__(self, figi: str, bar: Bar):
         self.figi = figi
-        self.tf = tf
         self.bar = bar
 
     def __str__(self):
-        return f"BarEvent={self.figi} {self.tf} {self.bar}"
+        return f"BarEvent={self.figi} {self.bar}"
 
 
 class TicEvent:

@@ -5,8 +5,6 @@
 # LICENSE:      MIT
 # ============================================================================
 
-from avin.connect import *
-from avin.core import *
-from avin.data import *
-from avin.manager import *
-from avin.utils import *
+from avin.connect.tinkoff import Tinkoff
+
+__all__ = ("Tinkoff",)
