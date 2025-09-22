@@ -73,3 +73,40 @@ def test_next_ts():
     next_ts = TimeFrame.MONTH.next_ts(ts)
     next_dt = ts_to_dt(next_ts)
     assert next_dt == str_to_utc("2025-10-01 03:00")
+
+
+def test_prev_ts():
+    dt = str_to_utc("2023-08-03 10:13:05")
+    ts = dt_to_ts(dt)
+
+    prev_ts = TimeFrame.M1.prev_ts(ts)
+    prev_dt = ts_to_dt(prev_ts)
+    assert prev_dt == str_to_utc("2023-08-03 10:13:00")
+
+    prev_ts = TimeFrame.M10.prev_ts(ts)
+    prev_dt = ts_to_dt(prev_ts)
+    assert prev_dt == str_to_utc("2023-08-03 10:10:00")
+
+    prev_ts = TimeFrame.H1.prev_ts(ts)
+    prev_dt = ts_to_dt(prev_ts)
+    assert prev_dt == str_to_utc("2023-08-03 10:00:00")
+
+    prev_ts = TimeFrame.DAY.prev_ts(ts)
+    prev_dt = ts_to_dt(prev_ts)
+    assert prev_dt == str_to_utc("2023-08-03 03:00:00")
+
+    prev_ts = TimeFrame.WEEK.prev_ts(ts)
+    prev_dt = ts_to_dt(prev_ts)
+    assert prev_dt == str_to_utc("2023-07-31 03:00:00")
+
+    prev_ts = TimeFrame.MONTH.prev_ts(ts)
+    prev_dt = ts_to_dt(prev_ts)
+    assert prev_dt == str_to_utc("2023-08-01 03:00:00")
+
+    #     let prev_ts = TimeFrame::Day.prev_ts(ts);
+    #     let prev_dt = DateTime::from_timestamp_nanos(prev_ts);
+    #     assert_eq!(
+    #         prev_dt,
+    #         Utc.with_ymd_and_hms(2023, 8, 1, 0, 0, 0).unwrap()
+    #     );
+    # }

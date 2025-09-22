@@ -10,7 +10,13 @@ from __future__ import annotations
 import enum
 from datetime import timedelta as TimeDelta
 
-from avin.utils import dt_to_ts, next_month, ts_to_dt
+from avin.utils import (
+    ONE_DAY,
+    ONE_MINUTE,
+    dt_to_ts,
+    next_month,
+    ts_to_dt,
+)
 
 
 class TimeFrame(enum.Enum):
@@ -92,11 +98,35 @@ class TimeFrame(enum.Enum):
                 dt = dt.replace(hour=0, minute=0) + TimeDelta(days=need_days)
             case TimeFrame.MONTH:
                 dt = next_month(dt)
+            case _:
+                raise NotImplementedError()
 
         return dt_to_ts(dt)
 
     def prev_ts(self, ts: int) -> int:
-        raise NotImplementedError()
+        dt = ts_to_dt(ts)
+        dt = dt.replace(microsecond=0, second=0)
+
+        match self:
+            case TimeFrame.M1:
+                pass
+            case TimeFrame.M10:
+                past_minutes = dt.minute % 10
+                dt -= past_minutes * ONE_MINUTE
+            case TimeFrame.H1:
+                dt = dt.replace(minute=0)
+            case TimeFrame.DAY:
+                dt = dt.replace(minute=0, hour=0)
+            case TimeFrame.WEEK:
+                past_days = dt.weekday() % 6
+                dt -= past_days * ONE_DAY
+                dt = dt.replace(minute=0, hour=0)
+            case TimeFrame.MONTH:
+                dt = dt.replace(minute=0, hour=0, day=1)
+            case _:
+                raise NotImplementedError()
+
+        return dt_to_ts(dt)
 
 
 if __name__ == "__main__":
