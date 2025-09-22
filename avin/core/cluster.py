@@ -20,7 +20,7 @@ class Cluster:
         self.high = _calc_high(tics)
         self.low = _calc_low(tics)
         self.close = _calc_close(tics)
-        self.pct = (self.close - self.open) / self.open * 100.0
+        self.pct = round(((self.close - self.open) / self.open * 100.0), 2)
 
         self.vol_b = _calc_vol_b(tics)
         self.vol_s = _calc_vol_s(tics)
@@ -34,9 +34,9 @@ class Cluster:
         self.count_s = _calc_count_s(tics)
         self.count = self.count_b + self.count_s
 
-        self.buy_p = self.val_b / self.val * 100.0
-        self.sell_p = self.val_s / self.val * 100.0
-        self.disb_p = self.buy_p - self.sell_p
+        self.buy_p = round((self.val_b / self.val * 100.0), 2)
+        self.sell_p = round((self.val_s / self.val * 100.0), 2)
+        self.disb_p = round((self.buy_p - self.sell_p), 2)
 
         self.vwap_b = _calc_vwap_b(tics)
         self.vwap_s = _calc_vwap_s(tics)
@@ -46,7 +46,10 @@ class Cluster:
 
 
 def _calc_ts(tf: TimeFrame, tics: pl.DataFrame):
-    raise NotImplementedError()
+    ts = tics.item(0, "ts_nanos")
+    ts = tf.prev_ts(ts)
+
+    return ts
 
 
 def _calc_open(tics: pl.DataFrame) -> float:

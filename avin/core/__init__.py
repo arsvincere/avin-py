@@ -10,6 +10,7 @@ from avin.core.asset_list import AssetList
 from avin.core.bar import Bar
 from avin.core.category import Category
 from avin.core.chart import Chart
+from avin.core.cluster import Cluster
 from avin.core.direction import Direction
 from avin.core.event import BarEvent, TicEvent
 from avin.core.exchange import Exchange
@@ -29,6 +30,7 @@ __all__ = (
     "BarEvent",
     "Category",
     "Chart",
+    "Cluster",
     "Direction",
     "Exchange",
     "Iid",
