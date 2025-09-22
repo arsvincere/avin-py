@@ -1,4 +1,3 @@
-#!/usr/bin/env  python3
 # ============================================================================
 # URL:          http://arsvincjre.com
 # AUTHOR:       Alex Avin

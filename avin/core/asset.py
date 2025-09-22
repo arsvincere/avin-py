@@ -17,6 +17,7 @@ from avin.core.category import Category
 from avin.core.chart import Chart
 from avin.core.event import BarEvent, TicEvent
 from avin.core.exchange import Exchange
+from avin.core.footprint import Footprint
 from avin.core.iid import Iid
 from avin.core.market_data import MarketData
 from avin.core.tic import Tic
@@ -154,7 +155,7 @@ class Share(Asset):
         Asset.__init__(self, iid)
         self.__charts: dict[TimeFrame, Chart] = dict()
         self.__tics = pl.DataFrame(schema=Tic.schema())
-        # self.__footprints: dict[TimeFrame, Footprint] = dict()
+        self.__footprints: dict[TimeFrame, Footprint] = dict()
 
     @classmethod
     def from_str(self, iid_str: str) -> Share:
@@ -319,6 +320,9 @@ class Share(Asset):
         """
 
         self.__tics.extend(e.tic.df)
+
+        for _tf, footprint in self.__footprints.items():
+            footprint.add_tic(e.tic)
 
 
 if __name__ == "__main__":
