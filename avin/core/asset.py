@@ -10,6 +10,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from datetime import datetime as DateTime
 from pathlib import Path
+from typing import Any
 
 import polars as pl
 
@@ -158,7 +159,7 @@ class Share(Asset):
         self.__footprints: dict[TimeFrame, Footprint] = dict()
 
     @classmethod
-    def from_str(self, iid_str: str) -> Share:
+    def from_str(self, iid_str: str) -> Any:
         """Create new share from str (case insensitive).
 
         # ru
@@ -172,7 +173,7 @@ class Share(Asset):
         return Share(iid)
 
     @classmethod
-    def from_csv(cls, csv_line: str) -> Share:
+    def from_csv(cls, csv_line: str) -> Any:
         """Create new share from csv.
 
         # ru

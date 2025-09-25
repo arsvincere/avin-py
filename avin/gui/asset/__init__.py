@@ -5,9 +5,6 @@
 # LICENSE:      MIT
 # ============================================================================
 
-from avin.connect import *
-from avin.core import *
-from avin.data import *
-from avin.manager import *
-from avin.terminal import *
-from avin.utils import *
+from avin.gui.asset.widget import AssetListWidget
+
+__all__ = ("AssetListWidget",)

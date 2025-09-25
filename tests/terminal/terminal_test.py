@@ -5,9 +5,11 @@
 # LICENSE:      MIT
 # ============================================================================
 
-from avin.connect import *
-from avin.core import *
-from avin.data import *
-from avin.manager import *
-from avin.terminal import *
-from avin.utils import *
+from avin import *
+
+
+def test_terminal():
+    t = Terminal()
+
+    assert t.asset_list.name == "xxx"
+    assert t.current_asset.ticker() == Ticker("AFKS")

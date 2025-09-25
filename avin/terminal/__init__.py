@@ -5,9 +5,10 @@
 # LICENSE:      MIT
 # ============================================================================
 
-from avin.connect import *
-from avin.core import *
-from avin.data import *
-from avin.manager import *
-from avin.terminal import *
-from avin.utils import *
+from avin.terminal._terminal import Terminal
+
+__all__ = ("Terminal",)
+
+
+if __name__ == "__main__":
+    ...
