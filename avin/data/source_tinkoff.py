@@ -7,6 +7,8 @@
 
 from __future__ import annotations
 
+from functools import cache
+
 import polars as pl
 import tinkoff.invest as ti
 
@@ -18,6 +20,7 @@ from avin.data.iid_cache import IidCache
 from avin.data.source import Source
 from avin.utils import (
     CFG,
+    AvinError,
     Cmd,
     TickerNotFound,
     dt_to_ts,
@@ -113,6 +116,10 @@ class SourceTinkoff:
         iid = Iid(info)
 
         return iid
+
+    @classmethod
+    def find_figi(cls, figi: str) -> Iid:
+        return _cached_find_figi(figi)
 
     # private
     @classmethod
@@ -262,6 +269,44 @@ class SourceTinkoff:
         }
 
         return names[name]
+
+
+@cache
+def _cached_find_figi(figi: str) -> Iid:
+    # load cache
+    cache = IidCache.load(SOURCE, Category.SHARE)
+    df = cache.df
+
+    # try find ticker
+    df = df.filter(pl.col("figi") == figi)
+    if len(df) != 1:
+        raise AvinError(f"Can't find figi '{figi}'")
+
+    info = {
+        "exchange": df.item(0, "exchange"),
+        "exchange_specific": df.item(0, "exchange_specific"),
+        "category": df.item(0, "category"),
+        "ticker": df.item(0, "ticker"),
+        "figi": df.item(0, "figi"),
+        "country": df.item(0, "country"),
+        "currency": df.item(0, "currency"),
+        "sector": df.item(0, "sector"),
+        "class_code": df.item(0, "class_code"),
+        "isin": df.item(0, "isin"),
+        "uid": df.item(0, "uid"),
+        "name": df.item(0, "name"),
+        "lot": df.item(0, "lot"),
+        "step": df.item(0, "step"),
+        "long": df.item(0, "long"),
+        "short": df.item(0, "short"),
+        "long_qual": df.item(0, "long_qual"),
+        "short_qual": df.item(0, "short_qual"),
+        "first_1m": df.item(0, "first_1m"),
+        "first_d": df.item(0, "first_d"),
+    }
+    iid = Iid(info)
+
+    return iid
 
 
 if __name__ == "__main__":

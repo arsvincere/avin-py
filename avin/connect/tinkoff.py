@@ -13,7 +13,7 @@ import tinkoff.invest as ti
 from PyQt6 import QtCore
 
 from avin.connect.ti_to_av import ti_to_av
-from avin.core import BarEvent, TicEvent
+from avin.core import Asset, BarEvent, TicEvent
 from avin.utils import CFG, AvinError, Cmd, log
 
 NAME = "Tinkoff"
@@ -37,10 +37,68 @@ class Tinkoff(QtCore.QThread):
     def run(self):
         asyncio.run(self.__main_loop())
 
+    def subscribe_bar(self, asset: Asset) -> None:
+        figi = asset.figi()
+        interval = ti.SubscriptionInterval.SUBSCRIPTION_INTERVAL_ONE_MINUTE
+        subscription = ti.CandleInstrument(figi, interval)
+
+        self.data_stream.candles.subscribe([subscription])
+
+    def unsubscribe_bar(self, asset: Asset) -> None:
+        figi = asset.figi()
+        interval = ti.SubscriptionInterval.SUBSCRIPTION_INTERVAL_ONE_MINUTE
+        subscription = ti.CandleInstrument(figi, interval)
+
+        self.data_stream.candles.unsubscribe([subscription])
+
+    def subscribe_tic(self, asset: Asset) -> None:
+        figi = asset.figi()
+        subscription = ti.TradeInstrument(figi)
+
+        self.data_stream.trades.subscribe([subscription])
+
+    def unsubscribe_tic(self, asset: Asset) -> None:
+        figi = asset.figi()
+        subscription = ti.TradeInstrument(figi)
+
+        self.data_stream.trades.unsubscribe([subscription])
+
+    # private
+    async def __run_connect(self):
+        # run connection loop
+        self.__connect_task = asyncio.create_task(self.__connect_loop())
+
+        # await connection
+        seconds_elapsed = 0
+        while self.client is None:
+            log.info(f"- waiting connection... ({seconds_elapsed} sec)")
+            await asyncio.sleep(1)
+            seconds_elapsed += 1
+
+            if seconds_elapsed == 5:
+                raise AvinError("Fail to connect Tinkoff")
+
+        log.info("Connection successfully started!")
+
+    async def __run_data_stream(self):
+        # run market data task
+        self.__data_task = asyncio.create_task(self.__data_loop())
+
+        seconds_elapsed = 0
+        while self.data_stream is None:
+            log.info(f"- waiting data stream... ({seconds_elapsed} sec)")
+            await asyncio.sleep(1)
+            seconds_elapsed += 1
+
+            if seconds_elapsed == 5:
+                raise AvinError("Fail to start data stream Tinkoff")
+
+        log.info("Data stream successfully started!")
+
     # loops
     async def __main_loop(self):
-        await self.__ensure_connect()
-        await self.__ensure_data_stream()
+        await self.__run_connect()
+        await self.__run_data_stream()
 
         while True:
             await asyncio.sleep(1)
@@ -105,35 +163,3 @@ class Tinkoff(QtCore.QThread):
 
         # если цикл закончился
         self.data_stream = None
-
-    # private
-    async def __ensure_connect(self):
-        # run connection loop
-        self.__connect_task = asyncio.create_task(self.__connect_loop())
-
-        # await connection
-        seconds_elapsed = 0
-        while self.client is None:
-            log.info(f"- waiting connection... ({seconds_elapsed} sec)")
-            await asyncio.sleep(1)
-            seconds_elapsed += 1
-
-            if seconds_elapsed == 5:
-                raise AvinError("Fail to connect Tinkoff")
-
-        log.info("Connection successfully started!")
-
-    async def __ensure_data_stream(self):
-        # run market data task
-        self.__data_task = asyncio.create_task(self.__data_loop())
-
-        seconds_elapsed = 0
-        while self.data_stream is None:
-            log.info(f"- waiting data stream... ({seconds_elapsed} sec)")
-            await asyncio.sleep(1)
-            seconds_elapsed += 1
-
-            if seconds_elapsed == 5:
-                raise AvinError("Fail to start data stream Tinkoff")
-
-        log.info("Data stream successfully started!")

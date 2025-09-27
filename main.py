@@ -7,4 +7,27 @@
 # LICENSE:      MIT
 # ============================================================================
 
-print(round(100500.6665454545, 2))
+import sys
+
+from PyQt6 import QtWidgets
+
+from avin.gui.main_window import MainWindow
+
+
+def main():
+    # start app
+    app = QtWidgets.QApplication(sys.argv)
+
+    # show main window
+    w = MainWindow()
+    w.show()
+    code = app.exec()
+
+    # before quit actions
+    ...
+
+    sys.exit(code)
+
+
+if __name__ == "__main__":
+    main()

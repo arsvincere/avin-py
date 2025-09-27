@@ -7,9 +7,12 @@
 
 from __future__ import annotations
 
+import time
+
 from PyQt6 import QtCore
 
-from avin.core import Asset, AssetList
+from avin.connect import Tinkoff
+from avin.core import Asset, AssetList, BarEvent, TicEvent
 from avin.utils import CFG, AvinError
 
 
@@ -20,6 +23,8 @@ class Terminal(QtCore.QObject):
         QtCore.QObject.__init__(self)
 
         self.__load_asset_list()
+        self.__load_broker()
+        self.__subscribe_market_data()
 
     def set_current_asset(self, asset: Asset) -> None:
         if asset not in self.asset_list:
@@ -34,6 +39,27 @@ class Terminal(QtCore.QObject):
         self.asset_list = AssetList.load(name)
 
         self.current_asset = self.asset_list[0]
+
+    def __load_broker(self) -> None:
+        self.broker = Tinkoff(self)
+        self.broker.new_bar.connect(self.__on_new_bar)
+        self.broker.new_tic.connect(self.__on_new_tic)
+
+        self.broker.start()
+        time.sleep(5)
+
+    def __subscribe_market_data(self) -> None:
+        for asset in self.asset_list:
+            self.broker.subscribe_bar(asset)
+            self.broker.subscribe_tic(asset)
+
+    @QtCore.pyqtSlot(BarEvent)
+    def __on_new_bar(self, e: BarEvent):
+        print(e)
+
+    @QtCore.pyqtSlot(TicEvent)
+    def __on_new_tic(self, e: TicEvent):
+        print(e)
 
 
 if __name__ == "__main__":

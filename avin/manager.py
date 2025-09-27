@@ -77,6 +77,14 @@ class Manager:
         return iid
 
     @classmethod
+    def find_figi(cls, figi: str) -> Iid:
+        """Find instrument id by FIGI"""
+
+        iid = SourceTinkoff.find_figi(figi)
+
+        return iid
+
+    @classmethod
     def download(
         cls,
         source: Source,

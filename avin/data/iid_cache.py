@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+from functools import cache
 from pathlib import Path
 
 import polars as pl
@@ -39,7 +40,7 @@ class IidCache:
     @classmethod
     def load(cls, source: Source, category: Category) -> IidCache:
         path = _create_file_path(source, category)
-        df = Cmd.read_pqt(Path(path))
+        df = _cached_load_df(path)
         cache = IidCache(source, category, df)
 
         return cache
@@ -70,6 +71,13 @@ def _create_file_path(source: Source, category: Category) -> Path:
     )
 
     return cache_path
+
+
+@cache
+def _cached_load_df(path: Path) -> pl.DataFrame:
+    df = Cmd.read_pqt(path)
+
+    return df
 
 
 if __name__ == "__main__":

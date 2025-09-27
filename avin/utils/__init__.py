@@ -44,6 +44,7 @@ from avin.utils.misc import (
     ts_to_dt,
     utc_to_local,
 )
+from avin.utils.timer import Timer
 
 __all__ = (
     "AvinError",
@@ -68,6 +69,7 @@ __all__ = (
     "SourceNotFound",
     "TEN_MINUTE",
     "TickerNotFound",
+    "Timer",
     "WeekDays",
     "dt_to_ts",
     "filter_dt",

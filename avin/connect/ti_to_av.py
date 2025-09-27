@@ -12,7 +12,8 @@ from typing import Any
 import tinkoff.invest as ti
 from tinkoff.invest.utils import quotation_to_decimal
 
-from avin.core import Bar
+from avin.core import Bar, Direction, Tic
+from avin.manager import Manager
 from avin.utils import AvinError, dt_to_ts
 
 
@@ -21,10 +22,20 @@ def ti_to_av(obj: Any):
 
     class_name = obj.__class__.__name__
     match class_name:
+        case "Quotation":
+            return _tiQuotation_to_avPrice(obj)
         case "Candle":
             return _tiCandle_to_avBar(obj)
+        case "Trade":
+            return _tiTrade_to_avTic(obj)
         case _:
             raise AvinError(f"Object={class_name}")
+
+
+def _tiQuotation_to_avPrice(ti_quotation):
+    price = float(quotation_to_decimal(ti_quotation))
+
+    return price
 
 
 def _tiCandle_to_avBar(candle: ti.Candle) -> Bar:
@@ -58,3 +69,48 @@ def _tiCandle_to_avBar(candle: ti.Candle) -> Bar:
     bar = Bar.from_ohlcv(ts, o, h, l, c, v)
 
     return bar
+
+
+def _tiTrade_to_avTic(trade: ti.Trade):
+    """Trade(
+        figi='BBG004730ZJ9',
+        direction=<TradeDirection.TRADE_DIRECTION_BUY: 1>,
+        price=Quotation(units=90, nano=840000000),
+        quantity=11,
+        time=datetime.datetime(
+            2025, 3, 2, 13, 47, 45, 986916,
+            tzinfo=datetime.timezone.utc
+        ),
+        instrument_uid='8e2b0325-0292-4654-8a18-4f63ed3b0e09',
+        trade_source=<TradeSourceType.TRADE_SOURCE_EXCHANGE: 1>
+    )
+    """
+
+    iid = Manager.find_figi(trade.figi)
+    ts = dt_to_ts(trade.time)
+    direction = _tiTradeDirection_to_avDirection(trade.direction)
+    price = _tiQuotation_to_avPrice(trade.price)
+    lots = trade.quantity
+    value = iid.lot() * lots * price
+
+    tic = Tic.new(
+        ts=ts,
+        direction=direction,
+        price=price,
+        lots=lots,
+        value=value,
+    )
+
+    return tic
+
+
+def _tiTradeDirection_to_avDirection(tinkoff_direction):
+    td = ti.TradeDirection
+    directions = {
+        # td.TRADE_DIRECTION_UNSPECIFIED:
+        td.TRADE_DIRECTION_BUY: Direction.BUY,
+        td.TRADE_DIRECTION_SELL: Direction.SELL,
+    }
+    avin_direction = directions[tinkoff_direction]
+
+    return avin_direction
