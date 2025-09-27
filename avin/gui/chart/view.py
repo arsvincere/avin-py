@@ -27,13 +27,13 @@ class ChartView(QtWidgets.QGraphicsView):
 
         if e.modifiers() == NO:
             if e.angleDelta().y() < 0:
-                self.scale(0.9, 1)
+                self.scale(1 / 1.1, 1)
             else:
                 self.scale(1.1, 1)
 
         if e.modifiers() == CTRL:
             if e.angleDelta().y() < 0:
-                self.scale(1, 0.9)
+                self.scale(1, 1 / 1.1)
             else:
                 self.scale(1, 1.1)
 
@@ -111,6 +111,10 @@ class ChartView(QtWidgets.QGraphicsView):
         # hide scroll bars
         self.setHorizontalScrollBarPolicy(SCROLL_OFF)
         self.setVerticalScrollBarPolicy(SCROLL_OFF)
+
+        # flip vertically
+        tr = QtGui.QTransform(1, 0, 0, -1, 0, 0)
+        self.setTransform(tr)
 
     def __set_cross_cursor(self):
         port = self.viewport()

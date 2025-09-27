@@ -28,7 +28,7 @@ class ChartWidget(QtWidgets.QWidget):
     def set_terminal(self, terminal: Terminal) -> None:
         self.terminal = terminal
 
-        tf = TimeFrame.DAY
+        tf = TimeFrame.M1
         chart = terminal.current_asset.load_chart(tf)  # type: ignore
         gchart = GChart(chart, None)
 
