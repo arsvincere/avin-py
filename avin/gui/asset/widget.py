@@ -77,8 +77,8 @@ if __name__ == "__main__":
     w = AssetListWidget(parent=None)
 
     w.set_terminal(terminal)
-
     w.setWindowTitle("AVIN")
     w.setWindowFlags(QtCore.Qt.WindowType.FramelessWindowHint)
     w.show()
+
     sys.exit(app.exec())

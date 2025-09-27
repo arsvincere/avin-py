@@ -56,8 +56,8 @@ def test_chart():
     assert chart.ticker() == Ticker("SBER")
     assert chart.tf() == tf
     # assert chart.bars() == BARS  # хз, дф одинаковые но TypeError..
-    assert chart.first() == Bar(bars[0])
-    assert chart.last() == Bar(bars[-1])
+    assert chart.first() == Bar.from_df(bars[0])
+    assert chart.last() == Bar.from_df(bars[-1])
     assert chart.now() is None
     assert chart.last_price() == 55.0
 

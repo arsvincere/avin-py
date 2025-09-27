@@ -22,7 +22,7 @@ class Bar:
     # ru
     Бар - суть таже что и свеча, но слово короче.
 
-    Обертка над polars.DataFrame с удобным доступом к значениям.
+    Обертка над dict с удобным доступом к значениям ohlcv.
     """
 
     class Kind(enum.Enum):
@@ -37,10 +37,9 @@ class Bar:
         DODJI = 0
         BEAR = -1
 
-    def __init__(self, data: pl.DataFrame):
-        assert len(data) == 1
-
+    def __init__(self, data: dict, chart=None):
         self.__data = data
+        self.__chart = chart
 
     def __str__(self):
         s = (
@@ -69,6 +68,13 @@ class Bar:
         )
 
     @classmethod
+    def from_df(cls, df: pl.DataFrame, chart=None) -> Bar:
+        data = df.to_dicts()[0]
+        bar = Bar(data, chart)
+
+        return bar
+
+    @classmethod
     def from_ohlcv(
         cls,
         ts: int,
@@ -77,37 +83,21 @@ class Bar:
         low: float,
         close: float,
         vol: int,
-        value: int | None = None,
+        chart=None,
     ) -> Bar:
-        """Create Bar from OHLCV.
+        """Create Bar from OHLCV"""
 
-        # ru
-        Создает датафрейм из OHLCV значений и оборачивает его в Bar.
-        Возвращает Bar.
+        data = {
+            "ts_nanos": ts,
+            "open": open,
+            "high": high,
+            "low": low,
+            "close": close,
+            "volume": vol,
+            "value": None,
+        }
 
-        ## Пример датафрейма внутри
-        ```text
-        ┌───────────┬────────┬────────┬────────┬────────┬───────────┬────────┐
-        │ ts_nanos  ┆ open   ┆ high   ┆ low    ┆ close  ┆ volume    ┆ value  │
-        │ ---       ┆ ---    ┆ ---    ┆ ---    ┆ ---    ┆ ---       ┆ ---    │
-        │ i64       ┆ f64    ┆ f64    ┆ f64    ┆ f64    ┆ i64       ┆ f64    │
-        ╞═══════════╪════════╪════════╪════════╪════════╪═══════════╪════════╡
-        │ 173585... ┆ 280.0  ┆ 280.41 ┆ 271.8  ┆ 272.25 ┆ 43086870  ┆ ...    │
-        """
-
-        df = pl.DataFrame(
-            {
-                "ts_nanos": ts,
-                "open": open,
-                "high": high,
-                "low": low,
-                "close": close,
-                "volume": vol,
-                "value": value,
-            }
-        )
-
-        return Bar(df)
+        return Bar(data, chart)
 
     @classmethod
     def join(cls, b1: Bar, b2: Bar) -> Bar:
@@ -124,19 +114,19 @@ class Bar:
         close = b2.c
         vol = b1.v + b2.v
 
-        df = pl.DataFrame(
-            {
-                "ts_nanos": ts,
-                "open": open,
-                "high": high,
-                "low": low,
-                "close": close,
-                "volume": vol,
-                "value": None,
-            }
-        )
+        data = {
+            "ts_nanos": ts,
+            "open": open,
+            "high": high,
+            "low": low,
+            "close": close,
+            "volume": vol,
+            "value": None,
+        }
 
-        return Bar(df)
+        bar = Bar(data, b1.chart)
+
+        return bar
 
     @classmethod
     def schema(cls) -> dict:
@@ -158,42 +148,52 @@ class Bar:
     def df(self) -> pl.DataFrame:
         """Bar data as dataframe"""
 
-        return self.__data
+        return pl.DataFrame(self.__data)
+
+    @property
+    def chart(self):
+        """Return parent chart"""
+
+        return self.__chart
 
     @property
     def ts(self) -> int:
         """Bar timestamp"""
 
-        return self.__data.item(0, "ts_nanos")
+        return self.__data["ts_nanos"]
 
     @property
     def o(self) -> float:
         """Bar open"""
 
-        return self.__data.item(0, "open")
+        return self.__data["open"]
 
     @property
     def h(self) -> float:
         """Bar high"""
 
-        return self.__data.item(0, "high")
+        return self.__data["high"]
 
     @property
     def l(self) -> float:
         """Bar low"""
 
-        return self.__data.item(0, "low")
+        return self.__data["low"]
 
     @property
     def c(self) -> float:
         """Bar close"""
 
-        return self.__data.item(0, "close")
+        return self.__data["close"]
 
     @property
     def v(self) -> int:
         """Bar volume"""
-        return self.__data.item(0, "volume")
+
+        return self.__data["volume"]
+
+    def set_chart(self, chart) -> None:
+        self.__chart = chart
 
     def dt(self) -> DateTime:
         """Return DateTime UTC of bar.
@@ -211,6 +211,7 @@ class Bar:
         Возвращает локальную (наивную) дату и время бара как строку.
         Форматирование строки и оффсет задается в конфиге.
         """
+
         dt = ts_to_dt(self.ts)
 
         return utc_to_local(dt)
@@ -221,6 +222,7 @@ class Bar:
         # ru
         Возвращает тип бара, перечисление 'Bar.Kind': бычий, медвежий, доджи.
         """
+
         if self.is_bear():
             return Bar.Kind.BEAR
         elif self.is_bull():
@@ -234,6 +236,7 @@ class Bar:
         # ru
         Если бар медвежий -> true, иначе -> false
         """
+
         return self.o > self.c
 
     def is_bull(self) -> bool:
@@ -242,6 +245,7 @@ class Bar:
         # ru
         Если бар бычий -> true, иначе -> false
         """
+
         return self.o < self.c
 
     def is_dodji(self) -> bool:
@@ -250,6 +254,7 @@ class Bar:
         # ru
         Если бар доджи -> true, иначе -> false
         """
+
         return self.o == self.c
 
     def full(self) -> Range:

@@ -139,9 +139,7 @@ class Range:
         Нормализованный модуль диапазона.
         """
 
-        value = self.abs() / self.start
-
-        return round(value, 2)
+        return self.abs() / self.start
 
     def abs_p(self) -> float:
         """
@@ -172,9 +170,7 @@ class Range:
         изменения конечной цены относительно начальной.
         """
 
-        value = self.delta() / self.__start
-
-        return round(value, 2)
+        return self.delta() / self.__start
 
     def delta_p(self) -> float:
         """Delta of range in percent

@@ -10,6 +10,8 @@ from __future__ import annotations
 from datetime import timedelta as TimeDelta
 from pathlib import Path
 
+from PyQt6 import QtGui
+
 __all__ = ("CFG",)
 
 
@@ -93,3 +95,14 @@ class CFG:
         hl_hover = "#5D5E60"
         hl_cliked = "#848388"
         hl_active = "#658594"
+
+    class Chart:
+        bar_width = 16  # px
+
+        bg = QtGui.QColor("#0d0c0c")
+        bg_footer = QtGui.QColor("#393836")
+        cross = QtGui.QColor("#625e5a")
+
+        bear = QtGui.QColor("#FF5D62")
+        bull = QtGui.QColor("#98BB6C")
+        dodji = QtGui.QColor("#CCCCCC")

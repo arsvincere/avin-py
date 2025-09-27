@@ -30,9 +30,6 @@ class TimeFrame(enum.Enum):
     def __str__(self):
         return self.name
 
-    # def __hash__(self):
-    #     return hash(str(self))
-
     @property
     def name(self):
         match self:
@@ -78,6 +75,36 @@ class TimeFrame(enum.Enum):
                 return 7 * 24 * 60 * 60 * 1_000_000_000
             case TimeFrame.MONTH:
                 return 30 * 24 * 60 * 60 * 1_000_000_000
+
+    def seconds(self) -> int:
+        match self:
+            case TimeFrame.M1:
+                return 1 * 60
+            case TimeFrame.M10:
+                return 10 * 60
+            case TimeFrame.H1:
+                return 60 * 60
+            case TimeFrame.DAY:
+                return 24 * 60 * 60
+            case TimeFrame.WEEK:
+                return 7 * 24 * 60 * 60
+            case TimeFrame.MONTH:
+                return 30 * 24 * 60 * 60
+
+    def minutes(self) -> int:
+        match self:
+            case TimeFrame.M1:
+                return 1
+            case TimeFrame.M10:
+                return 10
+            case TimeFrame.H1:
+                return 60
+            case TimeFrame.DAY:
+                return 24 * 60
+            case TimeFrame.WEEK:
+                return 7 * 24 * 60
+            case TimeFrame.MONTH:
+                return 30 * 24 * 60
 
     def next_ts(self, ts: int) -> int:
         dt = ts_to_dt(ts)

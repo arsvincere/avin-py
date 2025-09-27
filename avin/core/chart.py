@@ -10,6 +10,7 @@ from __future__ import annotations
 from datetime import datetime as DateTime
 
 import polars as pl
+from PyQt6 import QtCore
 
 from avin.core.bar import Bar
 from avin.core.iid import Iid
@@ -19,20 +20,25 @@ from avin.core.timeframe import TimeFrame
 from avin.manager import Manager
 
 
-class Chart:
+class Chart(QtCore.QObject):
     """Aggregation of instrument id, timeframe and bars.
 
     # ru
     График - хранит идентификатора инструмента, таймфрейм и бары.
     """
 
+    upd_bar = QtCore.pyqtSignal(Bar)
+    new_bar = QtCore.pyqtSignal(Bar)
+
     def __init__(self, iid: Iid, tf: TimeFrame, bars: pl.DataFrame):
+        QtCore.QObject.__init__(self)
+
         self.__iid = iid
         self.__tf = tf
         self.__bars = bars
         self.__now: Bar | None = None
 
-    def __getitem__(self, n) -> Bar | None:
+    def __getitem__(self, n: int) -> Bar | None:
         """Get bar by number.
 
         # ru
@@ -48,11 +54,20 @@ class Chart:
         if n == 0:
             return self.__now
 
-        index = len(self.__bars) - n
-        row = self.__bars[index]
-        bar = Bar(row)
+        if n <= len(self.__bars):
+            row = self.__bars[-n]
+            bar = Bar.from_df(row, self)
+            return bar
 
-        return bar
+        return None
+
+    def __iter__(self):
+        for dct in self.__bars.iter_rows(named=True):
+            bar = Bar(data=dct, chart=self)
+            yield bar
+
+    def __len__(self) -> int:
+        return len(self.__bars)
 
     @classmethod
     def empty(cls, iid: Iid, tf: TimeFrame) -> Chart:
@@ -131,7 +146,7 @@ class Chart:
         if df.is_empty():
             return None
 
-        bar = Bar(df)
+        bar = Bar.from_df(df, self)
 
         return bar
 
@@ -148,7 +163,7 @@ class Chart:
         if df.is_empty():
             return None
 
-        bar = Bar(df)
+        bar = Bar.from_df(df, self)
 
         return bar
 
@@ -198,6 +213,7 @@ class Chart:
 
     def add_bar(self, bar: Bar) -> None:
         """Add new bar
+
         Depending on datetime of 'new_bar' this function do:
          - only update real-time bar
          - add new historical bar and update real-time
@@ -210,24 +226,23 @@ class Chart:
           поставит текущим (now);
         """
 
+        bar.set_chart(self)
+
         # если баров не было - в пустой график добавляем первый бар
-        if self.__now is None:
+        # или если время одинаковое - только обновить текущий бар
+        if self.__now is None or self.__now.ts == bar.ts:
             self.__now = bar
+            self.upd_bar.emit(self.now())
             return
 
-        # далее ситуации когда в графике есть бары
-        # если время одинаковое - только обновить текущий бар
-        if self.__now.ts == bar.ts:
-            self.__now = bar
-            return
-
-        # определим время смены бара
+        # время смены бара
         next_ts = self.__tf.next_ts(self.__now.ts)
 
         # если время пришедшего нового бара больше текущего последнего
         # и при этом меньше чем время смены бара, - джоинить этот бар
         if self.__now.ts < bar.ts < next_ts:
             self.__now = Bar.join(self.__now, bar)
+            self.upd_bar.emit(bar)
             return
 
         # если время пришедшего нового бара больше текущего последнего
@@ -235,6 +250,18 @@ class Chart:
         if bar.ts > self.__now.ts and bar.ts >= next_ts:
             self.__bars.extend(self.__now.df)
             self.__now = bar
+
+            self.new_bar.emit(self.last())
+            self.upd_bar.emit(self.now())
+            return
+
+        assert False, "Unreachable"
+
+    def highest_high(self):
+        return self.__bars["high"].max()
+
+    def lowest_low(self):
+        return self.__bars["low"].min()
 
 
 if __name__ == "__main__":
