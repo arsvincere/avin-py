@@ -93,8 +93,8 @@ class BarInfo(QtWidgets.QWidget):
             f"L: {bar.l:<6}  "
             f"C: {bar.c:<6}  "
             f"V: {vol_str:<7}  "
-            f"(Body: {body_p:.2f} / "
-            f"Full: {full_p:.2f})"
+            f"(Full: {full_p:.2f} / "
+            f"Body: {body_p:.2f})"
         )
 
     def __create_widgets(self):  # {{{
@@ -105,7 +105,7 @@ class BarInfo(QtWidgets.QWidget):
             "High: ____ "
             "Low: ____ "
             "Close: ____ "
-            "(Body: __%)"
+            "(Full: __ / Body __)"
         )
 
     def __create_layouts(self):  # {{{
