@@ -1,0 +1,4 @@
+polars-lts-cpu
+pyqt6==6.11.0
+pytest
+pytest-asyncio
