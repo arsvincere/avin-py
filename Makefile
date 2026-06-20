@@ -1,6 +1,5 @@
 .DEFAULT_GOAL:=help
 SHELL=bash
-# PYTHONPATH=
 VENV=.venv
 ACTIVATE_ENV=source .venv/bin/activate
 

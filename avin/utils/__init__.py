@@ -12,6 +12,8 @@ from datetime import time as Time
 from datetime import timedelta as TimeDelta
 
 from avin.utils.cmd import Cmd
+from avin.utils.conf import cfg
+from avin.utils.logger import log
 
 __all__ = (
     "Cmd",
@@ -19,4 +21,6 @@ __all__ = (
     "DateTime",
     "Time",
     "TimeDelta",
+    "cfg",
+    "log",
 )

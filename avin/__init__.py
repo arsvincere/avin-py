@@ -5,7 +5,7 @@
 # LICENSE:      MIT
 # ============================================================================
 
-from avin.config import *
+from avin.connect import *
 from avin.core import *
-from avin.exceptions import *
+from avin.data import *
 from avin.utils import *

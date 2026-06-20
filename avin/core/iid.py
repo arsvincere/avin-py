@@ -5,10 +5,10 @@
 # LICENSE:      MIT
 # ============================================================================
 
-from avin.config import Cfg
 from avin.core.category import Category
 from avin.core.exchange import Exchange
 from avin.utils.cmd import Cmd
+from avin.utils.conf import cfg
 
 
 class Iid:
@@ -62,7 +62,7 @@ class Iid:
 
     def path(self) -> str:
         path = Cmd.path(
-            Cfg.Dir.DATA,
+            cfg.data,
             self.exchange().name,
             self.category().name,
             self.ticker(),

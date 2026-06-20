@@ -5,12 +5,10 @@
 # LICENSE:      MIT
 # ============================================================================
 
-from pathlib import Path
-
-__all__ = ("Cfg",)
+"""Custom exceptions."""
 
 
-class Cfg:
-    class Dir:
-        ROOT = Path.home() / "trading"
-        DATA = ROOT / "data"
+class ConfigNotFound(Exception): ...
+
+
+# class TickerNotFound(Exception): ...

@@ -1,0 +1,171 @@
+[dir]
+    # Specify the path to the working directory relative to the home folder
+    root = "trading" # == /home/<user>/trading
+
+    # Specify path to market data dir
+    data = "trading/data"
+
+[connect]
+    # Path to tinkoff token
+    tinkoff_token = "trading/connect/tinkoff/token.txt"
+
+    # Path to moex account
+    moex_account = "trading/connect/moex/account.txt"
+
+    # Path to moex api key
+    moex_token = "trading/connect/moex/token.txt"
+
+[usr]
+    # Your local timeshift from UTC+0
+    # set it if you want see time with offset-aware
+    # for example for Moscow +3 hours, set 0 if you want see default UTC time
+    offset = 3
+
+    # The application uses timestamp nanos everywhere.
+    # When it is necessary to display (in gui or log) will be used this format
+    dt_fmt = "%Y-%m-%d %H:%M:%S"
+
+    # Your applications
+    editor = "nvim"
+    python = "python3"
+    terminal = "alacritty"
+    # Exec flag for your terminal: -e for alacritty, -x for xfce4-terminal...
+    # example: 'alacritty -e nvim', 'xfce4-terminal -x nvim'
+    # it is use for run subprocesses
+    exec = "-e"
+    # Other options used when start terminal
+    opt = "-T AlacrittyFloat"
+
+[log]
+    history = 5 # days
+    debug = true
+    info = true
+
+[data]
+    # Availible formats: "parquet", "csv", "postgres"
+    format = "parquet"
+
+    record_tics = [
+        { iid = "MOEX_SHARE_AFKS", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_AFLT", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_ASTR", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_CHMF", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_GAZP", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_GMKN", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_LKOH", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_MOEX", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_MTSS", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_NLMK", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_NVTK", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_PIKK", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_PLZL", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_ROSN", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_SBER", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_SNGS", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_T", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_TATN", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_VTBR", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_YDEX", source = "TINKOFF" },
+    ]
+    record_ob = [
+        { iid = "MOEX_SHARE_AFKS", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_AFLT", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_ASTR", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_CHMF", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_GAZP", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_GMKN", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_LKOH", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_MOEX", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_MTSS", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_NLMK", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_NVTK", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_PIKK", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_PLZL", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_ROSN", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_SBER", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_SNGS", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_T", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_TATN", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_VTBR", source = "TINKOFF" },
+        { iid = "MOEX_SHARE_YDEX", source = "TINKOFF" },
+    ]
+
+[core]
+    default_asset_list = "xxx"
+    default_bars_count = 5000
+
+[tester]
+    default_commission = 0.05 # %
+
+[trader]
+    work_list = [
+        { iid = "MOEX_SHARE_AFKS", strategy = [ "BigTrendShort" ] },
+        { iid = "MOEX_SHARE_CHMF", strategy = [ "BigTrendShort" ] },
+        { iid = "MOEX_SHARE_GAZP", strategy = [ "BigTrendShort" ] },
+        { iid = "MOEX_SHARE_GMKN", strategy = [ "BigTrendShort" ] },
+        { iid = "MOEX_SHARE_LKOH", strategy = [ "BigTrendShort" ] },
+        { iid = "MOEX_SHARE_MOEX", strategy = [ "BigTrendShort" ] },
+        { iid = "MOEX_SHARE_NLMK", strategy = [ "BigTrendShort" ] },
+        { iid = "MOEX_SHARE_NVTK", strategy = [ "BigTrendShort" ] },
+        { iid = "MOEX_SHARE_ROSN", strategy = [ "BigTrendShort" ] },
+        { iid = "MOEX_SHARE_SBER", strategy = [ "BigTrendShort" ] },
+        { iid = "MOEX_SHARE_VTBR", strategy = [ "BigTrendShort" ] },
+    ]
+
+[terminal]
+
+[gui.color]
+    # common colors
+    red = "#FF0000"
+    orange = "#FFA500"
+    yellow = "#FFFF00"
+    green = "#008000"
+    cyan = "#00FFFF"
+    blue = "#0000FF"
+    violet = "#EE82EE"
+    white = "#FFFFFF"
+    grey = "#808080"
+    black = "#000000"
+
+    # Cursor crosshair
+    cross = "#282727"
+    cross_opacity = 1.0
+
+    # Bars with close < open
+    bear = "#C34043"
+    bear_opacity = 1.0
+
+    # Bars with close > open
+    bull = "#76946A"
+    bull_opacity = 1.0
+
+    # Bars with open == close
+    dodji = "#AAAAAA"
+    dodji_opacity = 1.0
+
+    # trends
+    trend_t1 = "#AAAAAA"
+    trend_t2 = "#658594"
+    trend_t3 = "#7E9CD8"
+    trend_t4 = "#957FB8"
+    trend_t5 = "#DCA561"
+    trend_t1_opacity = 0.2
+    trend_t2_opacity = 0.4
+    trend_t3_opacity = 0.6
+    trend_t4_opacity = 0.8
+    trend_t5_opacity = 1.0
+    auto_bar_opacity = true
+
+    # trades
+    trade_open = "#AAAAAA"
+    trade_take = "#24C824"
+    trade_stop = "#E82424"
+
+[gui.chart]
+    bottom_pane_height = 100.0
+    left_pane_width = 200.0
+    right_pane_width = 200.0
+
+[gui.test]
+    trade_shift = 1.03 # 3% upper
+    trade_size = 5.0 # px

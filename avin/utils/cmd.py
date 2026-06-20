@@ -12,66 +12,60 @@ import subprocess
 import tomllib
 import zipfile
 from collections import deque
+from pathlib import Path
 
 import polars as pl
 
 
 class Cmd:
     @staticmethod
-    def path(*path_parts) -> str:
-        path = os.path.join(*path_parts)
+    def path(*path_parts: (Path)) -> Path:
+        """Склеивает все части в один путь"""
+
+        path = Path.joinpath(*path_parts)
         return path
 
     @staticmethod
-    def make_dirs(path: str) -> None:
+    def make_dirs(path: Path) -> None:
         """Создает все необходимые папки для этого пути"""
 
-        if not os.path.exists(path):
-            os.makedirs(path)
+        path.mkdir(parents=True, exist_ok=True)
 
     @staticmethod
-    def name(file_path: str, extension: bool = False) -> str:
+    def name(file_path: Path, extension: bool = False) -> str:
         """Отделяет имя файла из пути к файлу
         /home/file_name.txt -> file_name.txt  # extension=True
         /home/file_name.txt -> file_name  # extension=False
         """
 
-        file_name = os.path.basename(file_path)  # == somename.xxx
-
         if extension:
-            return file_name
-
-        name = os.path.splitext(file_name)[0]  # == somename
-        return name
+            return file_path.name  # == name.xxx
+        else:
+            return file_path.stem  # == name
 
     @staticmethod
-    def dir_name(file_path: str) -> str:
+    def dir_name(file_path: Path) -> str:
         assert Cmd.is_file(file_path)
 
-        file_path = os.path.dirname(file_path)
-        dir_name = os.path.basename(file_path)
-
-        return dir_name
+        return file_path.parent.name
 
     @staticmethod
-    def dir_path(file_path: str) -> str:
+    def dir_path(file_path: Path) -> Path:
         assert Cmd.is_file(file_path)
 
-        dir_path = os.path.dirname(file_path)
-
-        return dir_path
+        return file_path.parent
 
     @staticmethod
-    def is_exist(path: str) -> bool:
-        return os.path.exists(path)
+    def is_exist(path: Path) -> bool:
+        return path.is_file() or path.is_dir()
 
     @staticmethod
-    def is_file(path: str) -> bool:
-        return os.path.isfile(path)
+    def is_file(path: Path) -> bool:
+        return path.is_file()
 
     @staticmethod
-    def is_dir(path: str) -> bool:
-        return os.path.isdir(path)
+    def is_dir(path: Path) -> bool:
+        return path.is_dir()
 
     @staticmethod
     def content(dir_path: str, full_path=False) -> list[str]:

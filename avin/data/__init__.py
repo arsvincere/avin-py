@@ -5,10 +5,6 @@
 # LICENSE:      MIT
 # ============================================================================
 
-"""Custom exceptions."""
+from avin.data.iid_cache import IidCache
 
-
-# class ConfigNotFound(Exception): ...
-
-
-# class TickerNotFound(Exception): ...
+__all__ = ("IidCache",)
