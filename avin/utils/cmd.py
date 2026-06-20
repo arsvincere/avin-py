@@ -6,7 +6,6 @@
 # ============================================================================
 
 import json
-import os
 import shutil
 import subprocess
 import tomllib
@@ -15,6 +14,7 @@ from collections import deque
 from pathlib import Path
 
 import polars as pl
+import tomli_w
 
 
 class Cmd:
@@ -68,117 +68,118 @@ class Cmd:
         return path.is_dir()
 
     @staticmethod
-    def content(dir_path: str, full_path=False) -> list[str]:
-        names = os.listdir(dir_path)
-
+    def content(dir_path: Path, full_path=False) -> list[str]:
         contents = list()
-        for name in names:
+
+        for i in dir_path.iterdir():
             if full_path:
-                path = Cmd.path(dir_path, name)
-                contents.append(path)
+                contents.append(str(i))
             else:
-                contents.append(name)
+                contents.append(i.name)
 
         return contents
 
     @staticmethod
     def get_files(
-        dir_path: str, full_path=False, include_sub_dir=False
+        dir_path: Path, full_path=False, include_sub_dir=False
     ) -> list[str]:
         if include_sub_dir:
             return Cmd.__get_files_in_dir_include_subdir(dir_path, full_path)
-
-        return Cmd.__get_files_in_dir(dir_path, full_path)
+        else:
+            return Cmd.__get_files_in_dir(dir_path, full_path)
 
     @staticmethod
-    def get_dirs(dir_path: str, full_path=False) -> list[str]:
+    def get_dirs(dir_path: Path, full_path=False) -> list[str]:
         """Возвращает список папок в 'dir_path' без обхода подпапок"""
-        names = os.listdir(dir_path)
 
-        list_dirs = list()
-        for name in names:
-            path = Cmd.path(dir_path, name)
-            if os.path.isdir(path):
+        dirs = list()
+
+        for i in dir_path.iterdir():
+            if i.is_dir():
                 if full_path:
-                    list_dirs.append(path)
+                    dirs.append(str(i))
                 else:
-                    list_dirs.append(name)
+                    dirs.append(i.name)
 
-        return list_dirs
-
-    @staticmethod
-    def find_file(file_name: str, dir_path: str) -> str | None:
-        for root, _dirs, files in os.walk(dir_path):
-            if file_name in files:
-                return os.path.join(root, file_name)
-
-        return None
+        return dirs
 
     @staticmethod
-    def find_dir(dir_name: str, root_dir: str) -> str | None:
-        for root, dirs, _files in os.walk(root_dir):
-            if dir_name in dirs:
-                return os.path.join(root, dir_name)
+    def find_file(file_name: str, dir_path: Path) -> list[Path]:
+        """Searching file include subdirs, collect all founded.
+        file_name may be a pattern, for example "*_test.py"
+        """
 
-        return None
+        finded = list()
 
-    @staticmethod
-    def select(files: list[str], name=None, extension=None) -> list[str]:
-        """Список файлов c именем 'name', и/или расширением 'extension'"""
+        for i in dir_path.rglob(file_name):
+            if i.is_file():
+                finded.append(i)
 
-        selected = list()
-        for file in files:
-            if name is not None and name == Cmd.name(file):
-                selected.append(file)
-            if extension is not None and file.endswith(extension):
-                selected.append(file)
-
-        return selected
+        return finded
 
     @staticmethod
-    def rename(old_path: str, new_path: str) -> None:
+    def find_dir(dir_name: str, root_dir: Path) -> list[Path]:
+        """Searching dir (include subdirs), collect all founded.
+        dir_name may be a pattern, for example "u*"
+        """
+        finded = list()
+
+        for i in root_dir.rglob(dir_name):
+            if i.is_dir():
+                finded.append(i)
+
+        return finded
+
+    @staticmethod
+    def rename(old_path: Path, new_path: Path) -> None:
         """Переименовывает old_path в new_path"""
 
-        os.rename(old_path, new_path)
+        old_path.rename(new_path)
 
     @staticmethod
-    def replace(src: str, dest: str, create_dirs=True) -> None:
-        """Перемещает src в dest"""
+    def replace(src: Path, dest: Path, create_dirs=True) -> None:
+        """Перемещает src в dest.
+
+        В отличии от Cmd.rename флаг create_dirs позволяет
+        создать при необходимости путь к директории.
+
+        WARNING: Overriding if dest is exist!
+        """
 
         if create_dirs:
             Cmd.__create_dirs_for_filepath(dest)
 
-        os.replace(src, dest)
+        src.replace(dest)
 
     @staticmethod
-    def copy(src_file: str, dest_file: str) -> None:
+    def copy(src_file: Path, dest_file: Path) -> None:
         """Копирует src в dest"""
 
         shutil.copy(src_file, dest_file)
 
     @staticmethod
-    def copy_dir(src: str, dest: str) -> None:
+    def copy_dir(src: Path, dest: Path) -> None:
         """Копирует src в dest"""
 
         shutil.copytree(src, dest)
 
     @staticmethod
-    def delete(file_path: str) -> None:
+    def delete(file_path: Path) -> None:
         """Удаляет файла по указанному пути"""
 
-        os.remove(file_path)
+        file_path.unlink()
 
     @staticmethod
-    def delete_dir(path: str) -> None:
-        shutil.rmtree(path)
+    def delete_dir(dir_path: Path) -> None:
+        shutil.rmtree(dir_path)
 
     @staticmethod
-    def extract(archive_path: str, dest_dir: str) -> None:
+    def extract(archive_path: Path, dest_dir: Path) -> None:
         with zipfile.ZipFile(archive_path, "r") as file:
             file.extractall(dest_dir)
 
     @staticmethod
-    def read(file_path: str) -> str:
+    def read(file_path: Path) -> str:
         """Read file as one string"""
 
         with open(file_path, encoding="utf-8") as file:
@@ -187,7 +188,7 @@ class Cmd:
         return string
 
     @staticmethod
-    def write(string: str, file_path: str, create_dirs=True) -> None:
+    def write(string: str, file_path: Path, create_dirs=True) -> None:
         """Write string in file (overwrite)"""
         if create_dirs:
             Cmd.__create_dirs_for_filepath(file_path)
@@ -196,7 +197,7 @@ class Cmd:
             file.write(string)
 
     @staticmethod
-    def append(text: list[str], file_path: str) -> None:
+    def append(text: list[str], file_path: Path) -> None:
         """Append text in file"""
 
         with open(file_path, "a", encoding="utf-8") as file:
@@ -204,7 +205,7 @@ class Cmd:
                 file.write(line)
 
     @staticmethod
-    def get_tail(file_path: str, n: int) -> list[str]:
+    def get_tail(file_path: Path, n: int) -> list[str]:
         # Читает весь файл построчно и добавляет его в
         # очередь, у которой максимальная длина n... таким образом
         # дойдя до конца файла в очереди останется n последних строк
@@ -215,7 +216,7 @@ class Cmd:
         return text
 
     @staticmethod
-    def read_text(file_path: str) -> list[str]:
+    def read_text(file_path: Path) -> list[str]:
         """Read file by row, return list[str]"""
 
         text = list()
@@ -226,7 +227,9 @@ class Cmd:
         return text
 
     @staticmethod
-    def write_text(text: list[str], file_path: str, create_dirs=True) -> None:
+    def write_text(
+        text: list[str], file_path: Path, create_dirs=True
+    ) -> None:
         if create_dirs:
             Cmd.__create_dirs_for_filepath(file_path)
 
@@ -235,7 +238,7 @@ class Cmd:
                 file.write(line)
 
     @staticmethod
-    def read_json(file_path: str, decoder=None):
+    def read_json(file_path: Path, decoder=None):
         with open(file_path, encoding="utf-8") as file:
             obj = json.load(
                 fp=file,
@@ -246,7 +249,7 @@ class Cmd:
 
     @staticmethod
     def write_json(
-        obj, file_path, encoder=None, indent=4, create_dirs=True
+        obj, file_path: Path, encoder=None, indent=4, create_dirs=True
     ) -> None:
         if create_dirs:
             Cmd.__create_dirs_for_filepath(file_path)
@@ -261,7 +264,7 @@ class Cmd:
             )
 
     @staticmethod
-    def from_json_str(string: str, decoder=None):
+    def from_json_str(string: str, decoder=None) -> object:
         obj = json.loads(
             string,
             object_hook=decoder,
@@ -281,21 +284,26 @@ class Cmd:
         return string
 
     @staticmethod
-    def read_toml(file_path: str):
+    def read_toml(file_path: Path) -> object:
         with file_path.open(mode="rb") as f:
             data = tomllib.load(f)
 
         return data
 
     @staticmethod
-    def read_pqt(path: str) -> pl.DataFrame:
+    def write_toml(obj, file_path: Path) -> None:
+        with file_path.open(mode="wb") as f:
+            tomli_w.dump(obj, f)
+
+    @staticmethod
+    def read_pqt(path: Path) -> pl.DataFrame:
         df = pl.read_parquet(path)
 
         return df
 
     @staticmethod
     def write_pqt(
-        df: pl.DataFrame, path: str, create_dirs: bool = True
+        df: pl.DataFrame, path: Path, create_dirs: bool = True
     ) -> None:
         if create_dirs:
             Cmd.__create_dirs_for_filepath(path)
@@ -317,37 +325,37 @@ class Cmd:
         subprocess.call(command)
 
     @staticmethod
-    def __get_files_in_dir(dir_path, full_path):
+    def __get_files_in_dir(dir_path: Path, full_path: bool) -> list[str]:
         all_files = list()
-        names = os.listdir(dir_path)
-        for name in names:
-            path = Cmd.path(dir_path, name)
-            if os.path.isfile(path):
+
+        for i in dir_path.iterdir():
+            if i.is_file():
                 if full_path:
-                    all_files.append(path)
+                    all_files.append(str(i))
                 else:
-                    all_files.append(name)
+                    all_files.append(i.name)
+
         return all_files
 
     @staticmethod
-    def __get_files_in_dir_include_subdir(dir_path, full_path):
+    def __get_files_in_dir_include_subdir(
+        dir_path: Path, full_path: bool
+    ) -> list[str]:
         all_files = list()
-        for root, _dirs, files in os.walk(dir_path):
-            if full_path:
-                for f in files:
-                    path = Cmd.path(root, f)
-                    all_files.append(path)
-            else:
-                all_files += files
+
+        for i in dir_path.rglob("*"):
+            if i.is_file():
+                if full_path:
+                    all_files.append(str(i))
+                else:
+                    all_files.append(i.name)
 
         return all_files
 
     @staticmethod
-    def __create_dirs_for_filepath(file_path) -> None:
-        dir_path = os.path.dirname(file_path)
-
-        if not os.path.exists(dir_path):
-            os.makedirs(dir_path)
+    def __create_dirs_for_filepath(file_path: Path) -> None:
+        dir_path = file_path.parent
+        Cmd.make_dirs(dir_path)
 
     # @staticmethod
     # def write_bin(
