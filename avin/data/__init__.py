@@ -6,5 +6,6 @@
 # ============================================================================
 
 from avin.data.iid_cache import IidCache
+from avin.data.source_tinkoff import SourceTinkoff
 
-__all__ = ("IidCache",)
+__all__ = ("IidCache", "SourceTinkoff")

@@ -1,7 +1,7 @@
 .DEFAULT_GOAL:=help
 SHELL=bash
 VENV=.venv
-ACTIVATE_ENV=source .venv/bin/activate
+ACTIVATE_ENV=source ~/avin/.venv/bin/activate
 
 venv:
 	python3 -m venv $(VENV)
@@ -12,7 +12,7 @@ requirements: .venv
 	$(VENV)/bin/python -m pip install --upgrade -r requirements.txt
 
 dev: .venv
-	source ~/avin/.venv/bin/activate && nvim -c AvinDevPy
+	$(ACTIVATE_ENV) && nvim -c AvinDevPy
 
 check:
 	ruff check --select I --fix

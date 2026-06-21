@@ -5,6 +5,3 @@
 # LICENSE:      MIT
 # ============================================================================
 
-from avin.connect.tinkoff import SourceTinkoff
-
-__all__ = ("SourceTinkoff",)

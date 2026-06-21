@@ -8,12 +8,15 @@
 from __future__ import annotations
 
 import polars as pl
+import requests
 import t_tech.invest as ti
 
 from avin.core.category import Category
+from avin.core.iid import Iid
+from avin.core.market_data import MarketData
 from avin.core.source import Source
 from avin.data.iid_cache import IidCache
-from avin.utils import Cmd, cfg, dt_to_ts, log
+from avin.utils import Cmd, DateTime, cfg, dt_to_ts, log
 from avin.utils.exceptions import InvalidToken
 
 SOURCE = Source.TINKOFF
@@ -49,7 +52,11 @@ class SourceTinkoff:
     TOKEN = None
 
     @classmethod
-    def cache_instruments_info(cls) -> None:
+    def availible_market_data(cls) -> list[MarketData]:
+        return [MarketData.BAR_1M]
+
+    @classmethod
+    def cache(cls) -> None:
         log.info("Caching instruments info from Tinkoff")
 
         # Without authorization - not work
@@ -63,7 +70,13 @@ class SourceTinkoff:
         cache = IidCache(SOURCE, Category.SHARE, df_shares_info)
         IidCache.save(cache)
 
-        print(df_shares_info)
+    @classmethod
+    def download(cls, iid: Iid, md: MarketData, year: int) -> None:
+        match md:
+            case MarketData.BAR_1M:
+                _download_tinkoff_bar_1m(iid, md, year)
+            case _:
+                raise ValueError(f"Tinkoff not provide: {md}")
 
     @classmethod
     def __ensure_auth(cls) -> None:
@@ -229,6 +242,114 @@ def _extract_info(i: ti.Instrument) -> dict:
         exit(1)
 
     return info
+
+
+def _download_tinkoff_bar_1m(iid: Iid, md: MarketData, year: int) -> None:
+    # create clear tmp dir
+    tmp_dir = cfg.tmp / "tinkoff"
+    if tmp_dir.exists():
+        Cmd.delete_dir(tmp_dir)
+        Cmd.make_dirs(tmp_dir)
+
+    # create archive path
+    e = iid.exchange().name
+    c = iid.category().name
+    t = iid.ticker()
+    archive_name = f"{e}-{c}-{t}-{md}-{year}.zip"
+    archive_path = tmp_dir / "download" / archive_name
+    Cmd.make_dirs_for_filepath(archive_path)
+    print(archive_path)
+
+    # create clear dir path for extract files
+    extract_dir_name = f"{e}-{c}-{t}-{md}-{year}"
+    extract_path = tmp_dir / "extract" / extract_dir_name
+    Cmd.make_dirs_for_filepath(extract_path)
+    print(extract_path)
+    if extract_path.exists():
+        Cmd.delete_dir(tmp_dir)
+        Cmd.make_dirs(tmp_dir)
+
+    # download archive
+    uid = iid.info()["uid"]
+    url = "https://invest-public-api.tinkoff.ru/history-data?"
+    url += f"instrumentId={uid}&"
+    url += f"year={year}"
+    with open(archive_path, "wb") as f:
+        f.write(requests.get(url).content)
+
+    # check archive not empty
+    if Cmd.size(archive_path) == 0:
+        raise ValueError(f"Market data for {iid}-{year} unavailable")
+
+    # extract archive
+    Cmd.extract(archive_path, extract_path)
+
+    # read extracted tinkoff csv files
+    schema = pl.Schema(
+        {
+            "uid": pl.String,
+            "datetime": pl.String,
+            "open": pl.Float64,
+            "close": pl.Float64,
+            "high": pl.Float64,
+            "low": pl.Float64,
+            "volume": pl.Int64,
+            "--": pl.String,
+        }
+    )
+    tinkoff_df = pl.DataFrame(schema=schema)
+    files = sorted(Cmd.get_files(extract_path, full_path=True))
+    for file in files:
+        file_df = pl.read_csv(
+            file,
+            has_header=False,
+            separator=";",
+            schema=schema,
+        )
+        tinkoff_df.extend(file_df)
+
+    # format tinkoff bars data:
+    # input df
+    # ┌─────┬───────────┬───────┬───────┬───────┬───────┬────────┬──────┐
+    # │ uid ┆ datetime  ┆ open  ┆ close ┆ high  ┆ low   ┆ volume ┆ --   │
+    # │ --- ┆ ---       ┆ ---   ┆ ---   ┆ ---   ┆ ---   ┆ ---    ┆ ---  │
+    # │ str ┆ str       ┆ f64   ┆ f64   ┆ f64   ┆ f64   ┆ i64    ┆ str  │
+    # ╞═════╪═══════════╪═══════╪═══════╪═══════╪═══════╪════════╪══════╡
+    # │ c.. ┆ 2025-01.. ┆ 83.2  ┆ 83.4  ┆ 83.4  ┆ 83.2  ┆ 4      ┆ null │
+    # │ c.. ┆ 2025-01.. ┆ 82.68 ┆ 82.68 ┆ 82.68 ┆ 82.68 ┆ 1      ┆ null │
+    # │ c.. ┆ 2025-01.. ┆ 82.64 ┆ 82.64 ┆ 82.64 ┆ 82.64 ┆ 1      ┆ null │
+    # │ c.. ┆ 2025-01.. ┆ 82.66 ┆ 82.64 ┆ 82.68 ┆ 82.64 ┆ 15     ┆ null │
+    # │ c.. ┆ 2025-01.. ┆ 82.68 ┆ 82.8  ┆ 82.8  ┆ 82.68 ┆ 30     ┆ null │
+    # │ …   ┆ …         ┆ …     ┆ …     ┆ …     ┆ …     ┆ …      ┆ …    │
+    #
+    # output df
+    # ┌───────────┬───────┬───────┬───────┬───────┬────────┬──────┐
+    # │ datetime  ┆ open  ┆ close ┆ high  ┆ low   ┆ volume ┆ ts   │
+    # │ ---       ┆ ---   ┆ ---   ┆ ---   ┆ ---   ┆ ---    ┆ ---  │
+    # │ str       ┆ f64   ┆ f64   ┆ f64   ┆ f64   ┆ i64    ┆ i64  │
+    # ╞═══════════╪═══════╪═══════╪═══════╪═══════╪════════╪══════╡
+    # │ 2025-01.. ┆ 83.2  ┆ 83.4  ┆ 83.4  ┆ 83.2  ┆ 4      ┆ 1234 │
+    # │ 2025-01.. ┆ 82.68 ┆ 82.68 ┆ 82.68 ┆ 82.68 ┆ 1      ┆ 1235 │
+    # │ 2025-01.. ┆ 82.64 ┆ 82.64 ┆ 82.64 ┆ 82.64 ┆ 1      ┆ 1236 │
+    # │ 2025-01.. ┆ 82.66 ┆ 82.64 ┆ 82.68 ┆ 82.64 ┆ 15     ┆ 1237 │
+    # │ 2025-01.. ┆ 82.68 ┆ 82.8  ┆ 82.8  ┆ 82.68 ┆ 30     ┆ 1238 │
+    # │ …         ┆ …     ┆ …     ┆ …     ┆ …     ┆ …      ┆ …    │
+    timestamps = list()
+    datetimes = tinkoff_df.get_column("datetime")
+    for str_dt in datetimes:
+        dt = DateTime.fromisoformat(str_dt)
+        ts = dt_to_ts(dt)
+        timestamps.append(ts)
+
+    df = tinkoff_df.select(
+        ["datetime", "open", "high", "low", "close", "volume"]
+    )
+    df = df.with_columns(pl.Series("ts", timestamps))
+
+    # save parquet
+    file_name = f"{year}.parquet"
+    file_path = iid.path() / SOURCE.name / file_name
+    Cmd.write_pqt(df, file_path)
 
 
 if __name__ == "__main__":

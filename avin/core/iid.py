@@ -5,6 +5,8 @@
 # LICENSE:      MIT
 # ============================================================================
 
+from pathlib import Path
+
 from avin.core.category import Category
 from avin.core.exchange import Exchange
 from avin.utils.cmd import Cmd
@@ -60,12 +62,12 @@ class Iid:
     def step(self) -> float:
         return float(self.__info["step"])
 
-    def path(self) -> str:
+    def path(self) -> Path:
         path = Cmd.path(
             cfg.data,
-            self.exchange().name,
-            self.category().name,
-            self.ticker(),
+            Path(self.exchange().name),
+            Path(self.category().name),
+            Path(self.ticker()),
         )
         return path
 

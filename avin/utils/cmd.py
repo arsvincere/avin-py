@@ -26,10 +26,16 @@ class Cmd:
         return path
 
     @staticmethod
-    def make_dirs(path: Path) -> None:
+    def make_dirs(dir_path: Path) -> None:
         """Создает все необходимые папки для этого пути"""
 
-        path.mkdir(parents=True, exist_ok=True)
+        dir_path.mkdir(parents=True, exist_ok=True)
+
+    @staticmethod
+    def make_dirs_for_filepath(file_path: Path) -> None:
+        # TODO: test it
+        dir_path = file_path.parent
+        Cmd.make_dirs(dir_path)
 
     @staticmethod
     def name(file_path: Path, extension: bool = False) -> str:
@@ -42,6 +48,11 @@ class Cmd:
             return file_path.name  # == name.xxx
         else:
             return file_path.stem  # == name
+
+    @staticmethod
+    def size(file_path: Path) -> int:
+        # TODO: test it
+        return file_path.stat().st_size
 
     @staticmethod
     def dir_name(file_path: Path) -> str:
@@ -147,7 +158,7 @@ class Cmd:
         """
 
         if create_dirs:
-            Cmd.__create_dirs_for_filepath(dest)
+            Cmd.make_dirs_for_filepath(dest)
 
         src.replace(dest)
 
@@ -191,7 +202,7 @@ class Cmd:
     def write(string: str, file_path: Path, create_dirs=True) -> None:
         """Write string in file (overwrite)"""
         if create_dirs:
-            Cmd.__create_dirs_for_filepath(file_path)
+            Cmd.make_dirs_for_filepath(file_path)
 
         with open(file_path, "w", encoding="utf-8") as file:
             file.write(string)
@@ -231,7 +242,7 @@ class Cmd:
         text: list[str], file_path: Path, create_dirs=True
     ) -> None:
         if create_dirs:
-            Cmd.__create_dirs_for_filepath(file_path)
+            Cmd.make_dirs_for_filepath(file_path)
 
         with open(file_path, "w", encoding="utf-8") as file:
             for line in text:
@@ -252,7 +263,7 @@ class Cmd:
         obj, file_path: Path, encoder=None, indent=4, create_dirs=True
     ) -> None:
         if create_dirs:
-            Cmd.__create_dirs_for_filepath(file_path)
+            Cmd.make_dirs_for_filepath(file_path)
 
         with open(file_path, "w", encoding="utf-8") as file:
             json.dump(
@@ -306,7 +317,7 @@ class Cmd:
         df: pl.DataFrame, path: Path, create_dirs: bool = True
     ) -> None:
         if create_dirs:
-            Cmd.__create_dirs_for_filepath(path)
+            Cmd.make_dirs_for_filepath(path)
 
         df.write_parquet(path)
 
@@ -352,17 +363,12 @@ class Cmd:
 
         return all_files
 
-    @staticmethod
-    def __create_dirs_for_filepath(file_path: Path) -> None:
-        dir_path = file_path.parent
-        Cmd.make_dirs(dir_path)
-
     # @staticmethod
     # def write_bin(
     #     obj: object, path: str, compres=False, create_dirs=True
     # ) -> None:
     #     if create_dirs:
-    #         Cmd.__create_dirs_for_filepath(path)
+    #         Cmd.make_dirs_for_filepath(path)
     #
     #     fh = None
     #     try:
