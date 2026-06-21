@@ -18,67 +18,83 @@ from avin.utils.conf import cfg
 class Iid:
     """Instrument id"""
 
-    def __init__(self, info: dict[str, str]):
-        assert info["exchange"] is not None
-        assert info["category"] is not None
-        assert info["ticker"] is not None
-        assert info["figi"] is not None
-        assert info["name"] is not None
-        assert info["lot"] is not None
-        assert info["step"] is not None
+    def __init__(self, raw_info: dict[str, str]):
+        required = (
+            "exchange",
+            "category",
+            "ticker",
+            "figi",
+            "name",
+            "lot",
+            "step",
+        )
+        for key in required:
+            if key not in raw_info:
+                raise ValueError(f"{key} missing")
 
-        self.__info = info
+            if not isinstance(raw_info[key], str) or raw_info[key] == "":
+                raise ValueError(f"{key} invalid")
 
-    def __str__(self):
-        s = f"{self.exchange().name}_{self.category().name}_{self.ticker()}"
+        self.__raw_info = raw_info
+
+    def __str__(self) -> str:
+        s = f"{self.exchange.name}_{self.category.name}_{self.ticker}"
         return s
 
-    def __hash__(self):
-        return hash(self.figi())
+    def __hash__(self) -> int:
+        return hash(self.figi)
 
-    def __eq__(self, other: object):
-        assert isinstance(other, Iid)
-        return self.figi() == other.figi()
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Iid):
+            return NotImplemented
 
-    def info(self) -> dict[str, str]:
-        return self.__info
+        return self.figi == other.figi
 
+    @property
     def exchange(self) -> Exchange:
-        return Exchange.from_str(self.__info["exchange"])
+        return Exchange.from_str(self.__raw_info["exchange"])
 
+    @property
     def category(self) -> Category:
-        return Category.from_str(self.__info["category"])
+        return Category.from_str(self.__raw_info["category"])
 
+    @property
     def ticker(self) -> str:
-        return self.__info["ticker"]
+        return self.__raw_info["ticker"]
 
+    @property
     def figi(self) -> str:
-        return self.__info["figi"]
+        return self.__raw_info["figi"]
 
+    @property
     def name(self) -> str:
-        return self.__info["name"]
+        return self.__raw_info["name"]
 
+    @property
     def lot(self) -> int:
-        return int(self.__info["lot"])
+        return int(self.__raw_info["lot"])
 
+    @property
     def step(self) -> float:
-        return float(self.__info["step"])
+        return float(self.__raw_info["step"])
 
+    @property
     def path(self) -> Path:
         path = (
-            cfg.data
-            / self.exchange().name
-            / self.category().name
-            / self.ticker()
+            cfg.data / self.exchange.name / self.category.name / self.ticker
         )
         return path
 
-    def print(self) -> str:
-        return Cmd.to_json_str(self.__info, indent=4)
+    def to_json_str(self) -> str:
+        return Cmd.to_json_str(self.__raw_info, indent=4)
+
+    def dump_raw_info(self) -> dict[str, str]:
+        return self.__raw_info.copy()
 
     @classmethod
     def from_df(cls, df: pl.DataFrame) -> Iid:
-        assert len(df) == 1
+        if df.height != 1:
+            raise ValueError("Iid DataFrame must contain exactly 1 row")
 
         dct = df.row(0, named=True)
 
