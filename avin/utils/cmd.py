@@ -5,6 +5,7 @@
 # LICENSE:      MIT
 # ============================================================================
 
+import gzip
 import json
 import shutil
 import subprocess
@@ -32,7 +33,7 @@ class Cmd:
         dir_path.mkdir(parents=True, exist_ok=True)
 
     @staticmethod
-    def make_dirs_for_filepath(file_path: Path) -> None:
+    def make_dirs_for_file(file_path: Path) -> None:
         # TODO: test it
         dir_path = file_path.parent
         Cmd.make_dirs(dir_path)
@@ -158,7 +159,7 @@ class Cmd:
         """
 
         if create_dirs:
-            Cmd.make_dirs_for_filepath(dest)
+            Cmd.make_dirs_for_file(dest)
 
         src.replace(dest)
 
@@ -185,9 +186,16 @@ class Cmd:
         shutil.rmtree(dir_path)
 
     @staticmethod
-    def extract(archive_path: Path, dest_dir: Path) -> None:
+    def extract_zip(archive_path: Path, dest_dir: Path) -> None:
+        # TODO: test it
         with zipfile.ZipFile(archive_path, "r") as file:
             file.extractall(dest_dir)
+
+    @staticmethod
+    def extract_gz(archive_path: Path, dest: Path) -> None:
+        # TODO: test it
+        with gzip.open(archive_path, "rb") as f_in, open(dest, "wb") as f_out:
+            shutil.copyfileobj(f_in, f_out)
 
     @staticmethod
     def read(file_path: Path) -> str:
@@ -202,7 +210,7 @@ class Cmd:
     def write(string: str, file_path: Path, create_dirs=True) -> None:
         """Write string in file (overwrite)"""
         if create_dirs:
-            Cmd.make_dirs_for_filepath(file_path)
+            Cmd.make_dirs_for_file(file_path)
 
         with open(file_path, "w", encoding="utf-8") as file:
             file.write(string)
@@ -242,7 +250,7 @@ class Cmd:
         text: list[str], file_path: Path, create_dirs=True
     ) -> None:
         if create_dirs:
-            Cmd.make_dirs_for_filepath(file_path)
+            Cmd.make_dirs_for_file(file_path)
 
         with open(file_path, "w", encoding="utf-8") as file:
             for line in text:
@@ -263,7 +271,7 @@ class Cmd:
         obj, file_path: Path, encoder=None, indent=4, create_dirs=True
     ) -> None:
         if create_dirs:
-            Cmd.make_dirs_for_filepath(file_path)
+            Cmd.make_dirs_for_file(file_path)
 
         with open(file_path, "w", encoding="utf-8") as file:
             json.dump(
@@ -317,7 +325,7 @@ class Cmd:
         df: pl.DataFrame, path: Path, create_dirs: bool = True
     ) -> None:
         if create_dirs:
-            Cmd.make_dirs_for_filepath(path)
+            Cmd.make_dirs_for_file(path)
 
         df.write_parquet(path)
 
@@ -368,7 +376,7 @@ class Cmd:
     #     obj: object, path: str, compres=False, create_dirs=True
     # ) -> None:
     #     if create_dirs:
-    #         Cmd.make_dirs_for_filepath(path)
+    #         Cmd.make_dirs_for_file(path)
     #
     #     fh = None
     #     try:

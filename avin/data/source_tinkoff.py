@@ -7,6 +7,8 @@
 
 from __future__ import annotations
 
+import time
+
 import polars as pl
 import requests
 import t_tech.invest as ti
@@ -16,7 +18,7 @@ from avin.core.iid import Iid
 from avin.core.market_data import MarketData
 from avin.core.source import Source
 from avin.data.iid_cache import IidCache
-from avin.utils import Cmd, DateTime, cfg, dt_to_ts, log
+from avin.utils import Cmd, Date, DateTime, TimeDelta, cfg, dt_to_ts, log
 from avin.utils.exceptions import InvalidToken
 
 SOURCE = Source.TINKOFF
@@ -75,6 +77,8 @@ class SourceTinkoff:
         match md:
             case MarketData.BAR_1M:
                 _download_tinkoff_bar_1m(iid, md, year)
+            case MarketData.TIC:
+                _download_tinkoff_tic(iid, md, year)
             case _:
                 raise ValueError(f"Tinkoff not provide: {md}")
 
@@ -257,14 +261,12 @@ def _download_tinkoff_bar_1m(iid: Iid, md: MarketData, year: int) -> None:
     t = iid.ticker()
     archive_name = f"{e}-{c}-{t}-{md}-{year}.zip"
     archive_path = tmp_dir / "download" / archive_name
-    Cmd.make_dirs_for_filepath(archive_path)
-    print(archive_path)
+    Cmd.make_dirs_for_file(archive_path)
 
     # create clear dir path for extract files
     extract_dir_name = f"{e}-{c}-{t}-{md}-{year}"
     extract_path = tmp_dir / "extract" / extract_dir_name
-    Cmd.make_dirs_for_filepath(extract_path)
-    print(extract_path)
+    Cmd.make_dirs_for_file(extract_path)
     if extract_path.exists():
         Cmd.delete_dir(tmp_dir)
         Cmd.make_dirs(tmp_dir)
@@ -282,7 +284,7 @@ def _download_tinkoff_bar_1m(iid: Iid, md: MarketData, year: int) -> None:
         raise ValueError(f"Market data for {iid}-{year} unavailable")
 
     # extract archive
-    Cmd.extract(archive_path, extract_path)
+    Cmd.extract_zip(archive_path, extract_path)
 
     # read extracted tinkoff csv files
     schema = pl.Schema(
@@ -294,7 +296,7 @@ def _download_tinkoff_bar_1m(iid: Iid, md: MarketData, year: int) -> None:
             "high": pl.Float64,
             "low": pl.Float64,
             "volume": pl.Int64,
-            "--": pl.String,
+            "x": pl.String,
         }
     )
     tinkoff_df = pl.DataFrame(schema=schema)
@@ -311,7 +313,7 @@ def _download_tinkoff_bar_1m(iid: Iid, md: MarketData, year: int) -> None:
     # format tinkoff bars data:
     # input df
     # ┌─────┬───────────┬───────┬───────┬───────┬───────┬────────┬──────┐
-    # │ uid ┆ datetime  ┆ open  ┆ close ┆ high  ┆ low   ┆ volume ┆ --   │
+    # │ uid ┆ datetime  ┆ open  ┆ close ┆ high  ┆ low   ┆ volume ┆ x    │
     # │ --- ┆ ---       ┆ ---   ┆ ---   ┆ ---   ┆ ---   ┆ ---    ┆ ---  │
     # │ str ┆ str       ┆ f64   ┆ f64   ┆ f64   ┆ f64   ┆ i64    ┆ str  │
     # ╞═════╪═══════════╪═══════╪═══════╪═══════╪═══════╪════════╪══════╡
@@ -348,8 +350,122 @@ def _download_tinkoff_bar_1m(iid: Iid, md: MarketData, year: int) -> None:
 
     # save parquet
     file_name = f"{year}.parquet"
-    file_path = iid.path() / SOURCE.name / file_name
+    file_path = iid.path() / SOURCE.name / md.name / file_name
     Cmd.write_pqt(df, file_path)
+
+    # clear tmp dir
+    Cmd.delete_dir(tmp_dir)
+
+
+def _download_tinkoff_tic(iid: Iid, md: MarketData, year: int) -> None:
+    # create clear tmp dir
+    tmp_dir = cfg.tmp / "tinkoff"
+    if tmp_dir.exists():
+        Cmd.delete_dir(tmp_dir)
+        Cmd.make_dirs(tmp_dir)
+
+    # download archive day by day
+    ticker = iid.ticker()
+    day = Date(year, 1, 1)
+    # end = Date(year + 1, 1, 1) #
+    end = Date(year, 1, 5)  # dbg
+    while day < end:
+        # HTTP ERROR 429 (Too Many Requests)... 30 per minute is max
+        time.sleep(1)
+
+        # create archive path
+        e = iid.exchange().name
+        c = iid.category().name
+        t = iid.ticker()
+        archive_name = f"{e}-{c}-{t}-{md}-{day}.csv.gz"
+        archive_path = tmp_dir / "download" / archive_name
+        Cmd.make_dirs_for_file(archive_path)
+
+        # create clear dir path for extract files
+        extract_dir_name = f"{e}-{c}-{t}-{md}-{day}"
+        extract_path = tmp_dir / "extract" / extract_dir_name
+        Cmd.make_dirs_for_file(extract_path)
+        if extract_path.exists():
+            Cmd.delete_dir(tmp_dir)
+            Cmd.make_dirs(tmp_dir)
+
+        url = "https://invest-public-api.tinkoff.ru/history-trades/"
+        url += f"{day}?"
+        url += f"instrumentId={ticker}_TQBR"
+        with open(archive_path, "wb") as f:
+            f.write(requests.get(url).content)
+
+        # check archive not empty: skip / extract
+        if Cmd.size(archive_path) == 0:
+            log.info(f"{day} - no tic data")
+            Cmd.delete(archive_path)
+            continue
+        else:
+            Cmd.extract_gz(archive_path, extract_path)
+            log.info(f"{day} - tic data extracted")
+
+        # read extracted tinkoff csv files
+        schema = pl.Schema(
+            {
+                "datetime": pl.String,
+                "ticker": pl.String,
+                "direction": pl.String,
+                "price": pl.Float64,
+                "lots": pl.Int64,
+                "source": pl.String,
+                "uid": pl.String,
+                "x": pl.String,
+            }
+        )
+        tinkoff_df = pl.read_csv(
+            extract_path,
+            has_header=True,
+            separator=",",
+            schema=schema,
+        )
+
+        # format tinkoff bars data:
+        # input df
+        # ┌─────────┬───────┬──────────┬───────┬─────┬───────┬─────┬─────┐
+        # │ datetime┆ ticker┆ direction┆ price ┆ lots┆ source┆ uid ┆ x   │
+        # │ ---     ┆ ---   ┆ ---      ┆ ---   ┆ --- ┆ ---   ┆ --- ┆ --- │
+        # │ str     ┆ str   ┆ str      ┆ f64   ┆ f64 ┆ str   ┆ str ┆ str │
+        # ╞═════════╪═══════╪══════════╪═══════╪═════╪═══════╪═════╪═════╡
+        # │ 2026-01-┆ SBER_T┆ BUY      ┆ 300.53┆ 1.0 ┆ DEALER┆ e612┆ null│
+        #
+        # output df
+        # ┌──────────┬───────────┬────────┬──────┬──────────┬────────┬───────┐
+        # │ datetime ┆ direction ┆ price  ┆ lots ┆ quantity ┆ value  ┆ ts    │
+        # │ ---      ┆ ---       ┆ ---    ┆ ---  ┆ ---      ┆ ---    ┆ ---   │
+        # │ str      ┆ str       ┆ f64    ┆ i64  ┆ i64      ┆ f64    ┆ i64   │
+        # ╞══════════╪═══════════╪════════╪══════╪══════════╪════════╪═══════╡
+        # │ 2026-..  ┆ BUY       ┆ 300.26 ┆ 1    ┆ 10       ┆ 3002.6 ┆ 176.. │
+
+        df = tinkoff_df.select(["datetime", "direction", "price", "lots"])
+        df = df.with_columns(quantity=pl.col("lots") * iid.lot())
+        df = df.with_columns(value=pl.col("quantity") * pl.col("price"))
+        df = df.with_columns(pl.col("direction").str.replace_all("BUY", "B"))
+        df = df.with_columns(pl.col("direction").str.replace_all("SELL", "S"))
+
+        timestamps = list()
+        datetimes = tinkoff_df.get_column("datetime")
+        for str_dt in datetimes:
+            dt = DateTime.fromisoformat(str_dt)
+            ts = dt_to_ts(dt)
+            timestamps.append(ts)
+        df = df.with_columns(pl.Series("ts", timestamps))
+
+        # save parquet
+        file_name = f"{day}.parquet"
+        file_path = iid.path() / SOURCE.name / md.name / file_name
+        Cmd.write_pqt(df, file_path)
+
+        # next day
+        day += TimeDelta(days=1)
+
+    input(99)
+    # clear tmp dir
+    Cmd.delete_dir(tmp_dir)
 
 
 if __name__ == "__main__":

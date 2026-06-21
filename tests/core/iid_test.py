@@ -17,6 +17,7 @@ def test_iid():
         "name": "Сбер Банк",
         "lot": "10",
         "step": "0.01",
+        "uid": "e6123145-9665-43e0-8413-cd61b8aa9b13",
     }
 
     iid = Iid(info)
@@ -28,4 +29,5 @@ def test_iid():
     assert iid.name() == "Сбер Банк"
     assert iid.lot() == 10
     assert iid.step() == 0.01
+    assert iid.info()["uid"] == "e6123145-9665-43e0-8413-cd61b8aa9b13"
     assert iid.path() == "/home/alex/trading/data/MOEX/SHARE/SBER"
