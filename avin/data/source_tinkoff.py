@@ -17,9 +17,9 @@ from avin.core.category import Category
 from avin.core.iid import Iid
 from avin.core.market_data import MarketData
 from avin.core.source import Source
-from avin.data.cache_iid import IidCache
-from avin.data.data_bar import DataBar
-from avin.data.data_tic import DataTic
+from avin.data.bar_storge import BarStorage
+from avin.data.iid_storage import IidStorage
+from avin.data.tic_storage import TicStorage
 from avin.utils import Cmd, Date, DateTime, TimeDelta, cfg, dt_to_ts, log
 from avin.utils.exceptions import InvalidToken
 
@@ -71,8 +71,8 @@ class SourceTinkoff:
         # df with full info about shares
         df_shares_info = cls.__get_shares_info(f_shares)
 
-        cache = IidCache(SOURCE, Category.SHARE, df_shares_info)
-        IidCache.save(cache)
+        cache = IidStorage(SOURCE, Category.SHARE, df_shares_info)
+        IidStorage.save(cache)
 
     @classmethod
     def download(cls, iid: Iid, md: MarketData, year: int) -> None:
@@ -351,7 +351,7 @@ def _download_tinkoff_bar_1m(iid: Iid, md: MarketData, year: int) -> None:
     df = df.with_columns(pl.Series("ts", timestamps))
 
     # save parquet
-    DataBar.save(iid, SOURCE, md, df)
+    BarStorage.save(iid, SOURCE, md, df)
 
     # clear tmp dir
     Cmd.delete_dir(tmp_dir)
@@ -367,8 +367,7 @@ def _download_tinkoff_tic(iid: Iid, md: MarketData, year: int) -> None:
     # download archive day by day
     ticker = iid.ticker()
     day = Date(year, 1, 1)
-    # end = Date(year + 1, 1, 1) #
-    end = Date(year, 1, 5)  # dbg
+    end = Date(year + 1, 1, 1)
     while day < end:
         # HTTP ERROR 429 (Too Many Requests)... 30 per minute is max
         time.sleep(1)
@@ -399,6 +398,7 @@ def _download_tinkoff_tic(iid: Iid, md: MarketData, year: int) -> None:
         if Cmd.size(archive_path) == 0:
             log.info(f"{day} - no tic data")
             Cmd.delete(archive_path)
+            day += TimeDelta(days=1)
             continue
         else:
             Cmd.extract_gz(archive_path, extract_path)
@@ -456,7 +456,7 @@ def _download_tinkoff_tic(iid: Iid, md: MarketData, year: int) -> None:
         df = df.with_columns(pl.Series("ts", timestamps))
 
         # save parquet
-        DataTic.save(iid, SOURCE, md, df)
+        TicStorage.save(iid, SOURCE, md, df)
 
         # next day
         day += TimeDelta(days=1)

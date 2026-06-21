@@ -5,6 +5,8 @@
 # LICENSE:      MIT
 # ============================================================================
 
+from pathlib import Path
+
 from avin import *
 
 
@@ -30,4 +32,4 @@ def test_iid():
     assert iid.lot() == 10
     assert iid.step() == 0.01
     assert iid.info()["uid"] == "e6123145-9665-43e0-8413-cd61b8aa9b13"
-    assert iid.path() == "/home/alex/trading/data/MOEX/SHARE/SBER"
+    assert iid.path() == Path("/home/alex/trading/data/MOEX/SHARE/SBER")

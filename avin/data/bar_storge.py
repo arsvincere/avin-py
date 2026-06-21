@@ -20,7 +20,7 @@ from avin.utils import Cmd, dt_to_ts, log, ts_to_dt
 from avin.utils.exceptions import DataNotFound
 
 
-class DataBar:
+class BarStorage:
     @classmethod
     def save(
         cls, iid: Iid, source: Source, md: MarketData, df: pl.DataFrame
@@ -30,8 +30,8 @@ class DataBar:
         assert isinstance(md, MarketData)
         assert isinstance(df, pl.DataFrame)
 
-        b = ts_to_dt(df.item(0, "ts_nanos")).year
-        e = ts_to_dt(df.item(-1, "ts_nanos")).year
+        b = ts_to_dt(df.item(0, "ts")).year
+        e = ts_to_dt(df.item(-1, "ts")).year
         assert b == e
 
         # NOTE:
@@ -39,15 +39,15 @@ class DataBar:
         # два разных года. Например при обновление в первых
         # числах января. Перед сохранением нужно проверить состав
         # датафрейма и сохранить кусками по годам.
-        year = ts_to_dt(df.item(0, "ts_nanos")).year
-        end = ts_to_dt(df.item(-1, "ts_nanos")).year
+        year = ts_to_dt(df.item(0, "ts")).year
+        end = ts_to_dt(df.item(-1, "ts")).year
         while year <= end:
             begin_ts = dt_to_ts(DateTime(year, 1, 1, tzinfo=UTC))
             end_ts = dt_to_ts(DateTime(year + 1, 1, 1, tzinfo=UTC))
 
             year_df = df.filter(
-                pl.col("ts_nanos") >= begin_ts,
-                pl.col("ts_nanos") < end_ts,
+                pl.col("ts") >= begin_ts,
+                pl.col("ts") < end_ts,
             )
 
             path = cls.__create_file_path(iid, source, md, year)
@@ -90,7 +90,7 @@ class DataBar:
     def __create_dir_path(
         cls, iid: Iid, source: Source, md: MarketData
     ) -> Path:
-        dir_path = iid.path() / md.name
+        dir_path = iid.path() / source.name / md.name
 
         return dir_path
 

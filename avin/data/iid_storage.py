@@ -16,7 +16,7 @@ from avin.core.source import Source
 from avin.utils import Cmd, cfg, log
 
 
-class IidCache:
+class IidStorage:
     def __init__(
         self,
         source: Source,
@@ -40,13 +40,13 @@ class IidCache:
     def df(self) -> pl.DataFrame:
         return self.__iid_df
 
-    def path(self) -> str:
+    def path(self) -> Path:
         file_path = _create_file_path(self.__source, self.__category)
         return file_path
 
     @classmethod
-    def save(cls, cache: IidCache) -> None:
-        assert isinstance(cache, IidCache)
+    def save(cls, cache: IidStorage) -> None:
+        assert isinstance(cache, IidStorage)
 
         path = cache.path()
         df = cache.df()

@@ -19,7 +19,7 @@ from avin.utils import Cmd, log, ts_to_dt
 from avin.utils.exceptions import DataNotFound
 
 
-class DataTic:
+class TicStorage:
     @classmethod
     def save(
         cls, iid: Iid, source: Source, md: MarketData, df: pl.DataFrame
@@ -29,7 +29,7 @@ class DataTic:
         assert isinstance(df, pl.DataFrame)
         assert md == MarketData.TIC
 
-        date = ts_to_dt(df.item(0, "ts_nanos")).date()
+        date = ts_to_dt(df.item(0, "ts")).date()
 
         path = cls.__create_file_path(iid, source, md, date)
         Cmd.write_pqt(df, path)

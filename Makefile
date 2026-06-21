@@ -22,7 +22,10 @@ fmt:
 	ruff format
 
 test:
-	pytest tests
+	pytest -m "not integration"
+
+integration:
+	pytest -m integration
 
 pre-commit:
 	$(MAKE) check

@@ -14,7 +14,7 @@ from avin.asset.share import Share
 from avin.core.category import Category
 from avin.core.iid import Iid
 from avin.core.source import Source
-from avin.data.cache_iid import IidCache
+from avin.data.iid_storage import IidStorage
 from avin.utils.exceptions import TickerNotFound
 
 
@@ -41,4 +41,4 @@ class AssetFactory:
 
 @cache
 def _cached_load_shares() -> pl.DataFrame:
-    return IidCache.load(Source.TINKOFF, Category.SHARE)
+    return IidStorage.load(Source.TINKOFF, Category.SHARE)
