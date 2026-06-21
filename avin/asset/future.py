@@ -5,16 +5,7 @@
 # LICENSE:      MIT
 # ============================================================================
 
-"""Custom exceptions."""
+from avin.asset.asset import Asset
 
 
-class ConfigNotFound(Exception): ...
-
-
-class DataNotFound(Exception): ...
-
-
-class InvalidToken(Exception): ...
-
-
-class TickerNotFound(Exception): ...
+class Future(Asset): ...

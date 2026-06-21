@@ -17,7 +17,9 @@ from avin.core.category import Category
 from avin.core.iid import Iid
 from avin.core.market_data import MarketData
 from avin.core.source import Source
-from avin.data.iid_cache import IidCache
+from avin.data.cache_iid import IidCache
+from avin.data.data_bar import DataBar
+from avin.data.data_tic import DataTic
 from avin.utils import Cmd, Date, DateTime, TimeDelta, cfg, dt_to_ts, log
 from avin.utils.exceptions import InvalidToken
 
@@ -349,9 +351,7 @@ def _download_tinkoff_bar_1m(iid: Iid, md: MarketData, year: int) -> None:
     df = df.with_columns(pl.Series("ts", timestamps))
 
     # save parquet
-    file_name = f"{year}.parquet"
-    file_path = iid.path() / SOURCE.name / md.name / file_name
-    Cmd.write_pqt(df, file_path)
+    DataBar.save(iid, SOURCE, md, df)
 
     # clear tmp dir
     Cmd.delete_dir(tmp_dir)
@@ -456,14 +456,11 @@ def _download_tinkoff_tic(iid: Iid, md: MarketData, year: int) -> None:
         df = df.with_columns(pl.Series("ts", timestamps))
 
         # save parquet
-        file_name = f"{day}.parquet"
-        file_path = iid.path() / SOURCE.name / md.name / file_name
-        Cmd.write_pqt(df, file_path)
+        DataTic.save(iid, SOURCE, md, df)
 
         # next day
         day += TimeDelta(days=1)
 
-    input(99)
     # clear tmp dir
     Cmd.delete_dir(tmp_dir)
 

@@ -7,6 +7,8 @@
 
 from pathlib import Path
 
+import polars as pl
+
 from avin.core.category import Category
 from avin.core.exchange import Exchange
 from avin.utils.cmd import Cmd
@@ -63,13 +65,21 @@ class Iid:
         return float(self.__info["step"])
 
     def path(self) -> Path:
-        path = Cmd.path(
-            cfg.data,
-            Path(self.exchange().name),
-            Path(self.category().name),
-            Path(self.ticker()),
+        path = (
+            cfg.data
+            / self.exchange().name
+            / self.category().name
+            / self.ticker()
         )
         return path
 
     def print(self) -> str:
         return Cmd.to_json_str(self.__info, indent=4)
+
+    @classmethod
+    def from_df(cls, df: pl.DataFrame) -> Iid:
+        assert len(df) == 1
+
+        dct = df.row(0, named=True)
+
+        return Iid(dct)

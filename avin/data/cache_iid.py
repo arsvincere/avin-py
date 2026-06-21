@@ -55,20 +55,17 @@ class IidCache:
         log.info(f"Cache save: {path}")
 
     @classmethod
-    def load(cls, source: Source, category: Category) -> IidCache:
+    def load(cls, source: Source, category: Category) -> pl.DataFrame:
         path = _create_file_path(source, category)
-        df = Cmd.read_pqt(Path(path))
-        cache = IidCache(source, category, df)
+        if path.exists():
+            df = Cmd.read_pqt(Path(path))
+            return df
 
-        return cache
+        raise FileNotFoundError(path)
 
 
-def _create_file_path(source: Source, category: Category) -> str:
-    cache_path = Cmd.path(
-        cfg.cache,
-        source.name,
-        f"{category.name}.parquet",
-    )
+def _create_file_path(source: Source, category: Category) -> Path:
+    cache_path = cfg.cache / source.name / f"{category.name}.parquet"
 
     return cache_path
 

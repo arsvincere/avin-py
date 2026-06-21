@@ -5,7 +5,14 @@
 # LICENSE:      MIT
 # ============================================================================
 
-from avin.data.iid_cache import IidCache
+from avin.data.cache_iid import IidCache
+from avin.data.data_bar import DataBar
+from avin.data.data_tic import DataTic
 from avin.data.source_tinkoff import SourceTinkoff
 
-__all__ = ("IidCache", "SourceTinkoff")
+__all__ = (
+    "DataBar",
+    "DataTic",
+    "IidCache",
+    "SourceTinkoff",
+)
