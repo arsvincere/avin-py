@@ -12,7 +12,7 @@ requirements: .venv
 	$(VENV)/bin/python -m pip install --upgrade -r requirements.txt
 
 dev: .venv
-	source ~/avin.supellex/.venv/bin/activate && nvim -c AvinDevPy
+	source ~/avin/.venv/bin/activate && nvim -c AvinDevPy
 
 check:
 	ruff check --select I --fix

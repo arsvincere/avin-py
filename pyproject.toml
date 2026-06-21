@@ -5,7 +5,7 @@ description = "Trade system"
 authors = [{name = "Alex Avin", email = "mr.alexavin@gmail.com"}]
 license = "MIT"
 license-files = ["LICENSE"]
-requires-python = ">=3.14"
+# requires-python = ">=3.14"
 
 [tool.mypy]
 ignore_missing_imports = true

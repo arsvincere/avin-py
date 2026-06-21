@@ -1,17 +1,10 @@
 # ============================================================================
-# URL:          http://avin.info
+# URL:          http://arsvincjre.com
 # AUTHOR:       Alex Avin
 # E-MAIL:       mr.alexavin@gmail.com
 # LICENSE:      MIT
 # ============================================================================
 
-"""Custom exceptions."""
+from avin.connect.tinkoff import SourceTinkoff
 
-
-class ConfigNotFound(Exception): ...
-
-
-class InvalidToken(Exception): ...
-
-
-# class TickerNotFound(Exception): ...
+__all__ = ("SourceTinkoff",)
