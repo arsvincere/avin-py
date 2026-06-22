@@ -5,251 +5,331 @@
 # LICENSE:      MIT
 # ============================================================================
 
+import gzip
+import zipfile
 from pathlib import Path
 
 import polars as pl
 
-from avin import *
+from avin.utils.cmd import Cmd
 
 
-def test_path():
-    root = Path.home()
-    a = Path("aaa")
-    b = Path("bbb")
-    c = Path("ccc")
+def test_make_dirs(tmp_path: Path):
+    path = tmp_path / "a" / "b" / "c"
 
-    res = Cmd.path(root, a, b, c)
+    Cmd.make_dirs(path)
 
-    assert res == Path("/home/alex/aaa/bbb/ccc")
+    assert path.is_dir()
 
 
-def test_make_dirs():
-    root = Path.home()
-    a = Path("test_cmd_make_dir")
-    res = Cmd.path(root, a)
+def test_make_dirs_for_file(tmp_path: Path):
+    file_path = tmp_path / "a" / "b" / "file.txt"
 
-    res.mkdir(parents=True, exist_ok=True)
-    assert res.is_dir()
+    Cmd.make_dirs_for_file(file_path)
 
-    res.rmdir()
+    assert file_path.parent.is_dir()
 
 
-def test_name():
-    p = Path("/home/alex/avin/requirements.txt")
+def test_name(tmp_path: Path):
+    file_path = tmp_path / "test.txt"
 
-    file_name_with_extension = Cmd.name(p, extension=True)
-    assert file_name_with_extension == "requirements.txt"
+    assert Cmd.name(file_path) == "test"
+    assert Cmd.name(file_path, extension=True) == "test.txt"
 
-    file_name = Cmd.name(p)
-    assert file_name == "requirements"
 
+def test_exists_file_dir(tmp_path: Path):
+    file_path = tmp_path / "file.txt"
+    file_path.write_text("hello")
 
-def test_dir_name():
-    p = Path("/home/alex/avin/requirements.txt")
+    assert Cmd.exists(file_path)
+    assert Cmd.is_file(file_path)
 
-    dir_name = Cmd.dir_name(p)
+    assert Cmd.exists(tmp_path)
+    assert Cmd.is_dir(tmp_path)
 
-    assert dir_name == "avin"
 
+def test_content(tmp_path: Path):
+    (tmp_path / "a.txt").write_text("1")
+    (tmp_path / "b.txt").write_text("2")
+    (tmp_path / "dir").mkdir()
 
-def test_dir_path():
-    p = Path("/home/alex/avin/requirements.txt")
+    content = Cmd.content(tmp_path)
 
-    dir_path = Cmd.dir_path(p)
+    assert "a.txt" in content
+    assert "b.txt" in content
+    assert "dir" in content
 
-    assert dir_path == Path("/home/alex/avin")
 
+def test_get_files(tmp_path: Path):
+    (tmp_path / "a.txt").write_text("1")
+    (tmp_path / "b.txt").write_text("2")
+    (tmp_path / "dir").mkdir()
 
-def test_is_exist():
-    p = Path("/home/alex/avin/requirements.txt")
-    assert Cmd.is_exist(p)
+    files = Cmd.get_files(tmp_path)
 
-    p = Path("/home/alex/avin")
-    assert Cmd.is_exist(p)
+    assert sorted(files) == ["a.txt", "b.txt"]
 
 
-def test_is_file():
-    p = Path("/home/alex/avin/requirements.txt")
-    assert Cmd.is_file(p)
+def test_get_files_recursive(tmp_path: Path):
+    (tmp_path / "root.txt").write_text("1")
 
-    p = Path("/home/alex/avin")
-    assert not Cmd.is_file(p)
+    sub = tmp_path / "sub"
+    sub.mkdir()
 
+    (sub / "inner.txt").write_text("2")
 
-def test_is_dir():
-    p = Path("/home/alex/avin")
-    assert Cmd.is_dir(p)
+    files = Cmd.get_files(
+        tmp_path,
+        include_sub_dir=True,
+    )
 
-    p = Path("/home/alex/avin/requirements.txt")
-    assert not Cmd.is_dir(p)
+    assert "root.txt" in files
+    assert "inner.txt" in files
 
 
-def test_content():
-    p = Path("/home/alex/avin/")
+def test_get_dirs(tmp_path: Path):
+    (tmp_path / "a").mkdir()
+    (tmp_path / "b").mkdir()
 
-    content = Cmd.content(p, full_path=False)
-    assert len(content) > 10
+    dirs = Cmd.get_dirs(tmp_path)
 
+    assert sorted(dirs) == ["a", "b"]
 
-def test_get_files():
-    p = Path("/home/alex/avin/")
 
-    files = Cmd.get_files(p, full_path=False, include_sub_dir=False)
-    assert len(files) > 5
+def test_find_file(tmp_path: Path):
+    file_path = tmp_path / "abc.txt"
+    file_path.write_text("hello")
 
+    found = Cmd.find_file("abc.txt", tmp_path)
 
-def test_get_dirs():
-    p = Path("/home/alex/avin/")
+    assert found == [file_path]
 
-    dirs = Cmd.get_dirs(p, full_path=False)
-    assert len(dirs) > 5
 
+def test_find_dir(tmp_path: Path):
+    dir_path = tmp_path / "test_dir"
+    dir_path.mkdir()
 
-def test_find_file():
-    p = Path("/home/alex/avin/")
-    pattern = "pyproject.toml"
+    found = Cmd.find_dir("test_dir", tmp_path)
 
-    result = Cmd.find_file(pattern, p)
-    assert len(result) == 1
+    assert found == [dir_path]
 
 
-def test_rename():
-    o = Path("/home/alex/avin/usr")
-    n = Path("/home/alex/avin/usss")
-    Cmd.rename(o, n)
-    assert n.exists()
+def test_rename(tmp_path: Path):
+    src = tmp_path / "old.txt"
+    dst = tmp_path / "new.txt"
 
-    # cancel rename
-    Cmd.rename(n, o)
+    src.write_text("hello")
 
+    Cmd.rename(src, dst)
 
-def test_replace():
-    src = Path("/home/alex/avin/usr")
-    dest = Path("/home/alex/avin/usss")
-    Cmd.replace(src, dest)
-    assert dest.exists()
+    assert not src.exists()
+    assert dst.exists()
 
-    # cancel replace
-    Cmd.replace(dest, src)
 
+def test_replace(tmp_path: Path):
+    src = tmp_path / "src.txt"
+    dst = tmp_path / "dir" / "dst.txt"
 
-def test_copy_delete_file():
-    src = Path("/home/alex/avin/requirements.txt")
-    dest = Path("/home/alex/avin/requirements.txt.2")
+    src.write_text("hello")
 
-    Cmd.copy(src, dest)
+    Cmd.replace(src, dst)
 
-    assert Cmd.is_exist(dest)
+    assert not src.exists()
+    assert dst.read_text() == "hello"
 
-    # delete
-    Cmd.delete(dest)
 
+def test_copy(tmp_path: Path):
+    src = tmp_path / "src.txt"
+    dst = tmp_path / "dst.txt"
 
-def test_copy_delete_dir():
-    src = Path("/home/alex/avin/tests")
-    dest = Path("/home/alex/avin/tests2")
+    src.write_text("hello")
 
-    Cmd.copy_dir(src, dest)
+    Cmd.copy(src, dst)
 
-    assert Cmd.is_exist(dest)
+    assert dst.read_text() == "hello"
 
-    # delete
-    Cmd.delete_dir(dest)
 
+def test_delete(tmp_path: Path):
+    file_path = tmp_path / "file.txt"
+    file_path.write_text("hello")
 
-def test_read():
-    p = Path("/home/alex/avin/requirements.txt")
+    Cmd.delete(file_path)
 
-    text = Cmd.read(p)
-    assert len(text) > 0
+    assert not file_path.exists()
 
 
-def test_write():
-    p = Path("/home/alex/avin/requirements.txt")
-    text = Cmd.read(p)
+def test_write_read(tmp_path: Path):
+    file_path = tmp_path / "file.txt"
 
-    p2 = Path("/home/alex/avin/requirements.txt2")
-    Cmd.write(text, p2)
+    Cmd.write("hello world", file_path)
 
-    Cmd.delete(p2)
+    assert Cmd.read(file_path) == "hello world"
 
 
-def test_read_text():
-    p = Path("/home/alex/avin/requirements.txt")
+def test_write_read_text(tmp_path: Path):
+    file_path = tmp_path / "file.txt"
 
-    text = Cmd.read_text(p)
-    assert len(text) > 0
+    text = ["a\n", "b\n", "c\n"]
 
+    Cmd.write_text(text, file_path)
 
-def test_write_text():
-    p = Path("/home/alex/avin/requirements.txt")
+    assert Cmd.read_text(file_path) == text
 
-    text = Cmd.read_text(p)
-    assert len(text) > 0
 
-    p2 = Path("/home/alex/avin/requirements.txt2")
-    Cmd.write_text(text, p2)
+def test_append(tmp_path: Path):
+    file_path = tmp_path / "file.txt"
 
-    Cmd.delete(p2)
+    Cmd.write("a\n", file_path)
 
+    Cmd.append(
+        [
+            "b\n",
+            "c\n",
+        ],
+        file_path,
+    )
 
-def test_read_write_json():
+    assert Cmd.read_text(file_path) == [
+        "a\n",
+        "b\n",
+        "c\n",
+    ]
+
+
+def test_get_tail(tmp_path: Path):
+    file_path = tmp_path / "file.txt"
+
+    text = [
+        "1\n",
+        "2\n",
+        "3\n",
+        "4\n",
+        "5\n",
+    ]
+
+    Cmd.write_text(text, file_path)
+
+    assert Cmd.get_tail(file_path, 2) == [
+        "4\n",
+        "5\n",
+    ]
+
+
+def test_json(tmp_path: Path):
+    file_path = tmp_path / "data.json"
+
     obj = {
-        "name": "alex",
-        "age": 18,
-        "trader": True,
+        "a": 1,
+        "b": "hello",
     }
 
-    p = Path("/home/alex/avin/test.json")
-    Cmd.write_json(obj, p)
+    Cmd.write_json(obj, file_path)
 
-    readed_obj = Cmd.read_json(p)
-    assert obj == readed_obj
+    loaded = Cmd.read_json(file_path)
 
-    Cmd.delete(p)
+    assert loaded == obj
 
 
-def test_from_to_json():
+def test_json_string():
     obj = {
-        "name": "alex",
-        "age": 18,
-        "trader": True,
+        "a": 1,
+        "b": "hello",
     }
 
-    s = Cmd.to_json_str(obj)
-    from_s = Cmd.from_json_str(s)
+    string = Cmd.to_json_str(obj)
 
-    assert obj == from_s
+    loaded = Cmd.from_json_str(string)
+
+    assert loaded == obj
 
 
-def test_toml():
+def test_toml(tmp_path: Path):
+    file_path = tmp_path / "data.toml"
+
     obj = {
-        "name": "alex",
-        "age": 18,
-        "trader": True,
+        "server": {
+            "host": "localhost",
+            "port": 8080,
+        }
     }
-    p = Path("/home/alex/avin/test.toml")
-    Cmd.write_toml(obj, p)
 
-    readed = Cmd.read_toml(p)
-    assert obj == readed
+    Cmd.write_toml(obj, file_path)
 
-    Cmd.delete(p)
+    loaded = Cmd.read_toml(file_path)
+
+    assert loaded == obj
 
 
-def test_pqt():
-    data = {
-        "employee_id": [101, 102, 103, 104],
-        "name": ["Alice", "Bob", "Charlie", "David"],
-        "department": ["HR", "IT", "IT", "Sales"],
-        "salary": [60000, 85000, 90000, 55000],
-    }
-    df = pl.DataFrame(data)
+def test_parquet(tmp_path: Path):
+    file_path = tmp_path / "test.parquet"
 
-    p = Path("/home/alex/avin/test.pqt")
-    Cmd.write_pqt(df, p)
+    df = pl.DataFrame(
+        {
+            "a": [1, 2, 3],
+            "b": ["x", "y", "z"],
+        }
+    )
 
-    readed = Cmd.read_pqt(p)
-    assert df.equals(readed)
+    Cmd.write_pqt(df, file_path)
 
-    Cmd.delete(p)
+    loaded = Cmd.read_pqt(file_path)
+
+    assert loaded.equals(df)
+
+
+def test_extract_gz(tmp_path: Path):
+    src = tmp_path / "source.txt"
+    gz = tmp_path / "source.txt.gz"
+    dst = tmp_path / "result.txt"
+
+    src.write_text("hello")
+
+    with open(src, "rb") as fin, gzip.open(gz, "wb") as fout:
+        fout.write(fin.read())
+
+    Cmd.extract_gz(gz, dst)
+
+    assert dst.read_text() == "hello"
+
+
+def test_extract_zip(tmp_path: Path):
+    src = tmp_path / "file.txt"
+    archive = tmp_path / "archive.zip"
+    dest = tmp_path / "extract"
+
+    src.write_text("hello")
+
+    with zipfile.ZipFile(archive, "w") as z:
+        z.write(src, arcname="file.txt")
+
+    Cmd.extract_zip(archive, dest)
+
+    assert (dest / "file.txt").read_text() == "hello"
+
+
+def test_size(tmp_path: Path):
+    file_path = tmp_path / "file.txt"
+
+    file_path.write_text("hello")
+
+    assert Cmd.size(file_path) == 5
+
+
+def test_dir_name(tmp_path: Path):
+    file_path = tmp_path / "mydir" / "file.txt"
+
+    file_path.parent.mkdir()
+
+    file_path.write_text("hello")
+
+    assert Cmd.dir_name(file_path) == "mydir"
+
+
+def test_dir_path(tmp_path: Path):
+    file_path = tmp_path / "mydir" / "file.txt"
+
+    file_path.parent.mkdir()
+
+    file_path.write_text("hello")
+
+    assert Cmd.dir_path(file_path) == file_path.parent

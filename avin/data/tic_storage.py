@@ -45,7 +45,7 @@ class TicStorage:
         assert isinstance(date, Date)
 
         path = cls.__create_file_path(iid, source, md, date)
-        if Cmd.is_exist(path):
+        if path.is_file():
             df = Cmd.read_pqt(path)
             return df
 

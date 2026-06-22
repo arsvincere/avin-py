@@ -6,7 +6,7 @@
 # ============================================================================
 
 import logging
-import os
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from avin.utils import Date
@@ -14,84 +14,91 @@ from avin.utils.conf import cfg
 
 __all__ = ("log", "configure_log")
 
-NAME = "avin-logger"
-LOG_DIR = cfg.log
-HISTORY = cfg.log_history
-DEBUG = cfg.log_debug
-INFO = cfg.log_info
+LOGGER_NAME = "avin-logger"
 
-log = logging.getLogger(NAME)
+log = logging.getLogger(LOGGER_NAME)
 
 
-def configure_log(debug: bool, info: bool):
-    logger = logging.getLogger(NAME)
-    __config_stream_log(logger)
+# =========================
+# Public API
+# =========================
+
+
+def configure_log(debug: bool, info: bool) -> logging.Logger:
+    """
+    Configure application logger (idempotent).
+    Safe to call multiple times.
+    """
+
+    logger = logging.getLogger(LOGGER_NAME)
+
+    if logger.handlers:
+        return logger  # already configured
+
+    logger.setLevel(logging.DEBUG)
+
+    _add_stream_handler(logger)
+
+    log_dir: Path = cfg.log
+    log_dir.mkdir(parents=True, exist_ok=True)
 
     if info:
-        info_log_path = os.path.join(LOG_DIR, f"{Date.today()}.log")
-        __config_info_log(logger, info_log_path)
+        _add_file_handler(
+            logger,
+            log_dir / f"{Date.today()}.log",
+            level=logging.INFO,
+            mode="a",
+        )
 
     if debug:
-        debug_log_path = os.path.join(LOG_DIR, "debug.log")
-        __config_debug_log(logger, debug_log_path)
+        _add_file_handler(
+            logger,
+            log_dir / "debug.log",
+            level=logging.DEBUG,
+            mode="w",
+        )
 
-    __delete_old_log_files(LOG_DIR, HISTORY)
+    return logger
 
 
-def __config_stream_log(logger):
-    stream_formatter = logging.Formatter(
+# =========================
+# Handlers
+# =========================
+
+
+def _add_stream_handler(logger: logging.Logger) -> None:
+    formatter = logging.Formatter(
         "%(asctime)s [%(levelname)s] %(message)s",
         datefmt="%H:%M:%S",
     )
 
-    stream_handler = logging.StreamHandler()
-    stream_handler.setFormatter(stream_formatter)
-    stream_handler.setLevel(logging.DEBUG)
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+    handler.setLevel(logging.DEBUG)
 
-    logger.addHandler(stream_handler)
+    logger.addHandler(handler)
 
 
-def __config_debug_log(logger, file_path):
-    file_formatter = logging.Formatter(
+def _add_file_handler(
+    logger: logging.Logger,
+    file_path: Path,
+    level: int,
+    mode: str,
+) -> None:
+    formatter = logging.Formatter(
         "%(module)s: %(asctime)s [%(levelname)s] %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    file_handler = logging.FileHandler(file_path, mode="w")
-    file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(file_formatter)
-
-    logger.addHandler(file_handler)
-    logger.setLevel(logging.DEBUG)
-
-
-def __config_info_log(logger, file_path):
-    file_formatter = logging.Formatter(
-        "%(module)s: %(asctime)s [%(levelname)s] %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
+    handler = RotatingFileHandler(
+        file_path,
+        maxBytes=10_000_000,
+        backupCount=cfg.log_history_days,
+        mode=mode,
+        encoding="utf-8",
     )
 
-    file_handler = logging.FileHandler(file_path, mode="a")
-    file_handler.setLevel(logging.INFO)
-    file_handler.setFormatter(file_formatter)
+    handler.setLevel(level)
+    handler.setFormatter(formatter)
 
-    logger.addHandler(file_handler)
-    logger.setLevel(logging.INFO)
-
-
-def __delete_old_log_files(log_dir: Path, max_files: int) -> None:
-    contents = os.listdir(log_dir)
-    contents = [os.path.join(log_dir, i) for i in contents]
-
-    files = [i for i in contents if os.path.isfile(i)]
-    log_files = sorted([i for i in files if i.endswith(".log")])
-
-    while len(log_files) > max_files:
-        os.remove(log_files[0])  # remove oldest file in sorted file list
-        log_files.pop(0)
-
-
-if __name__ == "__main__":
-    ...
-else:
-    configure_log(debug=DEBUG, info=INFO)
+    logger.addHandler(handler)

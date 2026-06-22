@@ -20,13 +20,6 @@ import tomli_w
 
 class Cmd:
     @staticmethod
-    def path(*path_parts: (Path)) -> Path:
-        """Склеивает все части в один путь"""
-
-        path = Path.joinpath(*path_parts)
-        return path
-
-    @staticmethod
     def make_dirs(dir_path: Path) -> None:
         """Создает все необходимые папки для этого пути"""
 
@@ -34,7 +27,6 @@ class Cmd:
 
     @staticmethod
     def make_dirs_for_file(file_path: Path) -> None:
-        # TODO: test it
         dir_path = file_path.parent
         Cmd.make_dirs(dir_path)
 
@@ -52,12 +44,12 @@ class Cmd:
 
     @staticmethod
     def size(file_path: Path) -> int:
-        # TODO: test it
         return file_path.stat().st_size
 
     @staticmethod
     def dir_name(file_path: Path) -> str:
-        assert Cmd.is_file(file_path)
+        if not file_path.is_file():
+            raise ValueError(file_path)
 
         return file_path.parent.name
 
@@ -68,7 +60,7 @@ class Cmd:
         return file_path.parent
 
     @staticmethod
-    def is_exist(path: Path) -> bool:
+    def exists(path: Path) -> bool:
         return path.is_file() or path.is_dir()
 
     @staticmethod
@@ -187,13 +179,11 @@ class Cmd:
 
     @staticmethod
     def extract_zip(archive_path: Path, dest_dir: Path) -> None:
-        # TODO: test it
         with zipfile.ZipFile(archive_path, "r") as file:
             file.extractall(dest_dir)
 
     @staticmethod
     def extract_gz(archive_path: Path, dest: Path) -> None:
-        # TODO: test it
         with gzip.open(archive_path, "rb") as f_in, open(dest, "wb") as f_out:
             shutil.copyfileobj(f_in, f_out)
 
@@ -341,7 +331,7 @@ class Cmd:
             new_window_command = "x-terminal-emulator -e".split()
         subprocess.check_call(new_window_command + command)
         """
-        subprocess.call(command)
+        subprocess.run(command, check=True)
 
     @staticmethod
     def __get_files_in_dir(dir_path: Path, full_path: bool) -> list[str]:

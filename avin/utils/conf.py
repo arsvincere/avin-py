@@ -7,122 +7,141 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta as TimeDelta
 from pathlib import Path
+from typing import Any
 from zoneinfo import ZoneInfo
 
 from avin.utils.cmd import Cmd
 from avin.utils.exceptions import ConfigNotFound
 
-__all__ = "cfg"
+# =========================
+# Core Config Loader
+# =========================
+
+CONFIG_FILENAME = "config.toml"
 
 
+def _search_config_file() -> Path:
+    """Search config in priority order."""
+
+    candidates = [
+        Path.cwd() / CONFIG_FILENAME,
+        Path.home() / ".config" / "avin" / CONFIG_FILENAME,
+        Path(__file__).parents[2] / "res" / CONFIG_FILENAME,
+    ]
+
+    for path in candidates:
+        if path.exists():
+            return path
+
+    raise ConfigNotFound(f"Config file not found. Tried: {candidates}")
+
+
+# =========================
+# Config model
+# =========================
+
+
+@dataclass(frozen=True)
 class Configuration:
-    def __init__(self, file_path: Path):
-        self.__path = file_path
-        self.__cfg = Cmd.read_toml(file_path)
+    _cfg: dict[str, Any]
+    _base_path: Path = Path.home()
+
+    # -------- paths --------
 
     @property
     def root(self) -> Path:
-        return Path.home() / self.__cfg["dir"]["root"]
+        return self._base_path / self._cfg["dir"]["root"]
 
     @property
     def data(self) -> Path:
-        return Path.home() / self.__cfg["dir"]["data"]
-
-    @property
-    def tinkoff_token(self) -> Path:
-        return Path.home() / self.__cfg["connect"]["tinkoff_token"]
-
-    @property
-    def moex_account(self) -> Path:
-        return Path.home() / self.__cfg["connect"]["moex_account"]
-
-    @property
-    def moex_token(self) -> Path:
-        return Path.home() / self.__cfg["connect"]["moex_token"]
+        return self._base_path / self._cfg["dir"]["data"]
 
     @property
     def log(self) -> Path:
-        return Path(self.root, "log")
+        return self.root / "log"
 
     @property
     def res(self) -> Path:
-        return Path(self.root, "res")
+        return self.root / "res"
 
     @property
     def tmp(self) -> Path:
-        return Path(self.root, "tmp")
+        return self.root / "tmp"
 
     @property
     def connect(self) -> Path:
-        return Path(self.root, "connect")
+        return self.root / "connect"
 
     @property
     def cache(self) -> Path:
-        return Path(self.data, "cache")
+        return self.data / "cache"
+
+    # -------- secrets (paths) --------
 
     @property
-    def log_history(self) -> int:
-        return self.__cfg["log"]["history"]
+    def tinkoff_token_path(self) -> Path:
+        return self._base_path / self._cfg["connect"]["tinkoff_token"]
+
+    @property
+    def moex_account_path(self) -> Path:
+        return self._base_path / self._cfg["connect"]["moex_account"]
+
+    @property
+    def moex_token_path(self) -> Path:
+        return self._base_path / self._cfg["connect"]["moex_token"]
+
+    # -------- log --------
+
+    @property
+    def log_history_days(self) -> int:
+        return int(self._cfg["log"]["history"])
 
     @property
     def log_debug(self) -> bool:
-        return self.__cfg["log"]["debug"]
+        return bool(self._cfg["log"]["debug"])
 
     @property
     def log_info(self) -> bool:
-        return self.__cfg["log"]["info"]
+        return bool(self._cfg["log"]["info"])
+
+    # -------- user --------
 
     @property
     def local_timezone(self) -> ZoneInfo:
-        str_zone = self.__cfg["usr"]["timezone"]
-        local_tz = ZoneInfo(str_zone)
-        return local_tz
+        return ZoneInfo(self._cfg["usr"]["timezone"])
 
     @property
     def offset(self) -> TimeDelta:
-        return TimeDelta(hours=self.__cfg["usr"]["offset"])
+        return TimeDelta(hours=int(self._cfg["usr"]["offset"]))
 
     @property
     def dt_fmt(self) -> str:
-        return self.__cfg["usr"]["dt_fmt"]
+        return self._cfg["usr"]["dt_fmt"]
+
+    # -------- helpers --------
+
+    def get(self, *keys: str, default: Any | None = None) -> Any:
+        """Safe nested access: cfg.get('trader','work_list')"""
+        cur: Any = self._cfg
+        for k in keys:
+            if not isinstance(cur, dict) or k not in cur:
+                return default
+            cur = cur[k]
+        return cur
 
 
-def _read_config() -> Configuration:
-    """Try find and read config
-
-    First try in current dir, then in ~/.config/avin/config.toml,
-    then use config.toml from res/
-
-    Returns:
-        Configuration.
-
-    Raises:
-        ConfigNotFound if config not exists.
-    """
-
-    file_name = "config.toml"
-
-    # 1. try find user config in current dir
-    path = Path(Path.cwd(), file_name)
-    if path.exists():
-        return Configuration(path)
-
-    # 2. try find in user home ~/.config/avin/
-    path = Path(Path.home(), ".config", "avin", file_name)
-    if path.exists():
-        return Configuration(path)
-
-    # 3. try use default config
-    path = Path(__file__).parent.parent.parent / "res" / "config.toml"
-    if path.exists():
-        return Configuration(path)
-
-    raise ConfigNotFound(f"Config file not found: {path}")
+# =========================
+# Public API
+# =========================
 
 
-if __name__ == "__main__":
-    ...
-else:
-    cfg = _read_config()
+def load_config() -> Configuration:
+    path = _search_config_file()
+    dct = Cmd.read_toml(path)
+    return Configuration(dct)
+
+
+cfg = load_config()

@@ -25,7 +25,7 @@ from avin.utils.exceptions import InvalidToken
 
 SOURCE = Source.TINKOFF
 TARGET = ti.constants.INVEST_GRPC_API
-TOKEN_PATH = cfg.tinkoff_token
+TOKEN_PATH = cfg.tinkoff_token_path
 SCHEMA = pl.Schema(
     {
         "exchange": pl.String,
@@ -126,7 +126,7 @@ class SourceTinkoff:
 
 
 def _read_token() -> str:
-    if not Cmd.is_exist(TOKEN_PATH):
+    if not Cmd.exists(TOKEN_PATH):
         log.error(
             "Tinkoff not exist token file, operations with market data "
             "and orders unavailible. Make a token and put it in a "

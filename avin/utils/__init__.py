@@ -17,12 +17,12 @@ from avin.utils.logger import log
 from avin.utils.misc import (
     dt_to_ts,
     next_month,
-    now,
     now_local,
+    now_utc,
     prev_month,
     str_to_utc,
     ts_to_dt,
-    utc_to_local,
+    utc_to_local_str,
 )
 
 __all__ = (
@@ -35,10 +35,10 @@ __all__ = (
     "dt_to_ts",
     "log",
     "next_month",
-    "now",
     "now_local",
+    "now_utc",
     "prev_month",
     "str_to_utc",
     "ts_to_dt",
-    "utc_to_local",
+    "utc_to_local_str",
 )

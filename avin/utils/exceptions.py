@@ -5,16 +5,40 @@
 # LICENSE:      MIT
 # ============================================================================
 
-"""Custom exceptions."""
+"""Custom exceptions for Avin system."""
 
 
-class ConfigNotFound(Exception): ...
+# =========================
+# Base
+# =========================
 
 
-class DataNotFound(Exception): ...
+class AvinError(Exception):
+    """Base exception for Avin project."""
 
 
-class InvalidToken(Exception): ...
+# =========================
+# Config
+# =========================
 
 
-class TickerNotFound(Exception): ...
+class ConfigNotFound(AvinError): ...
+
+
+# =========================
+# Data
+# =========================
+
+
+class DataNotFound(AvinError): ...
+
+
+class TickerNotFound(AvinError): ...
+
+
+# =========================
+# Auth / Connect
+# =========================
+
+
+class InvalidToken(AvinError): ...
