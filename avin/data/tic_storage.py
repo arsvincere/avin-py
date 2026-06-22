@@ -22,45 +22,75 @@ from avin.utils.exceptions import DataNotFound
 class TicStorage:
     @classmethod
     def save(
-        cls, iid: Iid, source: Source, md: MarketData, df: pl.DataFrame
+        cls,
+        iid: Iid,
+        source: Source,
+        md: MarketData,
+        df: pl.DataFrame,
     ) -> None:
-        assert isinstance(iid, Iid)
-        assert isinstance(md, MarketData)
-        assert isinstance(df, pl.DataFrame)
-        assert md == MarketData.TIC
+        if md is not MarketData.TIC:
+            raise ValueError(f"TicStorage supports only {MarketData.TIC}")
 
-        date = ts_to_dt(df.item(0, "ts")).date()
+        date = _validate_df(df)
 
-        path = cls.__create_file_path(iid, source, md, date)
+        path = _create_file_path(
+            iid,
+            source,
+            md,
+            date,
+        )
+
         Cmd.write_pqt(df, path)
 
         log.info(f"Save tics: {path}")
 
     @classmethod
     def load(
-        cls, iid: Iid, source: Source, md: MarketData, date: Date
+        cls,
+        iid: Iid,
+        source: Source,
+        md: MarketData,
+        date: Date,
     ) -> pl.DataFrame:
-        assert isinstance(iid, Iid)
-        assert isinstance(md, MarketData)
-        assert isinstance(date, Date)
-
-        path = cls.__create_file_path(iid, source, md, date)
-        if path.is_file():
-            df = Cmd.read_pqt(path)
-            return df
-
-        raise DataNotFound(f"{iid} {source} {md} {date}")
-
-    @classmethod
-    def __create_file_path(
-        cls, iid: Iid, source: Source, md: MarketData, date: Date
-    ) -> Path:
-        file_path = (
-            iid.path
-            / source.name
-            / md.name
-            / f"{date.year}"
-            / f"{date}.parquet"
+        path = _create_file_path(
+            iid,
+            source,
+            md,
+            date,
         )
 
-        return file_path
+        if not path.is_file():
+            raise DataNotFound(f"{iid} {source} {md} {date}")
+
+        return Cmd.read_pqt(path)
+
+
+def _validate_df(df: pl.DataFrame) -> Date:
+    """
+    Validate tic dataframe and return its trading date.
+    """
+
+    if df.is_empty():
+        raise ValueError("DataFrame is empty")
+
+    if "ts" not in df.columns:
+        raise ValueError("Column 'ts' not found")
+
+    first_date = ts_to_dt(df.item(0, "ts")).date()
+    last_date = ts_to_dt(df.item(-1, "ts")).date()
+
+    if first_date != last_date:
+        raise ValueError("TicStorage accepts data only for a single day")
+
+    return first_date
+
+
+def _create_file_path(
+    iid: Iid,
+    source: Source,
+    md: MarketData,
+    date: Date,
+) -> Path:
+    return (
+        iid.path / source.name / md.name / str(date.year) / f"{date}.parquet"
+    )

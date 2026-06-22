@@ -71,8 +71,7 @@ class SourceTinkoff:
         # df with full info about shares
         df_shares_info = cls.__get_shares_info(f_shares)
 
-        cache = IidStorage(SOURCE, Category.SHARE, df_shares_info)
-        IidStorage.save(cache)
+        IidStorage.save(SOURCE, Category.SHARE, df_shares_info)
 
     @classmethod
     def download(cls, iid: Iid, md: MarketData, year: int) -> None:

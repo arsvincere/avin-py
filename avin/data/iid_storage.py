@@ -14,61 +14,48 @@ import polars as pl
 from avin.core.category import Category
 from avin.core.source import Source
 from avin.utils import Cmd, cfg, log
+from avin.utils.exceptions import DataNotFound
 
 
 class IidStorage:
-    def __init__(
-        self,
+    @classmethod
+    def save(
+        cls,
         source: Source,
         category: Category,
-        iid_df: pl.DataFrame,
-    ):
-        assert isinstance(source, Source)
-        assert isinstance(category, Category)
-        assert isinstance(iid_df, pl.DataFrame)
+        df: pl.DataFrame,
+    ) -> None:
+        if df.is_empty():
+            raise ValueError("DataFrame is empty")
 
-        self.__source = source
-        self.__category = category
-        self.__iid_df = iid_df
+        path = _create_file_path(
+            source,
+            category,
+        )
 
-    def source(self) -> Source:
-        return self.__source
+        Cmd.write_pqt(df, path)
 
-    def category(self) -> Category:
-        return self.__category
-
-    def df(self) -> pl.DataFrame:
-        return self.__iid_df
-
-    def path(self) -> Path:
-        file_path = _create_file_path(self.__source, self.__category)
-        return file_path
+        log.info(f"Save iid cache: {path}")
 
     @classmethod
-    def save(cls, cache: IidStorage) -> None:
-        assert isinstance(cache, IidStorage)
+    def load(
+        cls,
+        source: Source,
+        category: Category,
+    ) -> pl.DataFrame:
+        path = _create_file_path(
+            source,
+            category,
+        )
 
-        path = cache.path()
-        df = cache.df()
-        Cmd.write_pqt(df, Path(path))
+        if not path.is_file():
+            raise DataNotFound(f"{source} {category} ({path})")
 
-        log.info(f"Cache save: {path}")
-
-    @classmethod
-    def load(cls, source: Source, category: Category) -> pl.DataFrame:
-        path = _create_file_path(source, category)
-        if path.exists():
-            df = Cmd.read_pqt(Path(path))
-            return df
-
-        raise FileNotFoundError(path)
+        return Cmd.read_pqt(path)
 
 
-def _create_file_path(source: Source, category: Category) -> Path:
-    cache_path = cfg.cache / source.name / f"{category.name}.parquet"
-
-    return cache_path
-
-
-if __name__ == "__main__":
-    ...
+def _create_file_path(
+    source: Source,
+    category: Category,
+) -> Path:
+    return cfg.cache / source.name / f"{category.name}.parquet"
