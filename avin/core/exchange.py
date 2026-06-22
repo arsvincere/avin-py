@@ -13,6 +13,9 @@ class Exchange(enum.Enum):
 
     MOEX = 1
 
+    def __str__(self) -> str:
+        return self.name
+
     @classmethod
     def from_str(cls, string: str) -> Exchange:
         """Get enum from str.
@@ -24,12 +27,13 @@ class Exchange(enum.Enum):
             Category Enum.
 
         Raises:
-            ExchangeNotFound if category not exists.
+            ValueError if category not exists.
         """
 
         if attr := getattr(cls, string.upper(), None):
             return attr
 
         raise ValueError(
-            f"Exchangw not found. Choice from {Exchange._member_names_}"
+            f"Unknown exchange '{string}'. "
+            f"Available: {', '.join(cls._member_names_)}"
         )

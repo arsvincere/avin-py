@@ -5,15 +5,34 @@
 # LICENSE:      MIT
 # ============================================================================
 
-from avin import *
+import pytest
+
+from avin.core.category import Category
 
 
-def test_category():
+def test_init():
     c = Category.SHARE
     assert c.name == "SHARE"
 
 
-def test_category_from_str():
+def test_from_str_upper():
+    assert Category.from_str("SHARE") == Category.SHARE
+
+
+def test_from_str_lower():
+    assert Category.from_str("share") == Category.SHARE
+
+
+def test_from_str_mixed():
+    assert Category.from_str("ShArE") == Category.SHARE
+
+
+def test_from_str_invalid():
+    with pytest.raises(ValueError):
+        Category.from_str("bitcoin")
+
+
+def test_category_from_str_all():
     assert Category.from_str("CURRENCY") == Category.CURRENCY
     assert Category.from_str("INDEX") == Category.INDEX
     assert Category.from_str("SHARE") == Category.SHARE

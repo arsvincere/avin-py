@@ -5,17 +5,37 @@
 # LICENSE:      MIT
 # ============================================================================
 
-from avin import *
+import pytest
+
+from avin.core.source import Source
 
 
-def test_source():
-    s = Source.MOEX
+def test_init():
+    s = Source.MOEXALGO
     assert s.name == "MOEX"
 
 
-def test_source_from_str():
-    from_str = Source.from_str("MOEX")
-    assert from_str == Source.MOEX
+def test_source_str():
+    assert str(Source.TINKOFF) == "TINKOFF"
+    assert str(Source.MOEXALGO) == "MOEXALGO"
 
-    from_str = Source.from_str("TINKOFF")
-    assert from_str == Source.TINKOFF
+
+def test_source_from_str():
+    assert Source.from_str("TINKOFF") is Source.TINKOFF
+    assert Source.from_str("tinkoff") is Source.TINKOFF
+
+    assert Source.from_str("MOEXALGO") is Source.MOEXALGO
+    assert Source.from_str("moexalgo") is Source.MOEXALGO
+
+
+def test_source_from_str_invalid_type():
+    with pytest.raises(TypeError):
+        Source.from_str(None)
+
+    with pytest.raises(TypeError):
+        Source.from_str(123)
+
+
+def test_source_from_str_invalid_name():
+    with pytest.raises(ValueError):
+        Source.from_str("foo")

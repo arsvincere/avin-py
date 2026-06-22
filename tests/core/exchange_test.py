@@ -5,14 +5,32 @@
 # LICENSE:      MIT
 # ============================================================================
 
-from avin import *
+import pytest
+
+from avin.core.exchange import Exchange
 
 
-def test_exchange():
+def test_init():
     moex = Exchange.MOEX
     assert moex.name == "MOEX"
 
 
-def test_exchange_from_str():
-    from_str = Exchange.from_str("MOEX")
-    assert from_str == Exchange.MOEX
+def test_from_str_upper():
+    assert Exchange.from_str("MOEX") == Exchange.MOEX
+
+
+def test_from_str_lower():
+    assert Exchange.from_str("moex") == Exchange.MOEX
+
+
+def test_from_str_mixed():
+    assert Exchange.from_str("mOeX") == Exchange.MOEX
+
+
+def test_str():
+    assert str(Exchange.MOEX) == "MOEX"
+
+
+def test_invalid():
+    with pytest.raises(ValueError):
+        Exchange.from_str("NYSE")

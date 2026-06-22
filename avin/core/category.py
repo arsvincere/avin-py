@@ -21,6 +21,9 @@ class Category(enum.Enum):
     OPTION = 6
     ETF = 7
 
+    def __str__(self) -> str:
+        return self.name
+
     @classmethod
     def from_str(cls, string: str) -> Category:
         """Get enum from str.
@@ -32,12 +35,13 @@ class Category(enum.Enum):
             Category Enum.
 
         Raises:
-            CategoryNotFound if category not exists.
+            ValueError: if category does not exist.
         """
 
         if attr := getattr(cls, string.upper(), None):
             return attr
 
         raise ValueError(
-            f"Category not found. Choice from {Category._member_names_}"
+            f"Unknown category '{string}'. "
+            f"Available: {', '.join(cls._member_names_)}"
         )

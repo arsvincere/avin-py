@@ -31,42 +31,44 @@ class MarketData(enum.Enum):
     def __str__(self) -> str:
         return self.value
 
-    def __hash__(self):
-        return hash(self.name)
-
+    @property
     def timedelta(self) -> TimeDelta:
-        periods = {
-            "1M": TimeDelta(minutes=1),
-            "5M": TimeDelta(minutes=5),
-            "10M": TimeDelta(minutes=10),
-            "1H": TimeDelta(hours=1),
-            "D": TimeDelta(days=1),
-            "W": TimeDelta(weeks=1),
-            # "M": TimeDelta(days=30),  # don't use it! it dangerous
-            "TRADE_STATS": TimeDelta(minutes=5),
-            "ORDER_STATS": TimeDelta(minutes=5),
-            "OB_STATS": TimeDelta(minutes=5),
-        }
-        return periods[self.value]
+        match self:
+            case MarketData.BAR_1M:
+                return TimeDelta(minutes=1)
+            case (
+                MarketData.BAR_5M
+                | MarketData.TRADE_STATS
+                | MarketData.ORDER_STATS
+                | MarketData.OB_STATS
+            ):
+                return TimeDelta(minutes=5)
+            case MarketData.BAR_10M:
+                return TimeDelta(minutes=10)
+            case MarketData.BAR_1H:
+                return TimeDelta(hours=1)
+            case MarketData.BAR_DAY:
+                return TimeDelta(days=1)
+            case MarketData.BAR_WEEK:
+                return TimeDelta(weeks=1)
+            case MarketData.BAR_MONTH:
+                raise NotImplementedError(
+                    "Month period has no fixed timedelta"
+                )
+            case _:
+                raise NotImplementedError(self)
 
-    def prev_dt(self, dt: DateTime) -> DateTime:
+    def floor_dt(self, dt: DateTime) -> DateTime:
         match self:
             case MarketData.BAR_1M:
                 prev = dt.replace(second=0, microsecond=0)
 
-            case MarketData.BAR_5M:
-                prev = dt.replace(second=0, microsecond=0)
-                past = dt.minute % 5
-                prev -= TimeDelta(minutes=past)
-            case MarketData.TRADE_STATS:
-                prev = dt.replace(second=0, microsecond=0)
-                past = dt.minute % 5
-                prev -= TimeDelta(minutes=past)
-            case MarketData.ORDER_STATS:
-                prev = dt.replace(second=0, microsecond=0)
-                past = dt.minute % 5
-                prev -= TimeDelta(minutes=past)
-            case MarketData.OB_STATS:
+            case (
+                MarketData.BAR_5M
+                | MarketData.TRADE_STATS
+                | MarketData.ORDER_STATS
+                | MarketData.OB_STATS
+            ):
                 prev = dt.replace(second=0, microsecond=0)
                 past = dt.minute % 5
                 prev -= TimeDelta(minutes=past)
@@ -103,19 +105,12 @@ class MarketData(enum.Enum):
                 next = dt.replace(second=0, microsecond=0)
                 next += TimeDelta(minutes=1)
 
-            case MarketData.BAR_5M:
-                next = dt.replace(second=0, microsecond=0)
-                need_minutes = 5 - (dt.minute % 5)
-                next += TimeDelta(minutes=need_minutes)
-            case MarketData.TRADE_STATS:
-                next = dt.replace(second=0, microsecond=0)
-                need_minutes = 5 - (dt.minute % 5)
-                next += TimeDelta(minutes=need_minutes)
-            case MarketData.ORDER_STATS:
-                next = dt.replace(second=0, microsecond=0)
-                need_minutes = 5 - (dt.minute % 5)
-                next += TimeDelta(minutes=need_minutes)
-            case MarketData.OB_STATS:
+            case (
+                MarketData.BAR_5M
+                | MarketData.TRADE_STATS
+                | MarketData.ORDER_STATS
+                | MarketData.OB_STATS
+            ):
                 next = dt.replace(second=0, microsecond=0)
                 need_minutes = 5 - (dt.minute % 5)
                 next += TimeDelta(minutes=need_minutes)
@@ -169,30 +164,13 @@ class MarketData(enum.Enum):
         if not isinstance(string, str):
             raise TypeError(string)
 
-        types = {
-            "1M": MarketData.BAR_1M,
-            "5M": MarketData.BAR_5M,
-            "10M": MarketData.BAR_10M,
-            "1H": MarketData.BAR_1H,
-            "D": MarketData.BAR_DAY,
-            "W": MarketData.BAR_WEEK,
-            "M": MarketData.BAR_MONTH,
-            "BAR_1M": MarketData.BAR_1M,
-            "BAR_5M": MarketData.BAR_5M,
-            "BAR_10M": MarketData.BAR_10M,
-            "BAR_1H": MarketData.BAR_1H,
-            "BAR_D": MarketData.BAR_DAY,
-            "BAR_W": MarketData.BAR_WEEK,
-            "BAR_M": MarketData.BAR_MONTH,
-            "TIC": MarketData.TIC,
-            "BOOK": MarketData.BOOK,
-            "TRADE_STATS": MarketData.TRADE_STATS,
-            "ORDER_STATS": MarketData.ORDER_STATS,
-            "OB_STATS": MarketData.OB_STATS,
-        }
+        s = string.upper()
+        if s in cls.__members__:
+            return cls[s]
 
-        if t := types.get(string.upper()):
-            return t
+        for item in cls:
+            if item.value == s:
+                return item
 
         raise ValueError(
             f"Invalid market data name: '{string}'. "

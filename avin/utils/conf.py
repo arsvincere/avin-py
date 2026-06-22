@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import timedelta as TimeDelta
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from avin.utils.cmd import Cmd
 from avin.utils.exceptions import ConfigNotFound
@@ -72,6 +73,12 @@ class Configuration:
     @property
     def log_info(self) -> bool:
         return self.__cfg["log"]["info"]
+
+    @property
+    def local_timezone(self) -> ZoneInfo:
+        str_zone = self.__cfg["usr"]["timezone"]
+        local_tz = ZoneInfo(str_zone)
+        return local_tz
 
     @property
     def offset(self) -> TimeDelta:

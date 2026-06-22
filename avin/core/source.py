@@ -13,15 +13,18 @@ import enum
 class Source(enum.Enum):
     """Market data source."""
 
-    MOEX = 1
-    TINKOFF = 2
+    TINKOFF = 1
+    MOEXALGO = 2
+
+    def __str__(self) -> str:
+        return self.name
 
     @classmethod
-    def from_str(cls, s: str) -> Source:
+    def from_str(cls, string: str) -> Source:
         """Get enum from str.
 
         Args:
-            s: category name.
+            string: source name.
 
         Returns:
             Category Enum.
@@ -29,12 +32,16 @@ class Source(enum.Enum):
         Raises:
             InvalidSource if category not exists.
         """
+        if not isinstance(string, str):
+            raise TypeError(string)
 
-        if attr := getattr(cls, s.upper(), None):
-            return attr
+        s = string.upper()
+        if s in cls.__members__:
+            return cls[s]
 
         raise ValueError(
-            f"Source '{s}' not found. Choice from {Source._member_names_}"
+            f"Unknown source '{string}'. "
+            f"Available: {', '.join(cls.__members__)}"
         )
 
 
