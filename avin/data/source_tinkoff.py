@@ -258,9 +258,9 @@ def _download_tinkoff_bar_1m(iid: Iid, md: MarketData, year: int) -> None:
         Cmd.make_dirs(tmp_dir)
 
     # create archive path
-    e = iid.exchange().name
-    c = iid.category().name
-    t = iid.ticker()
+    e = iid.exchange.name
+    c = iid.category.name
+    t = iid.ticker
     archive_name = f"{e}-{c}-{t}-{md}-{year}.zip"
     archive_path = tmp_dir / "download" / archive_name
     Cmd.make_dirs_for_file(archive_path)
@@ -274,7 +274,7 @@ def _download_tinkoff_bar_1m(iid: Iid, md: MarketData, year: int) -> None:
         Cmd.make_dirs(tmp_dir)
 
     # download archive
-    uid = iid.info()["uid"]
+    uid = iid.dump_raw_info()["uid"]
     url = "https://invest-public-api.tinkoff.ru/history-data?"
     url += f"instrumentId={uid}&"
     url += f"year={year}"
@@ -365,7 +365,7 @@ def _download_tinkoff_tic(iid: Iid, md: MarketData, year: int) -> None:
         Cmd.make_dirs(tmp_dir)
 
     # download archive day by day
-    ticker = iid.ticker()
+    ticker = iid.ticker
     day = Date(year, 1, 1)
     end = Date(year + 1, 1, 1)
     while day < end:
@@ -373,9 +373,9 @@ def _download_tinkoff_tic(iid: Iid, md: MarketData, year: int) -> None:
         time.sleep(1)
 
         # create archive path
-        e = iid.exchange().name
-        c = iid.category().name
-        t = iid.ticker()
+        e = iid.exchange.name
+        c = iid.category.name
+        t = iid.ticker
         archive_name = f"{e}-{c}-{t}-{md}-{day}.csv.gz"
         archive_path = tmp_dir / "download" / archive_name
         Cmd.make_dirs_for_file(archive_path)
@@ -442,7 +442,7 @@ def _download_tinkoff_tic(iid: Iid, md: MarketData, year: int) -> None:
         # │ 2026-..  ┆ BUY       ┆ 300.26 ┆ 1    ┆ 10       ┆ 3002.6 ┆ 176.. │
 
         df = tinkoff_df.select(["datetime", "direction", "price", "lots"])
-        df = df.with_columns(quantity=pl.col("lots") * iid.lot())
+        df = df.with_columns(quantity=pl.col("lots") * iid.lot)
         df = df.with_columns(value=pl.col("quantity") * pl.col("price"))
         df = df.with_columns(pl.col("direction").str.replace_all("BUY", "B"))
         df = df.with_columns(pl.col("direction").str.replace_all("SELL", "S"))

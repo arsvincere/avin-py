@@ -56,7 +56,7 @@ class TicStorage:
         cls, iid: Iid, source: Source, md: MarketData, date: Date
     ) -> Path:
         file_path = (
-            iid.path()
+            iid.path
             / source.name
             / md.name
             / f"{date.year}"

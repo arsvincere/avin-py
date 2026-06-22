@@ -303,7 +303,7 @@ class Cmd:
         return string
 
     @staticmethod
-    def read_toml(file_path: Path) -> object:
+    def read_toml(file_path: Path):
         with file_path.open(mode="rb") as f:
             data = tomllib.load(f)
 

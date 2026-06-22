@@ -6,6 +6,7 @@
 # ============================================================================
 
 import pytest
+
 from avin.core.price_range import PriceRange
 
 
@@ -195,3 +196,9 @@ def test_not_decrease():
     r = PriceRange(100.0, 120.0)
 
     assert not r.is_decrease()
+
+
+def test_contract():
+    r = PriceRange(100.0, 120.0)
+
+    assert r.low <= r.mid <= r.high

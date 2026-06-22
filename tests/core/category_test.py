@@ -10,9 +10,13 @@ import pytest
 from avin.core.category import Category
 
 
-def test_init():
+def test_name():
     c = Category.SHARE
     assert c.name == "SHARE"
+
+
+def test_str():
+    assert str(Category.SHARE) == "SHARE"
 
 
 def test_from_str_upper():
@@ -30,6 +34,11 @@ def test_from_str_mixed():
 def test_from_str_invalid():
     with pytest.raises(ValueError):
         Category.from_str("bitcoin")
+
+
+def test_from_str_type_error():
+    with pytest.raises(TypeError):
+        Category.from_str(123)
 
 
 def test_category_from_str_all():

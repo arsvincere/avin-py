@@ -32,6 +32,9 @@ pre-commit:
 	$(MAKE) fmt
 	$(MAKE) test
 
+archive:
+	git archive --format zip HEAD -o avin.zip
+
 clean:
 	rm -rf .mypy_cache/
 	rm -rf .pytest_cache/

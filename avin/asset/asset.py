@@ -27,9 +27,6 @@ class Asset(ABC):
     def iid(self) -> Iid: ...
 
     @abstractmethod
-    def info(self) -> dict[str, str]: ...
-
-    @abstractmethod
     def exchange(self) -> Exchange: ...
 
     @abstractmethod
@@ -52,6 +49,3 @@ class Asset(ABC):
 
     @abstractmethod
     def path(self) -> Path: ...
-
-    @abstractmethod
-    def print(self) -> str: ...

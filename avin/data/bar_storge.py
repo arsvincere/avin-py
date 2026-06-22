@@ -90,7 +90,7 @@ class BarStorage:
     def __create_dir_path(
         cls, iid: Iid, source: Source, md: MarketData
     ) -> Path:
-        dir_path = iid.path() / source.name / md.name
+        dir_path = iid.path / source.name / md.name
 
         return dir_path
 

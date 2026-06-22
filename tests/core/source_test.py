@@ -12,7 +12,7 @@ from avin.core.source import Source
 
 def test_init():
     s = Source.MOEXALGO
-    assert s.name == "MOEX"
+    assert s.name == "MOEXALGO"
 
 
 def test_source_str():

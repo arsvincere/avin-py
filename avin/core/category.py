@@ -37,9 +37,12 @@ class Category(enum.Enum):
         Raises:
             ValueError: if category does not exist.
         """
+        if not isinstance(string, str):
+            raise TypeError(string)
 
-        if attr := getattr(cls, string.upper(), None):
-            return attr
+        s = string.upper()
+        if s in cls.__members__:
+            return cls[s]
 
         raise ValueError(
             f"Unknown category '{string}'. "
