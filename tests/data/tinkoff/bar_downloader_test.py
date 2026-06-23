@@ -124,21 +124,13 @@ def test_read_csv_concat(monkeypatch, downloader, sample_df):
 
 
 def test_download_flow(monkeypatch, downloader, sample_df):
-
-    class FakeResponse:
-        content = b"zip"
-
-        def raise_for_status(self):
-            pass
-
-        @property
-        def status_code(self):
-            return 200
-
-    # mock network
     monkeypatch.setattr(
-        "avin.data.tinkoff.bar_downloader.requests.get",
-        lambda *a, **k: FakeResponse(),
+        "avin.data.tinkoff.bar_downloader.TinkoffBarDownloader._prepare_workdir",
+        lambda self: None,
+    )
+    monkeypatch.setattr(
+        "avin.data.tinkoff.bar_downloader.TinkoffBarDownloader._download_archive",
+        lambda self: None,
     )
 
     # bypass zip + FS completely

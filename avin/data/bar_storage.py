@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 from datetime import UTC
-from datetime import datetime as DateTime
 from pathlib import Path
 
 import polars as pl
@@ -16,7 +15,7 @@ import polars as pl
 from avin.core.iid import Iid
 from avin.core.market_data import MarketData
 from avin.core.source import Source
-from avin.utils import Cmd, dt_to_ts, log, ts_to_dt
+from avin.utils import Cmd, DateTime, TimeDelta, dt_to_ts, log, ts_to_dt
 from avin.utils.exceptions import DataNotFound
 
 
@@ -104,8 +103,28 @@ class BarStorage:
         md: MarketData,
         begin: DateTime,
         end: DateTime,
-    ):
-        raise NotADirectoryError("TODO_ME")
+    ) -> pl.DataFrame:
+        if begin >= end:
+            raise ValueError("begin must be less than end")
+
+        begin_ts = dt_to_ts(begin)
+        end_ts = dt_to_ts(end)
+
+        dfs = list()
+        for year in _extract_range_years(begin, end):
+            df = cls.load(iid, source, md, year)
+            dfs.append(df)
+
+        df = pl.concat(dfs)
+        df = df.filter(
+            pl.col("ts") >= begin_ts,
+            pl.col("ts") < end_ts,
+        ).sort("ts")
+
+        if df.is_empty():
+            raise DataNotFound(f"{iid} {source} {md} {begin} - {end}")
+
+        return df
 
 
 def _validate_df(df: pl.DataFrame) -> None:
@@ -121,6 +140,23 @@ def _extract_years(df: pl.DataFrame) -> range:
     last_year = ts_to_dt(df.item(-1, "ts")).year
 
     return range(first_year, last_year + 1)
+
+
+def _extract_range_years(begin: DateTime, end: DateTime) -> range:
+    # - частый кейс как раз по границам лет задавать диапазон.
+    # begin 2020.01.01
+    # end 2025.01.01
+    # если тупо сделать +1 year к end, то получим до 2026г... лишний год...
+    # [2020, 2021, 2022, 2023, 2024, 2025, 2026]
+    # будет загружаться а потом отфильтровываться...
+    # Поэтому добавляем эту аккуратненькую строчечку -1 microseconds,
+    # и в итоге получим нужное, будет сформирован рейндж
+    # [2020, 2021, 2022, 2023, 2024, 2025]
+    # ну а в других случаях, не на границе года, -1 microseconds
+    # вообще ни на что не повлияет
+    last_dt = end - TimeDelta(microseconds=1)
+
+    return range(begin.year, last_dt.year + 1)
 
 
 def _filter_by_year(

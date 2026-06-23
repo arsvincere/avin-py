@@ -162,16 +162,7 @@ def test_fetch_archive_empty(monkeypatch, downloader):
 
 
 def test_download_day(monkeypatch, downloader, sample_df):
-    class FakeResponse:
-        def __init__(self):
-            self.content = b"zip"
-            self.status_code = 200
-
-        def raise_for_status(self):
-            pass
-
-    monkeypatch.setattr("requests.get", lambda *a, **k: FakeResponse())
-
+    monkeypatch.setattr(downloader, "_fetch_archive", lambda *a: True)
     monkeypatch.setattr(downloader, "_extract_archive", lambda *a: None)
     monkeypatch.setattr(downloader, "_read_day", lambda *a: sample_df)
     monkeypatch.setattr(downloader, "_format_df", lambda df: df)
