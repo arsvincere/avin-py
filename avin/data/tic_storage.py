@@ -14,7 +14,7 @@ import polars as pl
 from avin.core.iid import Iid
 from avin.core.market_data import MarketData
 from avin.core.source import Source
-from avin.utils import Cmd, Date, DateTime, log, ts_to_dt
+from avin.utils import Cmd, Date, DateTime, TimeDelta, dt_to_ts, log, ts_to_dt
 from avin.utils.exceptions import DataNotFound
 
 
@@ -64,8 +64,35 @@ class TicStorage:
         return Cmd.read_pqt(path)
 
     @classmethod
-    def load_last(cls, iid: Iid, source: Source, md: MarketData):
-        raise NotImplementedError("TODO ME")
+    def load_last(
+        cls,
+        iid: Iid,
+        source: Source,
+        md: MarketData,
+    ) -> pl.DataFrame:
+        dir_path = _create_dir_path(iid, source, md)
+
+        if not dir_path.exists():
+            raise DataNotFound(f"{iid} {source} {md} ({dir_path})")
+
+        years = sorted(
+            int(year)
+            for year in Cmd.get_dirs(dir_path)
+            if year.isdigit()
+        )
+
+        for year in reversed(years):
+            year_path = dir_path / str(year)
+            files = sorted(
+                file
+                for file in Cmd.get_files(year_path, full_path=True)
+                if Path(file).suffix == ".parquet"
+            )
+
+            if files:
+                return Cmd.read_pqt(Path(files[-1]))
+
+        raise DataNotFound(f"{iid} {source} {md} ({dir_path})")
 
     @classmethod
     def load_range(
@@ -75,8 +102,35 @@ class TicStorage:
         md: MarketData,
         begin: DateTime,
         end: DateTime,
-    ):
-        raise NotImplementedError("TODO ME")
+    ) -> pl.DataFrame:
+        if begin >= end:
+            raise ValueError("begin must be less than end")
+
+        begin_ts = dt_to_ts(begin)
+        end_ts = dt_to_ts(end)
+
+        dfs = list()
+        for date in _extract_range_dates(begin, end):
+            try:
+                df = cls.load(iid, source, md, date)
+            except DataNotFound:
+                continue
+
+            dfs.append(df)
+
+        if not dfs:
+            raise DataNotFound(f"{iid} {source} {md} {begin} - {end}")
+
+        df = pl.concat(dfs)
+        df = df.filter(
+            pl.col("ts") >= begin_ts,
+            pl.col("ts") < end_ts,
+        ).sort("ts")
+
+        if df.is_empty():
+            raise DataNotFound(f"{iid} {source} {md} {begin} - {end}")
+
+        return df
 
 
 def _validate_df(df: pl.DataFrame) -> Date:
@@ -99,12 +153,30 @@ def _validate_df(df: pl.DataFrame) -> Date:
     return first_date
 
 
+def _extract_range_dates(begin: DateTime, end: DateTime) -> list[Date]:
+    last_date = (end - TimeDelta(microseconds=1)).date()
+
+    dates = list()
+    current = begin.date()
+    while current <= last_date:
+        dates.append(current)
+        current += TimeDelta(days=1)
+
+    return dates
+
+
+def _create_dir_path(
+    iid: Iid,
+    source: Source,
+    md: MarketData,
+) -> Path:
+    return iid.path / source.name / md.name
+
+
 def _create_file_path(
     iid: Iid,
     source: Source,
     md: MarketData,
     date: Date,
 ) -> Path:
-    return (
-        iid.path / source.name / md.name / str(date.year) / f"{date}.parquet"
-    )
+    return _create_dir_path(iid, source, md) / str(date.year) / f"{date}.parquet"
