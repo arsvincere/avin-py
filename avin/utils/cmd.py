@@ -335,6 +335,8 @@ class Cmd:
 
     @staticmethod
     def __get_files_in_dir(dir_path: Path, full_path: bool) -> list[str]:
+        """Order is not guaranteed"""
+
         all_files = list()
 
         for i in dir_path.iterdir():

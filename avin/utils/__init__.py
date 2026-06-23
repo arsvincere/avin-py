@@ -10,6 +10,7 @@ from datetime import date as Date
 from datetime import datetime as DateTime
 from datetime import time as Time
 from datetime import timedelta as TimeDelta
+from datetime import timezone as TimeZone
 
 from avin.utils.cmd import Cmd
 from avin.utils.conf import cfg
@@ -31,6 +32,7 @@ __all__ = (
     "DateTime",
     "Time",
     "TimeDelta",
+    "TimeZone",
     "cfg",
     "dt_to_ts",
     "log",

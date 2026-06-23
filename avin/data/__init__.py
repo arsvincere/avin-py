@@ -7,8 +7,8 @@
 
 from avin.data.bar_storge import BarStorage
 from avin.data.iid_storage import IidStorage
-from avin.data.source_tinkoff import SourceTinkoff
 from avin.data.tic_storage import TicStorage
+from avin.data.tinkoff import SourceTinkoff
 
 __all__ = (
     "BarStorage",

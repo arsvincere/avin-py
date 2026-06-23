@@ -96,6 +96,17 @@ class BarStorage:
 
         return Cmd.read_pqt(Path(files[-1]))
 
+    @classmethod
+    def load_range(
+        cls,
+        iid: Iid,
+        source: Source,
+        md: MarketData,
+        begin: DateTime,
+        end: DateTime,
+    ):
+        raise NotADirectoryError("TODO_ME")
+
 
 def _validate_df(df: pl.DataFrame) -> None:
     if df.is_empty():

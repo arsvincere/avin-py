@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-from datetime import date as Date
 from pathlib import Path
 
 import polars as pl
@@ -15,7 +14,7 @@ import polars as pl
 from avin.core.iid import Iid
 from avin.core.market_data import MarketData
 from avin.core.source import Source
-from avin.utils import Cmd, log, ts_to_dt
+from avin.utils import Cmd, Date, DateTime, log, ts_to_dt
 from avin.utils.exceptions import DataNotFound
 
 
@@ -63,6 +62,21 @@ class TicStorage:
             raise DataNotFound(f"{iid} {source} {md} {date}")
 
         return Cmd.read_pqt(path)
+
+    @classmethod
+    def load_last(cls, iid: Iid, source: Source, md: MarketData):
+        raise NotImplementedError("TODO ME")
+
+    @classmethod
+    def load_range(
+        cls,
+        iid: Iid,
+        source: Source,
+        md: MarketData,
+        begin: DateTime,
+        end: DateTime,
+    ):
+        raise NotImplementedError("TODO ME")
 
 
 def _validate_df(df: pl.DataFrame) -> Date:
