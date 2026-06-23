@@ -22,4 +22,5 @@ asyncio_mode="auto"
 asyncio_default_fixture_loop_scope="session"
 markers = [
     "integration: integration tests",
+    "slow: very slowly tests",
 ]

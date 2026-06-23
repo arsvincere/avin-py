@@ -22,10 +22,16 @@ fmt:
 	ruff format
 
 test:
-	pytest -m "not integration"
+	pytest -m "not (integration or slow)"
 
-integration:
+test_integration:
 	pytest -m integration
+
+test_slow:
+	pytest -m slow
+
+test_all:
+	pytest
 
 pre-commit:
 	$(MAKE) check

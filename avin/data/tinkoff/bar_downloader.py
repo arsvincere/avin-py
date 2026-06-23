@@ -16,7 +16,7 @@ import requests
 from avin.core.iid import Iid
 from avin.core.market_data import MarketData
 from avin.core.source import Source
-from avin.data.bar_storge import BarStorage
+from avin.data.bar_storage import BarStorage
 from avin.data.tinkoff.schemas import TINKOFF_BAR_CSV_SCHEMA
 from avin.utils import Cmd, DateTime, cfg, dt_to_ts
 

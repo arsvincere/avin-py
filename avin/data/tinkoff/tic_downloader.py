@@ -54,7 +54,10 @@ class TinkoffTicDownloader:
 
     def _download_year(self) -> None:
         start = Date(self.year, 1, 1)
-        end = Date(self.year + 1, 1, 1)
+        end = min(
+            Date(self.year + 1, 1, 1),
+            Date.today(),
+        )
 
         day = start
         while day < end:
@@ -85,6 +88,12 @@ class TinkoffTicDownloader:
         url = self._build_url(day)
 
         response = self._get_with_retry(url)
+
+        # когда за сегодняшний день архива еще нет - 404
+        if response.status_code == 404:
+            return False
+
+        # когда в этот день не было торгов тогда просто пустой ответ
         if not response.content:
             return False
 
@@ -105,6 +114,9 @@ class TinkoffTicDownloader:
         for attempt in range(retries):
             try:
                 response = requests.get(url, timeout=30)
+
+                if response.status_code == 404:
+                    return response
 
                 if response.status_code in (429, 500, 502, 503, 504):
                     raise requests.HTTPError(

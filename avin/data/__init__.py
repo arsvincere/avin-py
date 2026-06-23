@@ -5,7 +5,7 @@
 # LICENSE:      MIT
 # ============================================================================
 
-from avin.data.bar_storge import BarStorage
+from avin.data.bar_storage import BarStorage
 from avin.data.iid_storage import IidStorage
 from avin.data.tic_storage import TicStorage
 from avin.data.tinkoff import SourceTinkoff
