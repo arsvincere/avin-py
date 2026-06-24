@@ -12,12 +12,21 @@ from pathlib import Path
 import polars as pl
 
 from avin.core.category import Category
+from avin.core.iid import Iid
 from avin.core.source import Source
 from avin.utils import Cmd, cfg, log
 from avin.utils.exceptions import DataNotFound
 
 
 class IidStorage:
+    @classmethod
+    def find_code(cls, code: str, source: Source) -> Iid:
+        raise NotImplementedError("TODO_ME")
+
+    @classmethod
+    def find_figi(cls, figi: str, source: Source) -> Iid:
+        raise NotImplementedError("TODO_ME")
+
     @classmethod
     def save(
         cls,
