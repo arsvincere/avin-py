@@ -8,35 +8,23 @@
 import enum
 
 
-class Exchange(enum.Enum):
+class Exchange(enum.StrEnum):
     """All exchanges enum."""
 
-    MOEX = 1
-
-    def __str__(self) -> str:
-        return self.name
+    MOEX = "MOEX"
 
     @classmethod
-    def from_str(cls, string: str) -> Exchange:
-        """Get enum from str.
+    def from_str(cls, value: str) -> Exchange:
+        """Get enum from str."""
 
-        Args:
-            string: category name.
+        if not isinstance(value, str):
+            raise TypeError(value)
 
-        Returns:
-            Category Enum.
-
-        Raises:
-            ValueError if category not exists.
-        """
-        if not isinstance(string, str):
-            raise TypeError(string)
-
-        s = string.upper()
+        s = value.upper()
         if s in cls.__members__:
             return cls[s]
 
         raise ValueError(
-            f"Unknown exchange '{string}'. "
+            f"Unknown exchange '{value}'. "
             f"Available: {', '.join(cls._member_names_)}"
         )

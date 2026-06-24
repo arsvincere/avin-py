@@ -12,16 +12,16 @@ from datetime import datetime as DateTime
 from datetime import timedelta as TimeDelta
 
 
-class MarketData(enum.Enum):
+class MarketData(enum.StrEnum):
     """Enum for selet what data type to download."""
 
-    BAR_1M = "1M"
-    BAR_5M = "5M"
-    BAR_10M = "10M"
-    BAR_1H = "1H"
-    BAR_DAY = "D"
-    BAR_WEEK = "W"
-    BAR_MONTH = "M"
+    BAR_1M = "BAR_1M"
+    BAR_5M = "BAR_5M"
+    BAR_10M = "BAR_10M"
+    BAR_1H = "BAR_1H"
+    BAR_DAY = "BAR_DAY"
+    BAR_WEEK = "BAR_WEEK"
+    BAR_MONTH = "BAR_MONTH"
     TIC = "TIC"
     BOOK = "BOOK"
     TRADE_STATS = "TRADE_STATS"

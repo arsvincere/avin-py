@@ -10,28 +10,15 @@ from __future__ import annotations
 import enum
 
 
-class Source(enum.Enum):
+class Source(enum.StrEnum):
     """Market data source."""
 
-    TINKOFF = 1
-    MOEXALGO = 2
-
-    def __str__(self) -> str:
-        return self.name
+    TINKOFF = "TINKOFF"
+    MOEXALGO = "MOEXALGO"
 
     @classmethod
     def from_str(cls, string: str) -> Source:
-        """Get enum from str.
-
-        Args:
-            string: source name.
-
-        Returns:
-            Category Enum.
-
-        Raises:
-            InvalidSource if category not exists.
-        """
+        """Get enum from str."""
         if not isinstance(string, str):
             raise TypeError(string)
 

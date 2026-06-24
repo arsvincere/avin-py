@@ -15,8 +15,8 @@ from avin.core.market_data import MarketData
 
 def test_str():
     assert MarketData.BAR_1M.name == "BAR_1M"
-    assert str(MarketData.BAR_1M) == "1M"
-    assert str(MarketData.BAR_DAY) == "D"
+    assert str(MarketData.BAR_1M) == "BAR_1M"
+    assert str(MarketData.BAR_DAY) == "BAR_DAY"
     assert str(MarketData.TIC) == "TIC"
 
 
@@ -28,20 +28,6 @@ def test_from_str_by_name():
     assert MarketData.from_str("bar_day") is MarketData.BAR_DAY
 
     assert MarketData.from_str("TRADE_STATS") is MarketData.TRADE_STATS
-
-
-def test_from_str_by_value():
-    assert MarketData.from_str("1M") is MarketData.BAR_1M
-    assert MarketData.from_str("5M") is MarketData.BAR_5M
-    assert MarketData.from_str("10M") is MarketData.BAR_10M
-    assert MarketData.from_str("1H") is MarketData.BAR_1H
-
-    assert MarketData.from_str("D") is MarketData.BAR_DAY
-    assert MarketData.from_str("W") is MarketData.BAR_WEEK
-    assert MarketData.from_str("M") is MarketData.BAR_MONTH
-
-    assert MarketData.from_str("tic") is MarketData.TIC
-    assert MarketData.from_str("book") is MarketData.BOOK
 
 
 def test_from_str_invalid_type():
