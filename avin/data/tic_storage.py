@@ -76,9 +76,7 @@ class TicStorage:
             raise DataNotFound(f"{iid} {source} {md} ({dir_path})")
 
         years = sorted(
-            int(year)
-            for year in Cmd.get_dirs(dir_path)
-            if year.isdigit()
+            int(year) for year in Cmd.get_dirs(dir_path) if year.isdigit()
         )
 
         for year in reversed(years):
@@ -179,4 +177,6 @@ def _create_file_path(
     md: MarketData,
     date: Date,
 ) -> Path:
-    return _create_dir_path(iid, source, md) / str(date.year) / f"{date}.parquet"
+    return (
+        _create_dir_path(iid, source, md) / str(date.year) / f"{date}.parquet"
+    )
