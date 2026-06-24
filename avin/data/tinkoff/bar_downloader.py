@@ -64,32 +64,34 @@ class TinkoffBarDownloader:
         self._prepare_workdir()
 
         try:
-            year = day.year
-            archive_path = self._archive_path(year)
-            extract_path = self._extract_path(year)
-
-            self._fetch_archive(year, archive_path)
-            self._extract_archive(archive_path, extract_path)
-
-            uid = self.iid.dump_raw_info()["uid"]
-            date = day.strftime("%Y%m%d")
-            file_name = f"{uid}_{date}.csv"
-            files = Cmd.find_file(file_name, extract_path)
-            if len(files) != 1:
-                raise FileNotFoundError("No CSV file found: ({file_name})")
-
-            tinkoff_df = pl.read_csv(
-                files[0],
-                has_header=False,
-                separator=";",
-                schema=TINKOFF_BAR_CSV_SCHEMA,
-            )
-            df = self._format_df(tinkoff_df)
-
-            BarStorage.save(self.iid, self.SOURCE, self.md, df)
-
+            self._download_day(day)
         finally:
             self._clear_workdir(cleanup)
+
+    def _download_day(self, day: Date) -> None:
+        year = day.year
+        archive_path = self._archive_path(year)
+        extract_path = self._extract_path(year)
+
+        self._fetch_archive(year, archive_path)
+        self._extract_archive(archive_path, extract_path)
+
+        uid = self.iid.dump_raw_info()["uid"]
+        date = day.strftime("%Y%m%d")
+        file_name = f"{uid}_{date}.csv"
+        files = Cmd.find_file(file_name, extract_path)
+        if len(files) != 1:
+            raise FileNotFoundError("No CSV file found: ({file_name})")
+
+        tinkoff_df = pl.read_csv(
+            files[0],
+            has_header=False,
+            separator=";",
+            schema=TINKOFF_BAR_CSV_SCHEMA,
+        )
+        df = self._format_df(tinkoff_df)
+
+        BarStorage.save(self.iid, self.SOURCE, self.md, df)
 
     def _prepare_workdir(self):
         if self.tmp_dir.exists():

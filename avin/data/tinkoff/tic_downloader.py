@@ -45,33 +45,35 @@ class TinkoffTicDownloader:
 
             day = start
             while day < end:
-                self.download_day(day, cleanup)
+                self._download_day(day)
                 day += TimeDelta(days=1)
 
         finally:
             self._clear_workdir(cleanup)
 
     def download_day(self, day: Date, cleanup: bool = True) -> None:
-        time.sleep(1)  # rate limit protection
-
         self._prepare_workdir()
 
         try:
-            archive_path = self._archive_path(day)
-            extract_path = self._extract_path(day)
-
-            if not self._fetch_archive(day, archive_path):
-                return
-
-            self._extract_archive(archive_path, extract_path)
-
-            df = self._read_tinkoff_csv(extract_path)
-            df = self._format_df(df)
-
-            TicStorage.save(self.iid, self.SOURCE, self.md, df)
-
+            self._download_day(day)
         finally:
             self._clear_workdir(cleanup)
+
+    def _download_day(self, day: Date) -> None:
+        time.sleep(1)  # rate limit protection
+
+        archive_path = self._archive_path(day)
+        extract_path = self._extract_path(day)
+
+        if not self._fetch_archive(day, archive_path):
+            return
+
+        self._extract_archive(archive_path, extract_path)
+
+        df = self._read_tinkoff_csv(extract_path)
+        df = self._format_df(df)
+
+        TicStorage.save(self.iid, self.SOURCE, self.md, df)
 
     def _prepare_workdir(self) -> None:
         if self.tmp_dir.exists():

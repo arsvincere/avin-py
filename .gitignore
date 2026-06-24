@@ -17,6 +17,7 @@ __pycache__/
 .bak/
 bak/
 log/
+note/
 tmp/
 usr/
 

@@ -77,13 +77,20 @@ class DataManager:
 
         df = storage.load_last(iid, source, md)
         ts = df.item(-1, "ts")
-        last_dt = ts_to_dt(ts)
-        day = (last_dt + TimeDelta(days=1)).date()
-        end = Date.today()
+        last_dt = ts_to_dt(ts).date()
+        yesterday = Date.today() - TimeDelta(days=1)
+        missing_days = (yesterday - last_dt).days
 
-        while day < end:
-            source_impl.download_day(iid, md, day)
-            day += TimeDelta(days=1)
+        if missing_days == 0:
+            return
+        elif missing_days == 1:
+            source_impl.download_day(iid, md, yesterday)
+        else:
+            for year in range(
+                last_dt.year,
+                yesterday.year + 1,
+            ):
+                source_impl.download_year(iid, md, year)
 
     @classmethod
     def update_all(cls) -> None:
@@ -147,20 +154,8 @@ def _get_storage(md: MarketData):
             return TicStorage
         case MarketData.BAR_1M:
             return BarStorage
-        case MarketData.BAR_5M:
-            return BarStorage
-        case MarketData.BAR_10M:
-            return BarStorage
-        case MarketData.BAR_1H:
-            return BarStorage
-        case MarketData.BAR_DAY:
-            return BarStorage
-        case MarketData.BAR_WEEK:
-            return BarStorage
-        case MarketData.BAR_MONTH:
-            return BarStorage
         case _:
-            raise NotImplementedError(md)
+            raise ValueError(md)
 
 
 def _get_source_impl(source: Source):

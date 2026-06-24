@@ -2,6 +2,7 @@ import pytest
 
 from avin import *
 from avin.data.tinkoff.tic_downloader import TinkoffTicDownloader
+from avin.utils.exceptions import DataNotFound
 
 
 @pytest.mark.slow
@@ -25,13 +26,13 @@ def test_download_tic_tinkoff_day():
     code = "MOEX_SHARE_ABIO"
     source = Source.TINKOFF
     md = MarketData.TIC
-    day = Date.today() - TimeDelta(weeks=1)
+    yesterday = Date.today() - TimeDelta(days=1)
     iid = IidStorage.find_code(code, source)
 
     downloader = TinkoffTicDownloader(iid, md)
-    downloader.download_day(day)
+    downloader.download_day(yesterday)
 
-    begin = DateTime.combine(day, Time(0, 0), tzinfo=UTC)
+    begin = DateTime.combine(yesterday, Time(0, 0), tzinfo=UTC)
     end = now_utc()
     df = DataManager.load(code, source, md, begin, end)
 
@@ -62,4 +63,25 @@ def test_delete_tinkoff_tic():
     source = Source.TINKOFF
     md = MarketData.TIC
 
+    DataManager.delete(code, source, md)
+
+    begin = DateTime.min.replace(tzinfo=UTC)
+    end = now_utc()
+    with pytest.raises(DataNotFound):
+        DataManager.load(
+            code,
+            source,
+            md,
+            begin,
+            end,
+        )
+
+
+@pytest.mark.integration
+def test_delete_tinkoff_bar_idempotent():
+    code = "MOEX_SHARE_ABIO"
+    source = Source.TINKOFF
+    md = MarketData.BAR_1M
+
+    DataManager.delete(code, source, md)
     DataManager.delete(code, source, md)

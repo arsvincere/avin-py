@@ -2,6 +2,7 @@ import pytest
 
 from avin import *
 from avin.data.tinkoff.bar_downloader import TinkoffBarDownloader
+from avin.utils.exceptions import DataNotFound
 
 
 @pytest.mark.integration
@@ -63,4 +64,25 @@ def test_delete_tinkoff_bar():
     source = Source.TINKOFF
     md = MarketData.BAR_1M
 
+    DataManager.delete(code, source, md)
+
+    begin = DateTime.min.replace(tzinfo=UTC)
+    end = now_utc()
+    with pytest.raises(DataNotFound):
+        DataManager.load(
+            code,
+            source,
+            md,
+            begin,
+            end,
+        )
+
+
+@pytest.mark.integration
+def test_delete_tinkoff_bar_idempotent():
+    code = "MOEX_SHARE_ABIO"
+    source = Source.TINKOFF
+    md = MarketData.BAR_1M
+
+    DataManager.delete(code, source, md)
     DataManager.delete(code, source, md)
