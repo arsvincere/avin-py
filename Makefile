@@ -24,14 +24,16 @@ fmt:
 test:
 	pytest -m "not (integration or slow)"
 
-test_integration:
+integration:
 	pytest -m integration
 
-test_slow:
+slow:
 	pytest -m slow
 
-test_all:
-	pytest
+all_test:
+	$(MAKE) test
+	$(MAKE) integration
+	$(MAKE) slow
 
 pre-commit:
 	$(MAKE) check

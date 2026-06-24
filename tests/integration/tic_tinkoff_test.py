@@ -36,3 +36,12 @@ def test_download_tic_tinkoff_day():
 
     df = DataManager.load(code, source, md, begin, end)
     assert not df.is_empty()
+
+
+@pytest.mark.integration
+def test_update_tinkoff_tic():
+    code = "MOEX_SHARE_GAZP"
+    source = Source.TINKOFF
+    md = MarketData.TIC
+
+    DataManager.update(code, source, md)

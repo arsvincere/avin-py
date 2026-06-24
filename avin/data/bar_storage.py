@@ -74,13 +74,17 @@ class BarStorage:
         if not dir_path.exists():
             raise DataNotFound(f"{iid} {source} {md} ({dir_path})")
 
-        files = sorted(
-            Cmd.get_files(
+        year_dirs = sorted(
+            Cmd.get_dirs(
                 dir_path,
                 full_path=True,
             )
         )
+        if not year_dirs:
+            raise DataNotFound(f"{iid} {source} {md} ({dir_path})")
 
+        last_year_dir = Path(year_dirs[-1])
+        files = Cmd.get_files(last_year_dir, full_path=True)
         if not files:
             raise DataNotFound(f"{iid} {source} {md} ({dir_path})")
 

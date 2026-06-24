@@ -20,7 +20,7 @@ from avin.data.tinkoff.bar_downloader import TinkoffBarDownloader
 from avin.data.tinkoff.mapper import extract_info
 from avin.data.tinkoff.schemas import IID_SCHEMA
 from avin.data.tinkoff.tic_downloader import TinkoffTicDownloader
-from avin.utils import log
+from avin.utils import Date, log
 
 
 class SourceTinkoff:
@@ -43,12 +43,22 @@ class SourceTinkoff:
         IidStorage.save(cls.SOURCE, Category.SHARE, df_shares_info)
 
     @classmethod
-    def download(cls, iid: Iid, md: MarketData, year: int) -> None:
+    def download_year(cls, iid: Iid, md: MarketData, year: int) -> None:
         match md:
             case MarketData.BAR_1M:
                 TinkoffBarDownloader(iid, md).download_year(year)
             case MarketData.TIC:
                 TinkoffTicDownloader(iid, md).download_year(year)
+            case _:
+                raise ValueError(f"Tinkoff not provide: {md}")
+
+    @classmethod
+    def download_day(cls, iid: Iid, md: MarketData, day: Date) -> None:
+        match md:
+            case MarketData.BAR_1M:
+                TinkoffBarDownloader(iid, md).download_day(day)
+            case MarketData.TIC:
+                TinkoffTicDownloader(iid, md).download_day(day)
             case _:
                 raise ValueError(f"Tinkoff not provide: {md}")
 

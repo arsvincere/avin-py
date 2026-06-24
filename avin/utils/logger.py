@@ -19,11 +19,6 @@ LOGGER_NAME = "avin-logger"
 log = logging.getLogger(LOGGER_NAME)
 
 
-# =========================
-# Public API
-# =========================
-
-
 def configure_log(debug: bool, info: bool) -> logging.Logger:
     """
     Configure application logger (idempotent).
@@ -59,11 +54,6 @@ def configure_log(debug: bool, info: bool) -> logging.Logger:
         )
 
     return logger
-
-
-# =========================
-# Handlers
-# =========================
 
 
 def _add_stream_handler(logger: logging.Logger) -> None:

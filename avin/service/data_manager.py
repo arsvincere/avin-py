@@ -16,7 +16,7 @@ from avin.data.bar_storage import BarStorage
 from avin.data.iid_storage import IidStorage
 from avin.data.tic_storage import TicStorage
 from avin.data.tinkoff.source_tinkoff import SourceTinkoff
-from avin.utils import DateTime, ts_to_dt
+from avin.utils import Date, DateTime, TimeDelta, ts_to_dt
 from avin.utils.exceptions import DataNotFound
 
 
@@ -55,7 +55,7 @@ class DataManager:
         iid = IidStorage.find_code(code, source)
 
         source_impl = _get_source_impl(source)
-        source_impl.download(iid, md, year)
+        source_impl.download_year(iid, md, year)
 
     @classmethod
     def update(
@@ -72,16 +72,18 @@ class DataManager:
             raise TypeError(md)
 
         iid = IidStorage.find_code(code, source)
-
         storage = _get_storage(md)
+        source_impl = _get_source_impl(source)
 
         df = storage.load_last(iid, source, md)
         ts = df.item(-1, "ts")
-        dt = ts_to_dt(ts)
-        year = dt.year
+        last_dt = ts_to_dt(ts)
+        day = (last_dt + TimeDelta(days=1)).date()
+        end = Date.today()
 
-        source_impl = _get_source_impl(source)
-        source_impl.download(iid, md, year)
+        while day < end:
+            source_impl.download_day(iid, md, day)
+            day += TimeDelta(days=1)
 
     @classmethod
     def update_all(cls) -> None:

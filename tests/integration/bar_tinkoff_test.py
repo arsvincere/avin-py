@@ -36,3 +36,12 @@ def test_download_bar_tinkoff_day():
 
     df = DataManager.load(code, source, md, begin, end)
     assert not df.is_empty()
+
+
+@pytest.mark.integration
+def test_update_tinkoff_bar():
+    code = "MOEX_SHARE_GAZP"
+    source = Source.TINKOFF
+    md = MarketData.BAR_1M
+
+    DataManager.update(code, source, md)
