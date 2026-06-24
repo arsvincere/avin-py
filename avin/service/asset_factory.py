@@ -15,7 +15,7 @@ from avin.core.category import Category
 from avin.core.iid import Iid
 from avin.core.source import Source
 from avin.data.iid_storage import IidStorage
-from avin.utils.exceptions import TickerNotFound
+from avin.utils.exceptions import InstrumentNotFound
 
 
 class AssetFactory:
@@ -31,7 +31,7 @@ class AssetFactory:
         row = shares.filter(pl.col("ticker") == t)
 
         if row.is_empty():
-            raise TickerNotFound(f"{t} ({code})")
+            raise InstrumentNotFound(f"{t} ({code})")
 
         iid = Iid.from_df(row)
         share = Share(iid)
