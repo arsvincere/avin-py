@@ -91,9 +91,16 @@ class IidStorage:
 
         return Cmd.read_pqt(path)
 
+    @classmethod
+    def delete(cls, source: Source, category: Category) -> None:
+        path = _create_file_path(source, category)
+
+        if Cmd.is_file(path):
+            Cmd.delete(path)
+
 
 def _create_file_path(
     source: Source,
     category: Category,
 ) -> Path:
-    return cfg.cache / source.name / f"{category.name}.parquet"
+    return cfg.iid_cache_path / source.name / f"{category.name}.parquet"

@@ -71,26 +71,20 @@ class TicStorage:
         md: MarketData,
     ) -> pl.DataFrame:
         dir_path = _create_dir_path(iid, source, md)
-
         if not dir_path.exists():
             raise DataNotFound(f"{iid} {source} {md} ({dir_path})")
 
-        years = sorted(
-            int(year) for year in Cmd.get_dirs(dir_path) if year.isdigit()
+        files = sorted(
+            Cmd.get_files(
+                dir_path,
+                full_path=True,
+            )
         )
 
-        for year in reversed(years):
-            year_path = dir_path / str(year)
-            files = sorted(
-                file
-                for file in Cmd.get_files(year_path, full_path=True)
-                if Path(file).suffix == ".parquet"
-            )
+        if not files:
+            raise DataNotFound(f"{iid} {source} {md} ({dir_path})")
 
-            if files:
-                return Cmd.read_pqt(Path(files[-1]))
-
-        raise DataNotFound(f"{iid} {source} {md} ({dir_path})")
+        return Cmd.read_pqt(Path(files[-1]))
 
     @classmethod
     def load_range(
@@ -130,6 +124,13 @@ class TicStorage:
 
         return df
 
+    @classmethod
+    def delete(cls, iid: Iid, source: Source, md: MarketData) -> None:
+        dir_path = _create_dir_path(iid, source, md)
+
+        if Cmd.is_dir(dir_path):
+            Cmd.delete_dir(dir_path)
+
 
 def _validate_df(df: pl.DataFrame) -> Date:
     """
@@ -144,7 +145,6 @@ def _validate_df(df: pl.DataFrame) -> Date:
 
     first_date = ts_to_dt(df.item(0, "ts")).date()
     last_date = ts_to_dt(df.item(-1, "ts")).date()
-
     if first_date != last_date:
         raise ValueError("TicStorage accepts data only for a single day")
 
@@ -168,7 +168,7 @@ def _create_dir_path(
     source: Source,
     md: MarketData,
 ) -> Path:
-    return iid.path / source.name / md.name
+    return iid.path / source / md
 
 
 def _create_file_path(

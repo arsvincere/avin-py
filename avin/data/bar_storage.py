@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-from datetime import UTC
 from pathlib import Path
 
 import polars as pl
@@ -15,7 +14,7 @@ import polars as pl
 from avin.core.iid import Iid
 from avin.core.market_data import MarketData
 from avin.core.source import Source
-from avin.utils import Cmd, DateTime, TimeDelta, dt_to_ts, log, ts_to_dt
+from avin.utils import Cmd, Date, DateTime, TimeDelta, dt_to_ts, log, ts_to_dt
 from avin.utils.exceptions import DataNotFound
 
 
@@ -28,24 +27,21 @@ class BarStorage:
         md: MarketData,
         df: pl.DataFrame,
     ) -> None:
-        _validate_df(df)
+        if md is not MarketData.BAR_1M:
+            raise ValueError(f"BarStorage supports only {MarketData.BAR_1M}")
 
-        for year in _extract_years(df):
-            year_df = _filter_by_year(df, year)
+        date = _validate_df(df)
 
-            if year_df.is_empty():
-                continue
+        path = _create_file_path(
+            iid,
+            source,
+            md,
+            date,
+        )
 
-            path = _create_file_path(
-                iid,
-                source,
-                md,
-                year,
-            )
+        Cmd.write_pqt(df, path)
 
-            Cmd.write_pqt(year_df, path)
-
-            log.info(f"Save bars: {path}")
+        log.info(f"Save bars: {path}")
 
     @classmethod
     def load(
@@ -53,17 +49,17 @@ class BarStorage:
         iid: Iid,
         source: Source,
         md: MarketData,
-        year: int,
+        date: Date,
     ) -> pl.DataFrame:
         path = _create_file_path(
             iid,
             source,
             md,
-            year,
+            date,
         )
 
-        if not path.exists():
-            raise DataNotFound(f"{iid} {source} {md} {year}")
+        if not path.is_file():
+            raise DataNotFound(f"{iid} {source} {md} {date}")
 
         return Cmd.read_pqt(path)
 
@@ -74,12 +70,7 @@ class BarStorage:
         source: Source,
         md: MarketData,
     ) -> pl.DataFrame:
-        dir_path = _create_dir_path(
-            iid,
-            source,
-            md,
-        )
-
+        dir_path = _create_dir_path(iid, source, md)
         if not dir_path.exists():
             raise DataNotFound(f"{iid} {source} {md} ({dir_path})")
 
@@ -111,66 +102,67 @@ class BarStorage:
         end_ts = dt_to_ts(end)
 
         dfs = list()
-        for year in _extract_range_years(begin, end):
-            df = cls.load(iid, source, md, year)
+        for date in _extract_range_dates(begin, end):
+            try:
+                df = cls.load(iid, source, md, date)
+            except DataNotFound:
+                continue
+
             dfs.append(df)
+
+        if not dfs:
+            raise DataNotFound(f"{iid} {source} {md} {begin} - {end}")
 
         df = pl.concat(dfs)
         df = df.filter(
             pl.col("ts") >= begin_ts,
             pl.col("ts") < end_ts,
         ).sort("ts")
+        # TODO: а нужен ли здесь сорт? даты идутт последовательно...
+        # concat же не нарушает порядок????
 
         if df.is_empty():
             raise DataNotFound(f"{iid} {source} {md} {begin} - {end}")
 
         return df
 
+    @classmethod
+    def delete(cls, iid: Iid, source: Source, md: MarketData) -> None:
+        dir_path = _create_dir_path(iid, source, md)
 
-def _validate_df(df: pl.DataFrame) -> None:
+        if Cmd.is_dir(dir_path):
+            Cmd.delete_dir(dir_path)
+
+
+def _validate_df(df: pl.DataFrame) -> Date:
+    """
+    Validate tic dataframe and return its trading date.
+    """
+
     if df.is_empty():
         raise ValueError("DataFrame is empty")
 
     if "ts" not in df.columns:
         raise ValueError("Column 'ts' not found")
 
+    first_date = ts_to_dt(df.item(0, "ts")).date()
+    last_date = ts_to_dt(df.item(-1, "ts")).date()
+    if first_date != last_date:
+        raise ValueError("TicStorage accepts data only for a single day")
 
-def _extract_years(df: pl.DataFrame) -> range:
-    first_year = ts_to_dt(df.item(0, "ts")).year
-    last_year = ts_to_dt(df.item(-1, "ts")).year
-
-    return range(first_year, last_year + 1)
-
-
-def _extract_range_years(begin: DateTime, end: DateTime) -> range:
-    # - частый кейс как раз по границам лет задавать диапазон.
-    # begin 2020.01.01
-    # end 2025.01.01
-    # если тупо сделать +1 year к end, то получим до 2026г... лишний год...
-    # [2020, 2021, 2022, 2023, 2024, 2025, 2026]
-    # будет загружаться а потом отфильтровываться...
-    # Поэтому добавляем эту аккуратненькую строчечку -1 microseconds,
-    # и в итоге получим нужное, будет сформирован рейндж
-    # [2020, 2021, 2022, 2023, 2024, 2025]
-    # ну а в других случаях, не на границе года, -1 microseconds
-    # вообще ни на что не повлияет
-    last_dt = end - TimeDelta(microseconds=1)
-
-    return range(begin.year, last_dt.year + 1)
+    return first_date
 
 
-def _filter_by_year(
-    df: pl.DataFrame,
-    year: int,
-) -> pl.DataFrame:
-    begin_ts = dt_to_ts(DateTime(year, 1, 1, tzinfo=UTC))
+def _extract_range_dates(begin: DateTime, end: DateTime) -> list[Date]:
+    last_date = (end - TimeDelta(microseconds=1)).date()
 
-    end_ts = dt_to_ts(DateTime(year + 1, 1, 1, tzinfo=UTC))
+    dates = list()
+    current = begin.date()
+    while current <= last_date:
+        dates.append(current)
+        current += TimeDelta(days=1)
 
-    return df.filter(
-        pl.col("ts") >= begin_ts,
-        pl.col("ts") < end_ts,
-    )
+    return dates
 
 
 def _create_dir_path(
@@ -178,13 +170,15 @@ def _create_dir_path(
     source: Source,
     md: MarketData,
 ) -> Path:
-    return iid.path / source.name / md.name
+    return iid.path / source / md
 
 
 def _create_file_path(
     iid: Iid,
     source: Source,
     md: MarketData,
-    year: int,
+    date: Date,
 ) -> Path:
-    return _create_dir_path(iid, source, md) / f"{year}.parquet"
+    return (
+        _create_dir_path(iid, source, md) / str(date.year) / f"{date}.parquet"
+    )

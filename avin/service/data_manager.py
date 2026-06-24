@@ -125,20 +125,37 @@ class DataManager:
 
         return storage.load_range(iid, source, md, begin, end)
 
+    @classmethod
+    def delete(
+        cls,
+        code: str,
+        source: Source,
+        md: MarketData,
+    ):
+
+        iid = IidStorage.find_code(code, source)
+
+        storage = _get_storage(md)
+        storage.delete(iid, source, md)
+
 
 def _get_storage(md: MarketData):
     match md:
         case MarketData.TIC:
             return TicStorage
-        case (
-            MarketData.BAR_1M,
-            MarketData.BAR_5M,
-            MarketData.BAR_10M,
-            MarketData.BAR_1H,
-            MarketData.BAR_DAY,
-            MarketData.BAR_WEEK,
-            MarketData.BAR_MONTH,
-        ):
+        case MarketData.BAR_1M:
+            return BarStorage
+        case MarketData.BAR_5M:
+            return BarStorage
+        case MarketData.BAR_10M:
+            return BarStorage
+        case MarketData.BAR_1H:
+            return BarStorage
+        case MarketData.BAR_DAY:
+            return BarStorage
+        case MarketData.BAR_WEEK:
+            return BarStorage
+        case MarketData.BAR_MONTH:
             return BarStorage
         case _:
             raise NotImplementedError(md)

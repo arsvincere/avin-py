@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import random
 import time
+from pathlib import Path
 
 import polars as pl
 import requests
@@ -24,23 +25,53 @@ from avin.utils import Cmd, Date, DateTime, TimeDelta, TimeZone, cfg, dt_to_ts
 class TinkoffTicDownloader:
     SOURCE: Source = Source.TINKOFF
 
-    def __init__(self, iid: Iid, md: MarketData, year: int) -> None:
+    def __init__(self, iid: Iid, md: MarketData) -> None:
         self.iid = iid
         self.md = md
-        self.year = year
 
-        self.tmp_dir = cfg.tmp / "tinkoff"
-        self.archive_dir = self.tmp_dir / "download"
-        self.extract_dir = self.tmp_dir / "extract"
+        self.tmp_dir = cfg.tmp_path / "tinkoff"
+        self.archive_dir = self.tmp_dir / "download" / str(iid)
+        self.extract_dir = self.tmp_dir / "extract" / str(iid)
 
-    def download(self, cleanup: bool = True) -> None:
+    def download_year(self, year: int, cleanup: bool = True) -> None:
         self._prepare_workdir()
 
         try:
-            self._download_year()
+            start = Date(year, 1, 1)
+            end = min(
+                Date(year + 1, 1, 1),
+                Date.today(),
+            )
+
+            day = start
+            while day < end:
+                self.download_day(day, cleanup)
+                day += TimeDelta(days=1)
+
         finally:
-            if cleanup:
-                self._clear_workdir()
+            self._clear_workdir(cleanup)
+
+    def download_day(self, day: Date, cleanup: bool = True) -> None:
+        time.sleep(1)  # rate limit protection
+
+        self._prepare_workdir()
+
+        try:
+            archive_path = self._archive_path(day)
+            extract_path = self._extract_path(day)
+
+            if not self._fetch_archive(day, archive_path):
+                return
+
+            self._extract_archive(archive_path, extract_path)
+
+            df = self._read_tinkoff_csv(extract_path)
+            df = self._format_df(df)
+
+            TicStorage.save(self.iid, self.SOURCE, self.md, df)
+
+        finally:
+            self._clear_workdir(cleanup)
 
     def _prepare_workdir(self) -> None:
         if self.tmp_dir.exists():
@@ -49,40 +80,16 @@ class TinkoffTicDownloader:
         Cmd.make_dirs(self.archive_dir)
         Cmd.make_dirs(self.extract_dir)
 
-    def _clear_workdir(self) -> None:
-        Cmd.delete_dir(self.tmp_dir)
+    def _clear_workdir(self, cleanup: bool) -> None:
+        if cleanup:
+            Cmd.delete_dir(self.tmp_dir)
 
-    def _download_year(self) -> None:
-        start = Date(self.year, 1, 1)
-        end = min(
-            Date(self.year + 1, 1, 1),
-            Date.today(),
+    def _build_url(self, day: Date) -> str:
+        return (
+            "https://invest-public-api.tinkoff.ru/history-trades"
+            f"/{day}"
+            f"?instrumentId={self.iid.ticker}_TQBR"
         )
-
-        day = start
-        while day < end:
-            df = self._download_day(day)
-            if df is not None:
-                TicStorage.save(self.iid, self.SOURCE, self.md, df)
-
-            day += TimeDelta(days=1)
-
-    def _download_day(self, day: Date) -> pl.DataFrame | None:
-        time.sleep(1)  # rate limit protection
-
-        archive_path = self._archive_path(day)
-        extract_path = self._extract_path(day)
-
-        ok = self._fetch_archive(day, archive_path)
-        if not ok:
-            return None
-
-        self._extract_archive(archive_path, extract_path)
-
-        df = self._read_day(extract_path)
-        df = self._format_df(df)
-
-        return df
 
     def _fetch_archive(self, day: Date, archive_path) -> bool:
         url = self._build_url(day)
@@ -132,17 +139,10 @@ class TinkoffTicDownloader:
 
         raise RuntimeError(f"failed request: {url}") from last_exc
 
-    def _build_url(self, day: Date) -> str:
-        return (
-            "https://invest-public-api.tinkoff.ru/history-trades"
-            f"/{day}"
-            f"?instrumentId={self.iid.ticker}_TQBR"
-        )
-
     def _extract_archive(self, archive_path, extract_path):
         Cmd.extract_gz(archive_path, extract_path)
 
-    def _read_day(self, extract_path) -> pl.DataFrame:
+    def _read_tinkoff_csv(self, extract_path) -> pl.DataFrame:
         return pl.read_csv(
             extract_path,
             has_header=True,
@@ -177,8 +177,8 @@ class TinkoffTicDownloader:
 
         return df
 
-    def _archive_path(self, day: Date):
+    def _archive_path(self, day: Date) -> Path:
         return self.archive_dir / f"{day}.csv.gz"
 
-    def _extract_path(self, day: Date):
+    def _extract_path(self, day: Date) -> Path:
         return self.extract_dir / f"{day}.csv"

@@ -46,9 +46,9 @@ class SourceTinkoff:
     def download(cls, iid: Iid, md: MarketData, year: int) -> None:
         match md:
             case MarketData.BAR_1M:
-                TinkoffBarDownloader(iid, md, year).download()
+                TinkoffBarDownloader(iid, md).download_year(year)
             case MarketData.TIC:
-                TinkoffTicDownloader(iid, md, year).download()
+                TinkoffTicDownloader(iid, md).download_year(year)
             case _:
                 raise ValueError(f"Tinkoff not provide: {md}")
 

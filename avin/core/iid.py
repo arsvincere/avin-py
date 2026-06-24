@@ -80,9 +80,7 @@ class Iid:
 
     @property
     def path(self) -> Path:
-        path = (
-            cfg.data / self.exchange.name / self.category.name / self.ticker
-        )
+        path = cfg.data_path / self.exchange / self.category / self.ticker
         return path
 
     def to_json_str(self) -> str:

@@ -39,7 +39,7 @@ def configure_log(debug: bool, info: bool) -> logging.Logger:
 
     _add_stream_handler(logger)
 
-    log_dir: Path = cfg.log
+    log_dir: Path = cfg.log_path
     log_dir.mkdir(parents=True, exist_ok=True)
 
     if info:

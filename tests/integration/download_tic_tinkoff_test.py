@@ -4,32 +4,35 @@ from avin import *
 from avin.data.tinkoff.tic_downloader import TinkoffTicDownloader
 
 
-@pytest.mark.integration
-def test_download_tic_tinkoff_day():
-    sber = AssetFactory.new("MOEX_SHARE_SBER")
-    iid = sber.iid()
-    md = MarketData.TIC
-    year = Date.today().year
-    day = Date(2026, 6, 22)
-
-    downloader = TinkoffTicDownloader(iid, md, year)
-
-    downloader._prepare_workdir()
-
-    try:
-        df = downloader._download_day(day)
-
-        assert df is not None
-        assert not df.is_empty()
-    finally:
-        downloader._clear_workdir()
-
-
 @pytest.mark.slow
 def test_download_tic_tinkoff_year():
-    sber = AssetFactory.new("MOEX_SHARE_SBER")
-    iid = sber.iid()
+    code = "MOEX_SHARE_SBER"
+    source = Source.TINKOFF
     md = MarketData.TIC
-    year = Date.today().year
+    year = 2026
 
-    TinkoffTicDownloader(iid, md, year).download()
+    DataManager.download(code, source, md, year)
+
+    begin = DateTime(2026, 1, 1, tzinfo=UTC)
+    end = DateTime(2026, 1, 5, tzinfo=UTC)
+    df = DataManager.load(code, source, md, begin, end)
+
+    assert not df.is_empty()
+
+
+@pytest.mark.integration
+def test_download_tic_tinkoff_day():
+    code = "MOEX_SHARE_GAZP"
+    source = Source.TINKOFF
+    md = MarketData.TIC
+    day = Date(2026, 6, 1)
+    begin = DateTime(2026, 6, 1, tzinfo=UTC)
+    end = DateTime(2026, 6, 2, tzinfo=UTC)
+    iid = IidStorage.find_code(code, source)
+
+    downloader = TinkoffTicDownloader(iid, md)
+
+    downloader.download_day(day)
+
+    df = DataManager.load(code, source, md, begin, end)
+    assert not df.is_empty()

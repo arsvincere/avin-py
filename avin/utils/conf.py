@@ -52,32 +52,32 @@ class Configuration:
     # -------- paths --------
 
     @property
-    def root(self) -> Path:
+    def root_path(self) -> Path:
         return self._base_path / self._cfg["dir"]["root"]
 
     @property
-    def data(self) -> Path:
+    def data_path(self) -> Path:
         return self._base_path / self._cfg["dir"]["data"]
 
     @property
-    def log(self) -> Path:
-        return self.root / "log"
+    def log_path(self) -> Path:
+        return self.root_path / "log"
 
     @property
-    def res(self) -> Path:
-        return self.root / "res"
+    def res_path(self) -> Path:
+        return self.root_path / "res"
 
     @property
-    def tmp(self) -> Path:
-        return self.root / "tmp"
+    def tmp_path(self) -> Path:
+        return self.root_path / "tmp"
 
     @property
-    def connect(self) -> Path:
-        return self.root / "connect"
+    def connect_path(self) -> Path:
+        return self.root_path / "connect"
 
     @property
-    def cache(self) -> Path:
-        return self.data / "cache"
+    def iid_cache_path(self) -> Path:
+        return self.data_path / "iid"
 
     # -------- secrets (paths) --------
 

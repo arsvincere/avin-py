@@ -6,5 +6,9 @@
 # ============================================================================
 
 from avin.service.asset_factory import AssetFactory
+from avin.service.data_manager import DataManager
 
-__all__ = ("AssetFactory",)
+__all__ = (
+    "AssetFactory",
+    "DataManager",
+)

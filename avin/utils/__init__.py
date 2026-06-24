@@ -6,6 +6,7 @@
 # ============================================================================
 
 
+from datetime import UTC
 from datetime import date as Date
 from datetime import datetime as DateTime
 from datetime import time as Time
@@ -33,6 +34,7 @@ __all__ = (
     "Time",
     "TimeDelta",
     "TimeZone",
+    "UTC",
     "cfg",
     "dt_to_ts",
     "log",

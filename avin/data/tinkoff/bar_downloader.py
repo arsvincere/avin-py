@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import random
 import time
+from pathlib import Path
 
 import polars as pl
 import requests
@@ -18,72 +19,106 @@ from avin.core.market_data import MarketData
 from avin.core.source import Source
 from avin.data.bar_storage import BarStorage
 from avin.data.tinkoff.schemas import TINKOFF_BAR_CSV_SCHEMA
-from avin.utils import Cmd, DateTime, cfg, dt_to_ts
+from avin.utils import Cmd, Date, DateTime, cfg, dt_to_ts
 
 
 class TinkoffBarDownloader:
     SOURCE: Source = Source.TINKOFF
 
-    def __init__(self, iid: Iid, md: MarketData, year: int):
+    def __init__(self, iid: Iid, md: MarketData):
         self.iid = iid
         self.md = md
-        self.year = year
 
-        self.tmp_dir = cfg.tmp / "tinkoff"
+        self.tmp_dir = cfg.tmp_path / "tinkoff"
+        self.archive_dir = self.tmp_dir / "download" / str(iid)
+        self.extract_dir = self.tmp_dir / "extract" / str(iid)
 
-        e = self.iid.exchange.name
-        c = self.iid.category.name
-        t = self.iid.ticker
-        prefix = f"{e}-{c}-{t}-{self.md}"
-
-        archive_name = f"{prefix}-{self.year}.zip"
-        self.archive_path = self.tmp_dir / "download" / archive_name
-
-        extract_dir_name = f"{prefix}-{self.year}"
-        self.extract_path = self.tmp_dir / "extract" / extract_dir_name
-
-    def download(self, cleanup: bool = True) -> None:
+    def download_year(self, year: int, cleanup: bool = True) -> None:
         self._prepare_workdir()
 
         try:
-            self._download_archive()
-            self._extract_archive()
+            archive_path = self._archive_path(year)
+            extract_path = self._extract_path(year)
 
-            tinkoff_df = self._read_tinkoff_csv_files()
-            df = self._format_tinkoff_df(tinkoff_df)
+            self._fetch_archive(year, archive_path)
+            self._extract_archive(archive_path, extract_path)
+
+            files = sorted(Cmd.get_files(extract_path, full_path=True))
+            if not files:
+                raise FileNotFoundError("No CSV files found")
+
+            for file in files:
+                tinkoff_df = pl.read_csv(
+                    file,
+                    has_header=False,
+                    separator=";",
+                    schema=TINKOFF_BAR_CSV_SCHEMA,
+                )
+                df = self._format_df(tinkoff_df)
+                BarStorage.save(self.iid, self.SOURCE, self.md, df)
+
+        finally:
+            self._clear_workdir(cleanup)
+
+    def download_day(self, day: Date, cleanup: bool = True) -> None:
+        self._prepare_workdir()
+
+        try:
+            year = day.year
+            archive_path = self._archive_path(year)
+            extract_path = self._extract_path(year)
+
+            self._fetch_archive(year, archive_path)
+            self._extract_archive(archive_path, extract_path)
+
+            uid = self.iid.dump_raw_info()["uid"]
+            date = day.strftime("%Y%m%d")
+            file_name = f"{uid}_{date}.csv"
+            files = Cmd.find_file(file_name, extract_path)
+            if len(files) != 1:
+                raise FileNotFoundError("No CSV file found: ({file_name})")
+
+            tinkoff_df = pl.read_csv(
+                files[0],
+                has_header=False,
+                separator=";",
+                schema=TINKOFF_BAR_CSV_SCHEMA,
+            )
+            df = self._format_df(tinkoff_df)
 
             BarStorage.save(self.iid, self.SOURCE, self.md, df)
 
         finally:
-            if cleanup:
-                Cmd.delete_dir(self.tmp_dir)
+            self._clear_workdir(cleanup)
 
     def _prepare_workdir(self):
         if self.tmp_dir.exists():
             Cmd.delete_dir(self.tmp_dir)
 
-        Cmd.make_dirs(self.tmp_dir / "download")
-        Cmd.make_dirs(self.tmp_dir / "extract")
+        Cmd.make_dirs(self.archive_dir)
+        Cmd.make_dirs(self.extract_dir)
 
-    def _build_url(self) -> str:
+    def _clear_workdir(self, cleanup: bool) -> None:
+        if cleanup:
+            Cmd.delete_dir(self.tmp_dir)
+
+    def _build_url(self, year: int) -> str:
         uid = self.iid.dump_raw_info()["uid"]
 
         return (
             f"https://invest-public-api.tinkoff.ru/history-data"
             f"?instrumentId={uid}"
-            f"&year={self.year}"
+            f"&year={year}"
         )
 
-    def _download_archive(self):
-        url = self._build_url()
+    def _fetch_archive(self, year: int, archive_path: Path):
+        url = self._build_url(year)
 
         response = self._get_with_retry(url)
         if not response.content:
-            raise ValueError(
-                f"Market data for {self.iid}-{self.year} unavailable"
-            )
+            raise ValueError(f"Market data for {self.iid}-{year} unavailable")
 
-        with open(self.archive_path, "wb") as f:
+        with open(archive_path, "wb") as f:
             f.write(response.content)
 
     def _get_with_retry(
@@ -112,13 +147,23 @@ class TinkoffBarDownloader:
 
         raise RuntimeError(f"failed to fetch {url}") from last_exc
 
-    def _extract_archive(self):
-        Cmd.extract_zip(self.archive_path, self.extract_path)
+    def _extract_archive(self, archive_path: Path, extract_path: Path):
+        Cmd.extract_zip(archive_path, extract_path)
 
-    def _read_tinkoff_csv_files(self) -> pl.DataFrame:
-        files = sorted(Cmd.get_files(self.extract_path, full_path=True))
+    def _read_tinkoff_csv_files(self, year) -> pl.DataFrame:
+        extract_path = self._extract_path(year)
+
+        files = sorted(Cmd.get_files(extract_path, full_path=True))
         if not files:
             raise FileNotFoundError("No CSV files found")
+
+        for file in files:
+            df = pl.read_csv(
+                file,
+                has_header=False,
+                separator=";",
+                schema=TINKOFF_BAR_CSV_SCHEMA,
+            )
 
         df = pl.concat(
             pl.read_csv(
@@ -133,7 +178,7 @@ class TinkoffBarDownloader:
         return df
 
     @staticmethod
-    def _format_tinkoff_df(tinkoff_df: pl.DataFrame) -> pl.DataFrame:
+    def _format_df(tinkoff_df: pl.DataFrame) -> pl.DataFrame:
         """Convert Tinkoff CSV schema to AVIN bar schema.
 
         Input:
@@ -161,3 +206,20 @@ class TinkoffBarDownloader:
         )
 
         return df
+
+    def _archive_path(self, year: int) -> Path:
+        return self.archive_dir / f"{year}.zip"
+
+    def _extract_path(self, year: int) -> Path:
+        return self.extract_dir / f"{year}"
+
+        # e = self.iid.exchange.name
+        # c = self.iid.category.name
+        # t = self.iid.ticker
+        # prefix = f"{e}-{c}-{t}-{self.md}"
+        #
+        # archive_name = f"{prefix}-{self.year}.zip"
+        # self.archive_path = self.tmp_dir / "download" / archive_name
+        #
+        # extract_dir_name = f"{prefix}-{self.year}"
+        # self.extract_path = self.tmp_dir / "extract" / extract_dir_name

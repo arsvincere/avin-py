@@ -10,19 +10,25 @@ def clear_cache():
     IidStorage.find_figi.cache_clear()
 
 
+# ----------------------------------------------------------------------------
+
+
 @pytest.mark.integration
-def test_tinkoff_cache_save_load():
+def test_tinkoff_cache_delete_save_load():
+    source = Source.TINKOFF
+    category = Category.SHARE
+
+    IidStorage.delete(source, category)
+
     SourceTinkoff.cache()  # IidStorage.save(...) при это задействован
 
-    df = IidStorage.load(
-        Source.TINKOFF,
-        Category.SHARE,
-    )
+    df = IidStorage.load(source, category)
+
     assert not df.is_empty()
 
 
 @pytest.mark.integration
-def test_cache_find_code():
+def test_tinkoff_cache_find_code():
     code = "MOEX_SHARE_SBER"
     source = Source.TINKOFF
 
@@ -34,7 +40,7 @@ def test_cache_find_code():
 
 
 @pytest.mark.integration
-def test_cache_find_figi():
+def test_tinkoff_cache_find_figi():
     figi = "BBG004730N88"
     source = Source.TINKOFF
 
