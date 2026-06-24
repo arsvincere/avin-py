@@ -28,9 +28,6 @@ class MarketData(enum.StrEnum):
     ORDER_STATS = "ORDER_STATS"
     OB_STATS = "OB_STATS"
 
-    def __str__(self) -> str:
-        return self.value
-
     @property
     def timedelta(self) -> TimeDelta:
         match self:
@@ -176,6 +173,20 @@ class MarketData(enum.StrEnum):
             f"Invalid market data name: '{string}'. "
             f"Choice from {MarketData._member_names_}"
         )
+
+    @classmethod
+    def all_bar_kind(
+        self,
+    ) -> list[MarketData]:
+        return [
+            self.BAR_1M,
+            self.BAR_5M,
+            self.BAR_10M,
+            self.BAR_1H,
+            self.BAR_DAY,
+            self.BAR_WEEK,
+            self.BAR_MONTH,
+        ]
 
 
 if __name__ == "__main__":
