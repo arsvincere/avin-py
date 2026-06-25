@@ -32,6 +32,10 @@ class Level:
         return self.val_b + self.val_s
 
     @property
+    def trades(self) -> int:
+        return self.trades_b + self.trades_s
+
+    @property
     def delta_vol(self) -> int:
         return self.vol_b - self.vol_s
 
