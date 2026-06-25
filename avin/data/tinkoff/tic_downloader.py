@@ -16,10 +16,10 @@ import requests
 
 from avin.core.iid import Iid
 from avin.core.market_data import MarketData
-from avin.core.path_builder import PathBuilder
 from avin.core.source import Source
 from avin.data.tic_storage import TicStorage
 from avin.data.tinkoff.schemas import TINKOFF_TIC_CSV_SCHEMA
+from avin.system.path_builder import PathBuilder
 from avin.utils.cmd import Cmd
 from avin.utils.dt import Date, DateTime, TimeDelta, TimeZone, dt_to_ts
 

@@ -20,8 +20,8 @@ from avin.data.tinkoff.bar_downloader import TinkoffBarDownloader
 from avin.data.tinkoff.mapper import extract_info
 from avin.data.tinkoff.schemas import IID_SCHEMA
 from avin.data.tinkoff.tic_downloader import TinkoffTicDownloader
+from avin.system.logger import log
 from avin.utils.dt import Date
-from avin.utils.logger import log
 
 
 class SourceTinkoff:

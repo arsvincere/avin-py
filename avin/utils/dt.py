@@ -15,7 +15,7 @@ from datetime import time as Time
 from datetime import timedelta as TimeDelta
 from datetime import timezone as TimeZone
 
-from avin.utils.conf import cfg
+from avin.system.conf import cfg
 
 __all__ = (
     "DAY_BEGIN",

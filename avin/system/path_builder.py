@@ -11,7 +11,7 @@ from avin.core.category import Category
 from avin.core.iid import Iid
 from avin.core.market_data import MarketData
 from avin.core.source import Source
-from avin.utils.conf import cfg
+from avin.system.conf import cfg
 from avin.utils.dt import Date
 
 

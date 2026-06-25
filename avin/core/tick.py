@@ -8,7 +8,7 @@
 from dataclasses import dataclass
 
 from avin.core.direction import Direction
-from avin.utils.conf import cfg
+from avin.system.conf import cfg
 from avin.utils.dt import DateTime, ts_to_dt
 
 

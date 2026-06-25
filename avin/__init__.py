@@ -20,8 +20,9 @@ from avin.core.tick import Tick
 from avin.core.timeframe import TimeFrame
 from avin.service.asset_factory import AssetFactory
 from avin.service.data_manager import DataManager
+from avin.system.conf import cfg
+from avin.system.logger import log
 from avin.utils.cmd import Cmd
-from avin.utils.conf import cfg
 from avin.utils.dt import (
     UTC,
     Date,
@@ -36,7 +37,6 @@ from avin.utils.dt import (
     ts_to_dt,
     utc_to_local_str,
 )
-from avin.utils.logger import log
 
 __all__ = (
     "AssetFactory",

@@ -9,8 +9,8 @@ import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from avin.core.path_builder import PathBuilder
-from avin.utils.conf import cfg
+from avin.system.conf import cfg
+from avin.system.path_builder import PathBuilder
 from avin.utils.dt import Date
 
 __all__ = ("log", "configure_log")
