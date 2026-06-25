@@ -8,7 +8,6 @@
 from dataclasses import dataclass
 
 from avin.domain.direction import Direction
-from avin.system.conf import cfg
 from avin.utils.dt import DateTime, ts_to_dt
 
 
@@ -23,7 +22,7 @@ class Tick:
 
     def __str__(self) -> str:
         s = (
-            f"Tick: {self.dt_local} {self.direction} "
+            f"Tick: {self.dt} {self.direction} "
             f"{self.lots}x{self.quantity}x{self.price}={self.value}"
         )
         return s
@@ -31,10 +30,6 @@ class Tick:
     @property
     def dt(self) -> DateTime:
         return ts_to_dt(self.ts)
-
-    @property
-    def dt_local(self) -> DateTime:
-        return self.dt.astimezone(cfg.local_timezone)
 
     def is_buy(self) -> bool:
         return self.direction == Direction.BUY

@@ -14,7 +14,8 @@ from avin.domain.instrument.iid import Iid
 
 class Share(Asset):
     def __init__(self, iid: Iid):
-        assert iid.category == Category.SHARE
+        if iid.category != Category.SHARE:
+            raise ValueError(iid)
 
         self.__iid = iid
 
@@ -26,8 +27,9 @@ class Share(Asset):
         return hash(self.figi())
 
     def __eq__(self, other: object):
-        assert isinstance(other, Iid)
-        return self.figi == other.figi
+        if not isinstance(other, Share):
+            raise ValueError("impossible compare Share with {other}")
+        return self.figi() == other.figi()
 
     def iid(self) -> Iid:
         return self.__iid

@@ -12,12 +12,12 @@ import pytest
 from avin.utils.dt import (
     dt_to_ts,
     next_month,
-    now_local,
+    # now_local,
     now_utc,
     prev_month,
     str_to_utc,
     ts_to_dt,
-    utc_to_local_str,
+    # utc_to_local_str,
 )
 
 # =========================
@@ -65,9 +65,9 @@ def test_now_utc_is_utc():
     assert dt.tzinfo == UTC
 
 
-def test_now_local_has_tz():
-    dt = now_local()
-    assert dt.tzinfo is not None
+# def test_now_local_has_tz():
+#     dt = now_local()
+#     assert dt.tzinfo is not None
 
 
 # =========================
@@ -128,9 +128,9 @@ def test_str_to_utc_with_naive_input():
 # =========================
 
 
-def test_utc_to_local_str_contains_string():
-    dt = datetime(2024, 1, 1, tzinfo=UTC)
-    s = utc_to_local_str(dt)
-
-    assert isinstance(s, str)
-    assert len(s) > 0
+# def test_utc_to_local_str_contains_string():
+#     dt = datetime(2024, 1, 1, tzinfo=UTC)
+#     s = utc_to_local_str(dt)
+#
+#     assert isinstance(s, str)
+#     assert len(s) > 0

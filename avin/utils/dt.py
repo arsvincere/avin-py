@@ -15,8 +15,6 @@ from datetime import time as Time
 from datetime import timedelta as TimeDelta
 from datetime import timezone as TimeZone
 
-from avin.system.conf import cfg
-
 __all__ = (
     "DAY_BEGIN",
     "DAY_END",
@@ -38,12 +36,12 @@ __all__ = (
     "WeekDays",
     "dt_to_ts",
     "next_month",
-    "now_local",
+    # "now_local",
     "now_utc",
     "prev_month",
     "str_to_utc",
     "ts_to_dt",
-    "utc_to_local_str",
+    # "utc_to_local_str",
 )
 
 
@@ -62,8 +60,8 @@ def now_utc() -> DateTime:
     return DateTime.now(UTC)
 
 
-def now_local() -> DateTime:
-    return DateTime.now().astimezone(cfg.local_timezone)
+# def now_local() -> DateTime:
+#     return DateTime.now().astimezone(cfg.local_timezone)
 
 
 def next_month(dt: DateTime) -> DateTime:
@@ -110,9 +108,9 @@ def str_to_utc(s: str) -> DateTime:
     return dt.astimezone(UTC)
 
 
-def utc_to_local_str(dt: DateTime) -> str:
-    local = dt.astimezone(cfg.local_timezone)
-    return local.strftime(cfg.dt_fmt)
+# def utc_to_local_str(dt: DateTime) -> str:
+#     local = dt.astimezone(cfg.local_timezone)
+#     return local.strftime(cfg.dt_fmt)
 
 
 class WeekDays(enum.Enum):

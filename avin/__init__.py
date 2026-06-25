@@ -39,7 +39,7 @@ from avin.utils.dt import (
     prev_month,
     str_to_utc,
     ts_to_dt,
-    utc_to_local_str,
+    # utc_to_local_str,
 )
 
 __all__ = (
@@ -77,5 +77,5 @@ __all__ = (
     "prev_month",
     "str_to_utc",
     "ts_to_dt",
-    "utc_to_local_str",
+    # "utc_to_local_str",
 )

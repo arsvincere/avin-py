@@ -13,6 +13,7 @@ from avin.data.iid_storage import IidStorage
 from avin.domain.asset.future import Future
 from avin.domain.asset.share import Share
 from avin.domain.instrument.category import Category
+from avin.domain.instrument.exchange import Exchange
 from avin.domain.instrument.iid import Iid
 from avin.domain.source import Source
 from avin.errors.exceptions import InstrumentNotFound
@@ -23,8 +24,10 @@ class AssetFactory:
     @cache
     def new(cls, code: str) -> Share | Future:
         e, c, t = code.split("_")
-        assert e == "MOEX"
-        assert c == "SHARE"
+        if e is not Exchange.MOEX:
+            raise NotImplementedError("TODO")
+        if c is not Category.SHARE:
+            raise NotImplementedError("TODO")
 
         shares = _cached_load_shares()
 
