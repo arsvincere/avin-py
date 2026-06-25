@@ -17,6 +17,10 @@ from avin.core.source import Source
 from avin.utils import Cmd, Date, DateTime, TimeDelta, dt_to_ts, log, ts_to_dt
 from avin.utils.exceptions import DataNotFound
 
+# TODO:
+# BarStorage and TicStorage are nearly identical.
+# Consider merge into DataStorage after raw/derived architecture stabilizes.
+
 
 class TicStorage:
     @classmethod
