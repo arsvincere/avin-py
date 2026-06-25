@@ -17,7 +17,6 @@ class Footprint:
     def __init__(self) -> None:
         self.clusters: list[Cluster] = []
 
-
     def __len__(self) -> int:
         return len(self.clusters)
 
