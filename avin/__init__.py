@@ -14,7 +14,7 @@ from avin.core.iid import Iid
 from avin.core.market_data import MarketData
 from avin.core.price_range import PriceRange
 from avin.core.source import Source
-from avin.core.tic import Tic
+from avin.core.tick import Tick
 from avin.service.asset_factory import AssetFactory
 from avin.service.data_manager import DataManager
 from avin.utils.cmd import Cmd
@@ -44,7 +44,7 @@ __all__ = (
     "MarketData",
     "PriceRange",
     "Source",
-    "Tic",
+    "Tick",
     "AssetFactory",
     "DataManager",
     "UTC",

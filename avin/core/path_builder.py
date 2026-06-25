@@ -30,6 +30,14 @@ class PathBuilder:
         return cls.DATA / iid.exchange / iid.category / iid.ticker
 
     @classmethod
+    def iid_cache_file(
+        cls,
+        source: Source,
+        category: Category,
+    ) -> Path:
+        return cls.IID / source / f"{category}.parquet"
+
+    @classmethod
     def market_data_dir(
         cls,
         iid: Iid,
@@ -48,11 +56,3 @@ class PathBuilder:
     ) -> Path:
         d = cls.market_data_dir(iid, source, md)
         return d / str(date.year) / f"{date}.parquet"
-
-    @classmethod
-    def iid_cache_file(
-        cls,
-        source: Source,
-        category: Category,
-    ) -> Path:
-        return cls.IID / source / f"{category}.parquet"
