@@ -4,6 +4,7 @@ from avin.core.market_data import MarketData
 from avin.core.source import Source
 from avin.data.iid_storage import IidStorage
 from avin.data.tinkoff.tic_downloader import TinkoffTicDownloader
+from avin.errors.exceptions import DataNotFound
 from avin.service.data_manager import DataManager
 from avin.utils.dt import (
     UTC,
@@ -14,7 +15,6 @@ from avin.utils.dt import (
     now_utc,
     ts_to_dt,
 )
-from avin.utils.exceptions import DataNotFound
 
 
 @pytest.mark.slow

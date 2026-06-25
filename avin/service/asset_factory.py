@@ -15,7 +15,7 @@ from avin.core.category import Category
 from avin.core.iid import Iid
 from avin.core.source import Source
 from avin.data.iid_storage import IidStorage
-from avin.utils.exceptions import InstrumentNotFound
+from avin.errors.exceptions import InstrumentNotFound
 
 
 class AssetFactory:

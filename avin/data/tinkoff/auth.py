@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import t_tech.invest as ti
 
+from avin.errors.exceptions import InvalidToken
 from avin.system.conf import cfg
 from avin.utils.cmd import Cmd
-from avin.utils.exceptions import InvalidToken
 
 TOKEN_PATH = cfg.tinkoff_token_path
 
