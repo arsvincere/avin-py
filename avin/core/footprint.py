@@ -5,6 +5,8 @@
 # LICENSE:      MIT
 # ============================================================================
 
+from collections.abc import Iterator
+
 from avin.core.cluster import Cluster
 from avin.core.tick import Tick
 
@@ -15,34 +17,26 @@ class Footprint:
     def __init__(self) -> None:
         self.clusters: list[Cluster] = []
 
-    def __len__(self) -> int:
-        raise NotImplementedError("TODO")
 
-    def __iter__(self):
-        raise NotImplementedError("TODO")
+    def __len__(self) -> int:
+        return len(self.clusters)
+
+    def __iter__(self) -> Iterator[Cluster]:
+        return iter(self.clusters)
 
     def __getitem__(self, index: int) -> Cluster:
-        raise NotImplementedError("TODO")
+        return self.clusters[index]
+
+    @property
+    def is_empty(self) -> bool:
+        return not self.clusters
 
     @property
     def last_cluster(self) -> Cluster:
-        raise NotImplementedError("TODO")
+        if not self.clusters:
+            raise ValueError("footprint is empty")
 
-    @property
-    def high(self) -> float:
-        raise NotImplementedError("TODO")
-
-    @property
-    def low(self) -> float:
-        raise NotImplementedError("TODO")
-
-    @property
-    def vol(self) -> int:
-        raise NotImplementedError("TODO")
-
-    @property
-    def val(self) -> int:
-        raise NotImplementedError("TODO")
+        return self.clusters[-1]
 
     def add(self, tick: Tick) -> None:
-        raise NotImplementedError("TODO")
+        raise NotImplementedError()
