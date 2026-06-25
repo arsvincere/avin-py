@@ -17,6 +17,7 @@ from avin.core.market_data import MarketData
 from avin.core.price_range import PriceRange
 from avin.core.source import Source
 from avin.core.tick import Tick
+from avin.core.timeframe import TimeFrame
 from avin.service.asset_factory import AssetFactory
 from avin.service.data_manager import DataManager
 from avin.utils.cmd import Cmd
@@ -57,6 +58,7 @@ __all__ = (
     "Tick",
     "Time",
     "TimeDelta",
+    "TimeFrame",
     "TimeZone",
     "UTC",
     "cfg",

@@ -50,7 +50,7 @@ def test_empty_ladder():
     assert ladder.is_empty
     assert len(ladder) == 0
 
-    assert ladder.prices == []
+    assert ladder.sorted_prices == []
     assert ladder.sorted_levels == []
 
 
@@ -163,7 +163,7 @@ def test_prices_are_sorted():
     ladder.add(buy_tick(price=100.0))
     ladder.add(buy_tick(price=101.0))
 
-    assert ladder.prices == [
+    assert ladder.sorted_prices == [
         100.0,
         101.0,
         102.0,

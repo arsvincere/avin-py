@@ -157,11 +157,11 @@ class MarketData(enum.StrEnum):
         return next
 
     @classmethod
-    def from_str(cls, string: str) -> MarketData:
-        if not isinstance(string, str):
-            raise TypeError(string)
+    def from_str(cls, value: str) -> MarketData:
+        if not isinstance(value, str):
+            raise TypeError(value)
 
-        s = string.upper()
+        s = value.upper()
         if s in cls.__members__:
             return cls[s]
 
@@ -170,7 +170,7 @@ class MarketData(enum.StrEnum):
                 return item
 
         raise ValueError(
-            f"Invalid market data name: '{string}'. "
+            f"Invalid market data name: '{value}'. "
             f"Choice from {MarketData._member_names_}"
         )
 
