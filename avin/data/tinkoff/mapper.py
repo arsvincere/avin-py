@@ -10,7 +10,7 @@ from __future__ import annotations
 import t_tech.invest as ti
 
 from avin.core.category import Category
-from avin.utils import dt_to_ts
+from avin.utils.dt import dt_to_ts
 
 TINKOFF_CATEGORY_MAP = {
     "shares": Category.SHARE,

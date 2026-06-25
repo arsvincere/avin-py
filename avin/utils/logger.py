@@ -9,8 +9,9 @@ import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from avin.utils import Date
+from avin.core.path_builder import PathBuilder
 from avin.utils.conf import cfg
+from avin.utils.dt import Date
 
 __all__ = ("log", "configure_log")
 
@@ -34,7 +35,7 @@ def configure_log(debug: bool, info: bool) -> logging.Logger:
 
     _add_stream_handler(logger)
 
-    log_dir: Path = cfg.log_path
+    log_dir: Path = PathBuilder.LOG
     log_dir.mkdir(parents=True, exist_ok=True)
 
     if info:

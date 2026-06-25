@@ -8,16 +8,17 @@
 from __future__ import annotations
 
 from functools import cache
-from pathlib import Path
 
 import polars as pl
 
 from avin.core.category import Category
 from avin.core.iid import Iid
 from avin.core.instrument_code import parse_code
+from avin.core.path_builder import PathBuilder
 from avin.core.source import Source
-from avin.utils import Cmd, cfg, log
+from avin.utils.cmd import Cmd
 from avin.utils.exceptions import DataNotFound, InstrumentNotFound
+from avin.utils.logger import log
 
 
 class IidStorage:
@@ -65,10 +66,7 @@ class IidStorage:
         if df.is_empty():
             raise ValueError("DataFrame is empty")
 
-        path = _create_file_path(
-            source,
-            category,
-        )
+        path = PathBuilder.iid_cache_file(source, category)
 
         Cmd.write_pqt(df, path)
 
@@ -81,10 +79,8 @@ class IidStorage:
         source: Source,
         category: Category,
     ) -> pl.DataFrame:
-        path = _create_file_path(
-            source,
-            category,
-        )
+
+        path = PathBuilder.iid_cache_file(source, category)
 
         if not path.is_file():
             raise DataNotFound(f"{source} {category} ({path})")
@@ -93,14 +89,7 @@ class IidStorage:
 
     @classmethod
     def delete(cls, source: Source, category: Category) -> None:
-        path = _create_file_path(source, category)
+        path = PathBuilder.iid_cache_file(source, category)
 
         if Cmd.is_file(path):
             Cmd.delete(path)
-
-
-def _create_file_path(
-    source: Source,
-    category: Category,
-) -> Path:
-    return cfg.iid_cache_path / source.name / f"{category.name}.parquet"

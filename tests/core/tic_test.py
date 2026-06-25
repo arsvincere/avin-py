@@ -8,7 +8,9 @@
 import polars as pl
 import pytest
 
-from avin import *
+from avin.core.direction import Direction
+from avin.core.tic import Tic
+from avin.utils.dt import ts_to_dt
 
 
 def test_tic_init():

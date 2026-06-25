@@ -16,10 +16,12 @@ import requests
 
 from avin.core.iid import Iid
 from avin.core.market_data import MarketData
+from avin.core.path_builder import PathBuilder
 from avin.core.source import Source
 from avin.data.bar_storage import BarStorage
 from avin.data.tinkoff.schemas import TINKOFF_BAR_CSV_SCHEMA
-from avin.utils import Cmd, Date, DateTime, cfg, dt_to_ts
+from avin.utils.cmd import Cmd
+from avin.utils.dt import Date, DateTime, dt_to_ts
 
 
 class TinkoffBarDownloader:
@@ -29,7 +31,7 @@ class TinkoffBarDownloader:
         self.iid = iid
         self.md = md
 
-        self.tmp_dir = cfg.tmp_path / "tinkoff"
+        self.tmp_dir = PathBuilder.TMP / "tinkoff"
         self.archive_dir = self.tmp_dir / "download" / str(iid)
         self.extract_dir = self.tmp_dir / "extract" / str(iid)
 

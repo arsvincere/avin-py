@@ -5,7 +5,6 @@
 # LICENSE:      MIT
 # ============================================================================
 
-from pathlib import Path
 
 import polars as pl
 import pytest
@@ -39,7 +38,6 @@ def test_init(raw_info):
     assert iid.name == "Сбер Банк"
     assert iid.lot == 10
     assert iid.step == 0.01
-    assert iid.path == Path("/home/alex/trading/data/MOEX/SHARE/SBER")
     assert (
         iid.dump_raw_info()["uid"] == "e6123145-9665-43e0-8413-cd61b8aa9b13"
     )

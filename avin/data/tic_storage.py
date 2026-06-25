@@ -13,9 +13,12 @@ import polars as pl
 
 from avin.core.iid import Iid
 from avin.core.market_data import MarketData
+from avin.core.path_builder import PathBuilder
 from avin.core.source import Source
-from avin.utils import Cmd, Date, DateTime, TimeDelta, dt_to_ts, log, ts_to_dt
+from avin.utils.cmd import Cmd
+from avin.utils.dt import Date, DateTime, TimeDelta, dt_to_ts, ts_to_dt
 from avin.utils.exceptions import DataNotFound
+from avin.utils.logger import log
 
 # TODO:
 # BarStorage and TicStorage are nearly identical.
@@ -36,12 +39,7 @@ class TicStorage:
 
         date = _validate_df(df)
 
-        path = _create_file_path(
-            iid,
-            source,
-            md,
-            date,
-        )
+        path = PathBuilder.market_data_file(iid, source, md, date)
 
         Cmd.write_pqt(df, path)
 
@@ -55,12 +53,7 @@ class TicStorage:
         md: MarketData,
         date: Date,
     ) -> pl.DataFrame:
-        path = _create_file_path(
-            iid,
-            source,
-            md,
-            date,
-        )
+        path = PathBuilder.market_data_file(iid, source, md, date)
 
         if not path.is_file():
             raise DataNotFound(f"{iid} {source} {md} {date}")
@@ -74,7 +67,7 @@ class TicStorage:
         source: Source,
         md: MarketData,
     ) -> pl.DataFrame:
-        dir_path = _create_dir_path(iid, source, md)
+        dir_path = PathBuilder.market_data_dir(iid, source, md)
         if not dir_path.exists():
             raise DataNotFound(f"{iid} {source} {md} ({dir_path})")
 
@@ -134,7 +127,7 @@ class TicStorage:
 
     @classmethod
     def delete(cls, iid: Iid, source: Source, md: MarketData) -> None:
-        dir_path = _create_dir_path(iid, source, md)
+        dir_path = PathBuilder.market_data_dir(iid, source, md)
 
         if Cmd.is_dir(dir_path):
             Cmd.delete_dir(dir_path)
@@ -169,22 +162,3 @@ def _extract_range_dates(begin: DateTime, end: DateTime) -> list[Date]:
         current += TimeDelta(days=1)
 
     return dates
-
-
-def _create_dir_path(
-    iid: Iid,
-    source: Source,
-    md: MarketData,
-) -> Path:
-    return iid.path / source / md
-
-
-def _create_file_path(
-    iid: Iid,
-    source: Source,
-    md: MarketData,
-    date: Date,
-) -> Path:
-    return (
-        _create_dir_path(iid, source, md) / str(date.year) / f"{date}.parquet"
-    )

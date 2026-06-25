@@ -10,7 +10,8 @@ from dataclasses import dataclass
 import polars as pl
 
 from avin.core.direction import Direction
-from avin.utils import DateTime, cfg, ts_to_dt
+from avin.utils.conf import cfg
+from avin.utils.dt import DateTime, ts_to_dt
 
 
 @dataclass(frozen=True)

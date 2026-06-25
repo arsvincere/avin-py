@@ -6,7 +6,6 @@
 # ============================================================================
 
 from abc import ABC, abstractmethod
-from pathlib import Path
 
 from avin.core.category import Category
 from avin.core.exchange import Exchange
@@ -46,6 +45,3 @@ class Asset(ABC):
 
     @abstractmethod
     def step(self) -> float: ...
-
-    @abstractmethod
-    def path(self) -> Path: ...

@@ -5,14 +5,12 @@
 # LICENSE:      MIT
 # ============================================================================
 
-from pathlib import Path
 
 import polars as pl
 
 from avin.core.category import Category
 from avin.core.exchange import Exchange
 from avin.utils.cmd import Cmd
-from avin.utils.conf import cfg
 
 
 class Iid:
@@ -77,11 +75,6 @@ class Iid:
     @property
     def step(self) -> float:
         return float(self.__raw_info["step"])
-
-    @property
-    def path(self) -> Path:
-        path = cfg.data_path / self.exchange / self.category / self.ticker
-        return path
 
     def to_json_str(self) -> str:
         return Cmd.to_json_str(self.__raw_info, indent=4)

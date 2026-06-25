@@ -2,9 +2,6 @@
     # Specify the path to the working directory relative to the home folder
     root = "trading" # == /home/<user>/trading
 
-    # Specify path to market data dir
-    data = "trading/data"
-
 [connect]
     # Path to tinkoff token
     tinkoff_token = "trading/connect/tinkoff/token.txt"

@@ -5,7 +5,6 @@
 # LICENSE:      MIT
 # ============================================================================
 
-from pathlib import Path
 
 from avin.asset.asset import Asset
 from avin.core.category import Category
@@ -53,6 +52,3 @@ class Share(Asset):
 
     def step(self) -> float:
         return self.__iid.step
-
-    def path(self) -> Path:
-        return self.__iid.path

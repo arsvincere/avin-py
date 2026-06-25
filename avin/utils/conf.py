@@ -52,32 +52,8 @@ class Configuration:
     # -------- paths --------
 
     @property
-    def root_path(self) -> Path:
+    def root_dir(self) -> Path:
         return self._base_path / self._cfg["dir"]["root"]
-
-    @property
-    def data_path(self) -> Path:
-        return self._base_path / self._cfg["dir"]["data"]
-
-    @property
-    def log_path(self) -> Path:
-        return self.root_path / "log"
-
-    @property
-    def res_path(self) -> Path:
-        return self.root_path / "res"
-
-    @property
-    def tmp_path(self) -> Path:
-        return self.root_path / "tmp"
-
-    @property
-    def connect_path(self) -> Path:
-        return self.root_path / "connect"
-
-    @property
-    def iid_cache_path(self) -> Path:
-        return self.data_path / "iid"
 
     # -------- secrets (paths) --------
 

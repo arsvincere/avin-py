@@ -1,6 +1,9 @@
 import pytest
 
-from avin import *
+from avin.core.category import Category
+from avin.core.source import Source
+from avin.data.iid_storage import IidStorage
+from avin.data.tinkoff.source_tinkoff import SourceTinkoff
 
 
 @pytest.fixture(autouse=True)
