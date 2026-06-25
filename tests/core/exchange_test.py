@@ -7,7 +7,7 @@
 
 import pytest
 
-from avin.core.exchange import Exchange
+from avin.domain.instrument.exchange import Exchange
 
 
 def test_init():

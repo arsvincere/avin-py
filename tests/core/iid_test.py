@@ -9,9 +9,9 @@
 import polars as pl
 import pytest
 
-from avin.core.category import Category
-from avin.core.exchange import Exchange
-from avin.core.iid import Iid
+from avin.domain.instrument.category import Category
+from avin.domain.instrument.exchange import Exchange
+from avin.domain.instrument.iid import Iid
 
 
 @pytest.fixture

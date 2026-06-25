@@ -1,0 +1,86 @@
+name: Badges
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths-ignore:
+      - ".github/badges/**"
+
+permissions:
+  contents: write
+
+jobs:
+  badges:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov
+          pip install -e . || true
+
+      - name: Generate badges
+        run: |
+          mkdir -p .github/badges
+
+          LOC=$(find avin tests -name "*.py" -type f \
+            | xargs grep -v '^[[:space:]]*$' \
+            | grep -v '^[[:space:]]*#' \
+            | wc -l)
+
+          TESTS=$(find tests -name "*.py" -type f \
+            | xargs grep -E '^[[:space:]]*def test_' \
+            | wc -l)
+
+          COVERAGE=$(pytest --cov=avin --cov-report=term 2>/dev/null \
+            | awk '/TOTAL/ {print $NF}' \
+            | tail -1)
+
+          if [ -z "$COVERAGE" ]; then
+            COVERAGE="unknown"
+            COVERAGE_COLOR="red"
+          else
+            COVERAGE_COLOR="e6c384"
+          fi
+
+          cat > .github/badges/loc.json <<EOF
+          {
+            "schemaVersion": 1,
+            "label": "LOC",
+            "message": "$LOC",
+            "color": "7e9cd8"
+          }
+          EOF
+
+          cat > .github/badges/tests.json <<EOF
+          {
+            "schemaVersion": 1,
+            "label": "Tests",
+            "message": "$TESTS",
+            "color": "7e9cd8"
+          }
+          EOF
+
+          cat > .github/badges/coverage.json <<EOF
+          {
+            "schemaVersion": 1,
+            "label": "Coverage",
+            "message": "$COVERAGE",
+            "color": "$COVERAGE_COLOR"
+          }
+          EOF
+
+      - name: Commit badges
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Update badges"
+          file_pattern: ".github/badges/*.json"

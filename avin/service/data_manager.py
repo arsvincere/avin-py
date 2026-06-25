@@ -8,14 +8,14 @@
 
 import polars as pl
 
-from avin.core.category import Category
-from avin.core.iid import Iid
-from avin.core.market_data import MarketData
-from avin.core.source import Source
 from avin.data.bar_storage import BarStorage
 from avin.data.iid_storage import IidStorage
 from avin.data.tic_storage import TicStorage
 from avin.data.tinkoff.source_tinkoff import SourceTinkoff
+from avin.domain.instrument.category import Category
+from avin.domain.instrument.iid import Iid
+from avin.domain.market_data import MarketData
+from avin.domain.source import Source
 from avin.errors.exceptions import DataNotFound
 from avin.utils.dt import Date, DateTime, TimeDelta, ts_to_dt
 

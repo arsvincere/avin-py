@@ -7,9 +7,9 @@
 
 import pytest
 
-from avin.core.direction import Direction
-from avin.core.ladder import Ladder
-from avin.core.tick import Tick
+from avin.domain.direction import Direction
+from avin.domain.footprint.ladder import Ladder
+from avin.domain.tick import Tick
 
 
 def buy_tick(

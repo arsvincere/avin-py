@@ -7,7 +7,7 @@
 
 import polars as pl
 
-from avin.core.iid import Iid
+from avin.domain.instrument.iid import Iid
 
 
 def sber_df() -> pl.DataFrame:

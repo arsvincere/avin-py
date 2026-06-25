@@ -7,7 +7,7 @@
 
 import pytest
 
-from avin.core.direction import Direction
+from avin.domain.direction import Direction
 
 
 def test_buy_value():

@@ -7,7 +7,7 @@
 
 import pytest
 
-from avin.core.category import Category
+from avin.domain.instrument.category import Category
 
 
 def test_name():

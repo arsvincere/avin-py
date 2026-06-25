@@ -7,8 +7,8 @@
 
 import pytest
 
-from avin.core.direction import Direction
-from avin.core.tick import Tick
+from avin.domain.direction import Direction
+from avin.domain.tick import Tick
 from avin.utils.dt import ts_to_dt
 
 

@@ -1,9 +1,9 @@
 import pytest
 
-from avin.core.market_data import MarketData
-from avin.core.source import Source
 from avin.data.iid_storage import IidStorage
 from avin.data.tinkoff.tic_downloader import TinkoffTicDownloader
+from avin.domain.market_data import MarketData
+from avin.domain.source import Source
 from avin.errors.exceptions import DataNotFound
 from avin.service.data_manager import DataManager
 from avin.utils.dt import (
