@@ -10,8 +10,8 @@ from avin.core.tick import Tick
 
 
 class Ladder:
-    def __init__(self):
-        self.levels: dict[float, Level] = dict()
+    def __init__(self) -> None:
+        self.levels: dict[float, Level] = {}
 
     def __len__(self) -> int:
         return len(self.levels)
@@ -39,7 +39,7 @@ class Ladder:
         return min(self.levels)
 
     @property
-    def prices(self) -> list[float]:
+    def sorted_prices(self) -> list[float]:
         return sorted(self.levels)
 
     @property
