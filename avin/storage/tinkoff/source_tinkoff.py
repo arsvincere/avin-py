@@ -10,16 +10,16 @@ from __future__ import annotations
 import polars as pl
 import t_tech.invest as ti
 
-from avin.data.iid_storage import IidStorage
-from avin.data.tinkoff.auth import TinkoffAuth
-from avin.data.tinkoff.bar_downloader import TinkoffBarDownloader
-from avin.data.tinkoff.mapper import extract_info
-from avin.data.tinkoff.schemas import IID_SCHEMA
-from avin.data.tinkoff.tic_downloader import TinkoffTicDownloader
+from avin.domain.data.market_data import MarketData
+from avin.domain.data.source import Source
 from avin.domain.instrument.category import Category
 from avin.domain.instrument.iid import Iid
-from avin.domain.market_data import MarketData
-from avin.domain.source import Source
+from avin.storage.iid_storage import IidStorage
+from avin.storage.tinkoff.auth import TinkoffAuth
+from avin.storage.tinkoff.bar_downloader import TinkoffBarDownloader
+from avin.storage.tinkoff.mapper import extract_info
+from avin.storage.tinkoff.schemas import IID_SCHEMA
+from avin.storage.tinkoff.tic_downloader import TinkoffTicDownloader
 from avin.system.logger import log
 from avin.utils.dt import Date
 

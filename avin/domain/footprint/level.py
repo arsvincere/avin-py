@@ -7,7 +7,7 @@
 
 from dataclasses import dataclass
 
-from avin.domain.tick import Tick
+from avin.domain.raw.tick import Tick
 
 
 @dataclass(slots=True)

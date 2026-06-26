@@ -7,7 +7,7 @@
 
 import pytest
 
-from avin.domain.source import Source
+from avin.domain.data.source import Source
 
 
 def test_init():

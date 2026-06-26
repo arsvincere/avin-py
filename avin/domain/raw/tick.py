@@ -9,7 +9,7 @@ from dataclasses import dataclass
 
 import polars as pl
 
-from avin.domain.direction import Direction
+from avin.domain.common.direction import Direction
 from avin.utils.dt import DateTime, ts_to_dt
 
 

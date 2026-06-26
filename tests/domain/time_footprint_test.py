@@ -7,10 +7,10 @@
 
 import pytest
 
-from avin.domain.direction import Direction
+from avin.domain.common.direction import Direction
+from avin.domain.common.timeframe import TimeFrame
 from avin.domain.footprint.time_footprint import TimeFootprint
-from avin.domain.tick import Tick
-from avin.domain.timeframe import TimeFrame
+from avin.domain.raw.tick import Tick
 
 # ============================================================================
 # Helpers

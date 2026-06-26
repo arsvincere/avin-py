@@ -11,10 +11,10 @@ from time import perf_counter
 
 import polars as pl
 
-from avin.data.tic_storage import TickStorage
-from avin.domain.market_data import MarketData
-from avin.domain.source import Source
-from avin.domain.tick import Tick
+from avin.storage.tic_storage import TickStorage
+from avin.domain.data.market_data import MarketData
+from avin.domain.data.source import Source
+from avin.domain.raw.tick import Tick
 from avin.service.asset_factory import AssetFactory
 from avin.service.footprint_builder import FootprintBuilder
 from avin.utils.dt import DateTime, extract_range_dates, now_utc

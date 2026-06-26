@@ -6,7 +6,11 @@
 # ============================================================================
 
 from avin.domain.asset import Future, Share
-from avin.domain.direction import Direction
+from avin.domain.common.direction import Direction
+from avin.domain.common.price_range import PriceRange
+from avin.domain.common.timeframe import TimeFrame
+from avin.domain.data.market_data import MarketData
+from avin.domain.data.source import Source
 from avin.domain.footprint import (
     Cluster,
     Ladder,
@@ -17,11 +21,7 @@ from avin.domain.footprint import (
     VolumeFootprint,
 )
 from avin.domain.instrument import Category, Exchange, Iid
-from avin.domain.market_data import MarketData
-from avin.domain.price_range import PriceRange
-from avin.domain.source import Source
-from avin.domain.tick import Tick
-from avin.domain.timeframe import TimeFrame
+from avin.domain.raw.tick import Tick
 from avin.service.asset_factory import AssetFactory
 from avin.service.data_manager import DataManager
 from avin.system.conf import cfg

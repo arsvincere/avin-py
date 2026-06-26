@@ -8,7 +8,7 @@
 from collections.abc import Iterator
 
 from avin.domain.footprint.cluster import Cluster
-from avin.domain.tick import Tick
+from avin.domain.raw.tick import Tick
 
 
 class Footprint:

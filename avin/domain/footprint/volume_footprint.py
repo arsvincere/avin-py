@@ -7,7 +7,7 @@
 
 from avin.domain.footprint.cluster import Cluster
 from avin.domain.footprint.footprint import Footprint
-from avin.domain.tick import Tick
+from avin.domain.raw.tick import Tick
 
 
 class VolumeFootprint(Footprint):

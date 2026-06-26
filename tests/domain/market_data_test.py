@@ -10,7 +10,7 @@ from datetime import timedelta as TimeDelta
 
 import pytest
 
-from avin.domain.market_data import MarketData
+from avin.domain.data.market_data import MarketData
 
 
 def test_str():

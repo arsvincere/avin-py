@@ -5,15 +5,15 @@
 # LICENSE:      MIT
 # ============================================================================
 
-from avin.domain.direction import Direction
+from avin.domain.common.direction import Direction
+from avin.domain.common.timeframe import TimeFrame
 from avin.domain.footprint import (
     TickFootprint,
     TimeFootprint,
     ValueFootprint,
     VolumeFootprint,
 )
-from avin.domain.tick import Tick
-from avin.domain.timeframe import TimeFrame
+from avin.domain.raw.tick import Tick
 from avin.service.footprint_builder import FootprintBuilder
 
 # ============================================================================

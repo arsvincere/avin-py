@@ -7,12 +7,12 @@
 
 import pytest
 
-from avin.data.iid_storage import IidStorage
-from avin.data.tinkoff.bar_downloader import TinkoffBarDownloader
-from avin.domain.market_data import MarketData
-from avin.domain.source import Source
+from avin.domain.data.market_data import MarketData
+from avin.domain.data.source import Source
 from avin.errors.exceptions import DataNotFound
 from avin.service.data_manager import DataManager
+from avin.storage.iid_storage import IidStorage
+from avin.storage.tinkoff.bar_downloader import TinkoffBarDownloader
 from avin.utils.dt import (
     UTC,
     Date,

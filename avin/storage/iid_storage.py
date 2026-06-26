@@ -11,10 +11,10 @@ from functools import cache
 
 import polars as pl
 
+from avin.domain.data.source import Source
 from avin.domain.instrument.category import Category
 from avin.domain.instrument.iid import Iid
 from avin.domain.instrument.instrument_code import parse_code
-from avin.domain.source import Source
 from avin.errors.exceptions import DataNotFound, InstrumentNotFound
 from avin.system.logger import log
 from avin.system.path_builder import PathBuilder

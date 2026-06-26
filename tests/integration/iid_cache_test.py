@@ -7,10 +7,10 @@
 
 import pytest
 
-from avin.data.iid_storage import IidStorage
-from avin.data.tinkoff.source_tinkoff import SourceTinkoff
+from avin.domain.data.source import Source
 from avin.domain.instrument.category import Category
-from avin.domain.source import Source
+from avin.storage.iid_storage import IidStorage
+from avin.storage.tinkoff.source_tinkoff import SourceTinkoff
 
 
 @pytest.fixture(autouse=True)

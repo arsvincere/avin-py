@@ -6,7 +6,7 @@
 # ============================================================================
 
 from avin.domain.footprint.ladder import Ladder
-from avin.domain.tick import Tick
+from avin.domain.raw.tick import Tick
 
 
 class Cluster:

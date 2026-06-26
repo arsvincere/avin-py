@@ -5,11 +5,11 @@
 # LICENSE:      MIT
 # ============================================================================
 
-from avin.data.tinkoff.mapper import (
+from avin.domain.instrument.category import Category
+from avin.storage.tinkoff.mapper import (
     category_to_avin_category,
     exchange_to_avin_exchange,
 )
-from avin.domain.instrument.category import Category
 
 
 def test_exchange_moex():

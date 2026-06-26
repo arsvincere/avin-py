@@ -7,9 +7,9 @@
 
 import pytest
 
-from avin.domain.direction import Direction
+from avin.domain.common.direction import Direction
 from avin.domain.footprint.tick_footprint import TickFootprint
-from avin.domain.tick import Tick
+from avin.domain.raw.tick import Tick
 
 # ============================================================================
 # Helpers
