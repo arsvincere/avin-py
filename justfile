@@ -96,11 +96,11 @@ all-test:
     just slow
 
 # ----------------------------------------------------------------------------
-# Bench
+# Benchmarks
 # ----------------------------------------------------------------------------
 
 # Bench build footprint from ticks
-[group('Benchmark')]
+[group('Benchmarks')]
 bench-footprint:
     {{venv}}/bin/python bench/footprint_builder.py
 

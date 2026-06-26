@@ -86,7 +86,7 @@ def save_result(row: dict[str, object]) -> None:
 
         writer.writerow(row)
 
-    print("saved: bench/results/footprint_builder.csv")
+    print("\nSaved: bench/results/footprint_builder.csv")
 
 
 if __name__ == "__main__":
