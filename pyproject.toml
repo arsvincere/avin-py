@@ -1,11 +1,30 @@
 [project]
 name = "avin"
-version = "0.1.0"
+version = "2.0.0"
 description = "Trade system"
 authors = [{name = "Alex Avin", email = "mr.alexavin@gmail.com"}]
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.14"
+dependencies = [
+    "polars[rtcompat]",
+    "pyqt6==6.11.0",
+    "requests",
+    "tomli-w",
+]
+
+[project.optional-dependencies]
+dev = [
+    "mypy",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "ruff",
+]
+
+tinkoff = [
+    "t_tech",
+]
 
 [tool.mypy]
 ignore_missing_imports = true
@@ -24,3 +43,11 @@ markers = [
     "integration: integration tests",
     "slow: very slowly tests",
 ]
+
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["avin", "avin.*"]
+exclude = ["tests", "tests.*", "res", "usr"]

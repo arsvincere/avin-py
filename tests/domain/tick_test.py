@@ -5,6 +5,8 @@
 # LICENSE:      MIT
 # ============================================================================
 
+from dataclasses import FrozenInstanceError
+
 import pytest
 
 from avin.domain.direction import Direction
@@ -96,5 +98,5 @@ def test_tick_immutable():
         1000.0,
     )
 
-    with pytest.raises(Exception):
+    with pytest.raises(FrozenInstanceError):
         tick.price = 999.0

@@ -1,34 +1,59 @@
-# Distribution / packaging
-*.spec
+# Virtual environments
 .venv/
-arch/
-build/
-dist/
-target/
 venv/
 
-# Byte-compiled / optimized / DLL files
+# Python cache / bytecode
+__pycache__/
+pycache/
+*.py[cod]
+*$py.class
+
+# Tool caches
 .mypy_cache/
 .pytest_cache/
 .ruff_cache/
-__pycache__/
+.coverage
+coverage.xml
+htmlcov/
 
-# tmp folders
-.bak/
-bak/
-log/
-note/
-tmp/
-usr/
+# Distribution / packaging
+*.spec
+*.egg-info/
+build/
+dist/
+target/
 
-# tmp files
-*.bak
-*.tmp
-1.*
-2.*
-3.*
-4.*
-5.*
+# Local environment / secrets
+.env
+.env.*
+!.env.example
+config.local.toml
+*.local.toml
+
+# IDE / editor
 Session.vim*
-avin.zip
-tmp.*
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Project-local temporary folders
+/.bak/
+/bak/
+/log/
+/note/
+/tmp/
+/usr/
+
+# Project-local temporary files
+/.bak
+/.tmp
+/tmp.*
+/avin.zip
+
+# Scratch numbered files in project root
+/1.*
+/2.*
+/3.*
+/4.*
+/5.*
