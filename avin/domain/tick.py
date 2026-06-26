@@ -7,6 +7,8 @@
 
 from dataclasses import dataclass
 
+import polars as pl
+
 from avin.domain.direction import Direction
 from avin.utils.dt import DateTime, ts_to_dt
 
@@ -51,24 +53,25 @@ class Tick:
     #     df = pl.DataFrame(data)
     #
     #     return df
-    #
-    # @classmethod
-    # def from_df(cls, df: pl.DataFrame) -> list[Tic]:
-    #     tics = list()
-    #
-    #     for row in df.iter_rows(named=True):
-    #         t = Tic(
-    #             row["ts"],
-    #             Direction.from_str(row["direction"]),
-    #             row["price"],
-    #             row["lots"],
-    #             row["quantity"],
-    #             row["value"],
-    #         )
-    #         tics.append(t)
-    #
-    #     return tics
-    #
+
+    @classmethod
+    def from_df(cls, df: pl.DataFrame) -> list[Tick]:
+        ticks: list[Tick] = []
+
+        for _, direction, price, lots, quantity, value, ts in df.iter_rows():
+            ticks.append(
+                Tick(
+                    ts,
+                    Direction.from_str(direction),
+                    price,
+                    lots,
+                    quantity,
+                    value,
+                )
+            )
+
+        return ticks
+
     # @classmethod
     # def schema(cls) -> pl.Schema:
     #     return pl.Schema(

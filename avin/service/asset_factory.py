@@ -15,6 +15,7 @@ from avin.domain.asset.share import Share
 from avin.domain.instrument.category import Category
 from avin.domain.instrument.exchange import Exchange
 from avin.domain.instrument.iid import Iid
+from avin.domain.instrument.instrument_code import parse_code
 from avin.domain.source import Source
 from avin.errors.exceptions import InstrumentNotFound
 
@@ -23,7 +24,7 @@ class AssetFactory:
     @classmethod
     @cache
     def new(cls, code: str) -> Share | Future:
-        e, c, t = code.split("_")
+        e, c, t = parse_code(code)
         if e is not Exchange.MOEX:
             raise NotImplementedError("TODO")
         if c is not Category.SHARE:

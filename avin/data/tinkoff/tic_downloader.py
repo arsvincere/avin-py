@@ -14,7 +14,7 @@ from pathlib import Path
 import polars as pl
 import requests
 
-from avin.data.tic_storage import TicStorage
+from avin.data.tic_storage import TickStorage
 from avin.data.tinkoff.schemas import TINKOFF_TIC_CSV_SCHEMA
 from avin.domain.instrument.iid import Iid
 from avin.domain.market_data import MarketData
@@ -75,7 +75,7 @@ class TinkoffTicDownloader:
         df = self._read_tinkoff_csv(extract_path)
         df = self._format_df(df)
 
-        TicStorage.save(self.iid, self.SOURCE, self.md, df)
+        TickStorage.save(self.iid, self.SOURCE, self.md, df)
 
     def _prepare_workdir(self) -> None:
         if self.tmp_dir.exists():

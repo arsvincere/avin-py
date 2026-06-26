@@ -37,6 +37,9 @@ Session.vim*
 .idea/
 .vscode/
 
+# Benchmark results
+bench/results/*.csv
+
 # Project-local temporary folders
 /.bak/
 /bak/

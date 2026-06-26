@@ -35,12 +35,13 @@ __all__ = (
     "UTC",
     "WeekDays",
     "dt_to_ts",
+    "extract_range_dates",
     "next_month",
-    # "now_local",
     "now_utc",
     "prev_month",
     "str_to_utc",
     "ts_to_dt",
+    # "now_local",
     # "utc_to_local_str",
 )
 
@@ -111,6 +112,18 @@ def str_to_utc(s: str) -> DateTime:
 # def utc_to_local_str(dt: DateTime) -> str:
 #     local = dt.astimezone(cfg.local_timezone)
 #     return local.strftime(cfg.dt_fmt)
+
+
+def extract_range_dates(begin: DateTime, end: DateTime) -> list[Date]:
+    last_date = (end - TimeDelta(microseconds=1)).date()
+
+    dates = list()
+    current = begin.date()
+    while current <= last_date:
+        dates.append(current)
+        current += ONE_DAY
+
+    return dates
 
 
 class WeekDays(enum.Enum):

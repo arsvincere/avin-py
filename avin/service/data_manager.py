@@ -10,7 +10,7 @@ import polars as pl
 
 from avin.data.bar_storage import BarStorage
 from avin.data.iid_storage import IidStorage
-from avin.data.tic_storage import TicStorage
+from avin.data.tic_storage import TickStorage
 from avin.data.tinkoff.source_tinkoff import SourceTinkoff
 from avin.domain.instrument.category import Category
 from avin.domain.instrument.iid import Iid
@@ -151,7 +151,7 @@ class DataManager:
 def _get_storage(md: MarketData):
     match md:
         case MarketData.TIC:
-            return TicStorage
+            return TickStorage
         case MarketData.BAR_1M:
             return BarStorage
         case _:

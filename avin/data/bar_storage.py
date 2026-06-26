@@ -21,7 +21,7 @@ from avin.utils.cmd import Cmd
 from avin.utils.dt import Date, DateTime, TimeDelta, dt_to_ts, ts_to_dt
 
 # TODO:
-# BarStorage and TicStorage are nearly identical.
+# BarStorage and TickStorage are nearly identical.
 # Consider merge into DataStorage after raw/derived architecture stabilizes.
 
 
@@ -149,7 +149,7 @@ def _validate_df(df: pl.DataFrame) -> Date:
     first_date = ts_to_dt(df.item(0, "ts")).date()
     last_date = ts_to_dt(df.item(-1, "ts")).date()
     if first_date != last_date:
-        raise ValueError("TicStorage accepts data only for a single day")
+        raise ValueError("BarStorage accepts data only for a single day")
 
     return first_date
 

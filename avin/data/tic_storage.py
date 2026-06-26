@@ -18,14 +18,20 @@ from avin.errors.exceptions import DataNotFound
 from avin.system.logger import log
 from avin.system.path_builder import PathBuilder
 from avin.utils.cmd import Cmd
-from avin.utils.dt import Date, DateTime, TimeDelta, dt_to_ts, ts_to_dt
+from avin.utils.dt import (
+    Date,
+    DateTime,
+    dt_to_ts,
+    extract_range_dates,
+    ts_to_dt,
+)
 
 # TODO:
-# BarStorage and TicStorage are nearly identical.
+# BarStorage and TickStorage are nearly identical.
 # Consider merge into DataStorage after raw/derived architecture stabilizes.
 
 
-class TicStorage:
+class TickStorage:
     @classmethod
     def save(
         cls,
@@ -35,7 +41,7 @@ class TicStorage:
         df: pl.DataFrame,
     ) -> None:
         if md is not MarketData.TIC:
-            raise ValueError(f"TicStorage supports only {MarketData.TIC}")
+            raise ValueError(f"TickStorage supports only {MarketData.TIC}")
 
         date = _validate_df(df)
 
@@ -103,7 +109,7 @@ class TicStorage:
         end_ts = dt_to_ts(end)
 
         dfs = list()
-        for date in _extract_range_dates(begin, end):
+        for date in extract_range_dates(begin, end):
             try:
                 df = cls.load(iid, source, md, date)
             except DataNotFound:
@@ -147,18 +153,6 @@ def _validate_df(df: pl.DataFrame) -> Date:
     first_date = ts_to_dt(df.item(0, "ts")).date()
     last_date = ts_to_dt(df.item(-1, "ts")).date()
     if first_date != last_date:
-        raise ValueError("TicStorage accepts data only for a single day")
+        raise ValueError("TickStorage accepts data only for a single day")
 
     return first_date
-
-
-def _extract_range_dates(begin: DateTime, end: DateTime) -> list[Date]:
-    last_date = (end - TimeDelta(microseconds=1)).date()
-
-    dates = list()
-    current = begin.date()
-    while current <= last_date:
-        dates.append(current)
-        current += TimeDelta(days=1)
-
-    return dates
