@@ -129,6 +129,12 @@ pre-commit:
     just type
     just test
 
+# Run one test file
+[group('Project')]
+commit message:
+    git add .
+    git commit -m "{{message}}"
+
 # Remove caches
 [group('Project')]
 clean:

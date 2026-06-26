@@ -7,6 +7,8 @@
 
 from PyQt6.QtWidgets import QDockWidget, QPlainTextEdit
 
+from avin.gui.state import AppState
+
 
 class StateDock(QDockWidget):
     def __init__(self) -> None:
@@ -18,21 +20,20 @@ class StateDock(QDockWidget):
         self._text.setReadOnly(True)
 
         self.setWidget(self._text)
-        self.set_state_text(self._default_text())
 
-    def set_state_text(self, text: str) -> None:
-        self._text.setPlainText(text)
+    def set_state(self, state: AppState) -> None:
+        self._text.setPlainText(self._format_state(state))
 
-    def _default_text(self) -> str:
+    def _format_state(self, state: AppState) -> str:
         return (
             "AppState\n"
             "--------\n"
-            "current_iid: None\n"
-            "source: None\n"
-            "timeframe: None\n"
-            "ticks_loaded: 0\n"
-            "footprint_clusters: 0\n"
-            "selected_cluster: None\n"
-            "selected_price: None\n"
-            "last_action: AppStarted\n"
+            f"current_iid: {state.current_iid}\n"
+            f"source: {state.source}\n"
+            f"timeframe: {state.timeframe}\n"
+            f"ticks_loaded: {state.ticks_loaded}\n"
+            f"footprint_clusters: {state.footprint_clusters}\n"
+            f"selected_cluster: {state.selected_cluster}\n"
+            f"selected_price: {state.selected_price}\n"
+            f"last_message: {state.last_message}\n"
         )
