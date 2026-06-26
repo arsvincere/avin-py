@@ -22,6 +22,7 @@ htmlcov/
 build/
 dist/
 target/
+/.cache/
 
 # Local environment / secrets
 .env
@@ -29,6 +30,10 @@ target/
 !.env.example
 config.local.toml
 *.local.toml
+
+# AI
+/.agents
+/.codex
 
 # IDE / editor
 Session.vim*
@@ -41,7 +46,6 @@ Session.vim*
 bench/results/*.csv
 
 # Project-local temporary folders
-/.bak/
 /bak/
 /log/
 /note/

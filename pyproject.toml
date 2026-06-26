@@ -35,6 +35,10 @@ tinkoff = [
     "t_tech",
 ]
 
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [tool.mypy]
 ignore_missing_imports = true
 
@@ -53,10 +57,9 @@ markers = [
     "slow: very slowly tests",
 ]
 
-[build-system]
-requires = ["setuptools>=69", "wheel"]
-build-backend = "setuptools.build_meta"
-
 [tool.setuptools.packages.find]
 include = ["avin", "avin.*"]
 exclude = ["tests", "tests.*", "res", "usr"]
+
+[tool.distutils.egg_info]
+egg_base = ".cache"

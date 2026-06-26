@@ -18,6 +18,11 @@ default:
 # Environment
 # ----------------------------------------------------------------------------
 
+# Create local cache dir
+[group('Environment')]
+cache:
+    mkdir -p .cache
+
 # Create python venv if missing (.venv)
 [group('Environment')]
 venv:
@@ -28,12 +33,12 @@ venv:
 
 # Install AVIN in editable mode
 [group('Environment')]
-install: venv
+install: venv cache
     {{python}} -m pip install -e .
 
 # Install AVIN with dev dependencies
 [group('Environment')]
-install-dev: venv
+install-dev: venv cache
     {{python}} -m pip install -e ".[dev]"
     just install-tbank
 
@@ -138,13 +143,15 @@ commit message:
 # Remove caches
 [group('Project')]
 clean:
+    rm -rf *.egg-info
+    rm -rf .cache
+    rm -rf .coverage
     rm -rf .mypy_cache
     rm -rf .pytest_cache
     rm -rf .ruff_cache
-    rm -rf htmlcov
-    rm -rf .coverage
-    rm -rf coverage.xml
     rm -rf avin.zip
+    rm -rf coverage.xml
+    rm -rf htmlcov
     {{python}} -m ruff clean || true
 
 # Remove caches and .venv
