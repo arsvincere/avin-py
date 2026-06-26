@@ -13,6 +13,9 @@ dependencies = [
     "tomli-w",
 ]
 
+[project.scripts]
+avin-gui = "avin.gui.app:run"
+
 [project.optional-dependencies]
 dev = [
     "mypy",
@@ -21,7 +24,6 @@ dev = [
     "pytest-cov",
     "ruff",
 ]
-
 tinkoff = [
     "t_tech",
 ]
