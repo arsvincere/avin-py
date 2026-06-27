@@ -6,7 +6,6 @@
 # ────────────────────────────────────────────────────────────────────────────
 
 import pytest
-
 from avin.domain.asset.asset import Asset
 from avin.domain.asset.share import Share
 from avin.domain.common.direction import Direction

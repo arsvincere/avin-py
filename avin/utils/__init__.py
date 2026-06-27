@@ -5,13 +5,8 @@
 #  https://avin.info
 # ────────────────────────────────────────────────────────────────────────────
 
-from datetime import UTC
-from datetime import date as Date
-from datetime import datetime as DateTime
-from datetime import time as Time
-from datetime import timedelta as TimeDelta
-from datetime import timezone as TimeZone
 
+from .alias import UTC, Date, DateTime, Time, TimeDelta, TimeZone
 from .cmd import Cmd
 from .const import (
     DAY_BEGIN,

@@ -8,14 +8,15 @@
 [project]
 name = "avin"
 version = "2.0.0"
-description = "Trade system"
+description = "Analytical trading platform. Data. Research. Execution."
 authors = [{name = "Alex Avin", email = "mr.alexavin@gmail.com"}]
 license = "MIT"
 license-files = ["LICENSE"]
+readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "polars[rtcompat]",
-    "pyqt6==6.11.0",
+    "PyQt6==6.11.0",
     "requests",
     "tomli-w",
 ]
@@ -35,30 +36,53 @@ dev = [
     "pytest-cov",
     "ruff",
 ]
-tinkoff = [
-    "t_tech",
-]
 
 [build-system]
 requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.mypy]
-ignore_missing_imports = true
+python_version = "3.14"
+files = ["avin"]
+check_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_return_any = true
+no_implicit_optional = true
+strict_equality = true
+namespace_packages = false
+show_error_codes = true
+pretty = true
+
+[tool.ruff]
+line-length = 78
+target-version = "py314"
+src = ["avin", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
 
 [tool.pytest.ini_options]
-minversion = "6.0"
-pythonpath = ["."]
-testpaths = [ "./tests", ]
-filterwarnings = [
-    "ignore::DeprecationWarning",
-    "ignore::pytest.PytestCollectionWarning",
-    ]
-asyncio_mode="auto"
+minversion = "8.0"
+testpaths = ["tests"]
+asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope="session"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+]
 markers = [
     "integration: integration tests",
-    "slow: very slowly tests",
+    "slow: slow tests",
+]
+filterwarnings = [
+    "ignore:.*figi is deprecated:DeprecationWarning",
 ]
 
 [tool.setuptools.packages.find]
@@ -67,3 +91,5 @@ exclude = ["tests", "tests.*", "res", "usr"]
 
 [tool.distutils.egg_info]
 egg_base = ".cache"
+
+

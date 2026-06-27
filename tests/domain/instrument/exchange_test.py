@@ -6,7 +6,6 @@
 # ────────────────────────────────────────────────────────────────────────────
 
 import pytest
-
 from avin.domain.instrument.exchange import Exchange
 
 

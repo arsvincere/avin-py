@@ -13,8 +13,8 @@ import polars as pl
 
 from avin.domain.data.source import Source
 from avin.domain.instrument.category import Category
-from avin.domain.instrument.iid import Iid
 from avin.domain.instrument.code import parse_code
+from avin.domain.instrument.iid import Iid
 from avin.errors.exceptions import DataNotFoundError, InstrumentNotFoundError
 from avin.system.logger import log
 from avin.system.path_builder import PathBuilder

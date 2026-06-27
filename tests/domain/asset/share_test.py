@@ -6,7 +6,6 @@
 # ────────────────────────────────────────────────────────────────────────────
 
 import pytest
-
 from avin.domain.asset.asset import Asset
 from avin.domain.asset.share import Share
 from avin.domain.instrument.category import Category

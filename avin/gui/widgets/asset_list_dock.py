@@ -9,8 +9,8 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QDockWidget, QTreeWidget, QTreeWidgetItem
 
 from avin.gui.app_controller import AppController
-from avin.gui.messages import SelectAsset
 from avin.gui.app_state import AppState
+from avin.gui.messages import SelectAsset
 
 
 class AssetListDock(QDockWidget):

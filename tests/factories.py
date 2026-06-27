@@ -6,7 +6,6 @@
 # ────────────────────────────────────────────────────────────────────────────
 
 import polars as pl
-
 from avin.domain.instrument.iid import Iid
 
 
@@ -38,5 +37,5 @@ def sber_df() -> pl.DataFrame:
 
 
 def sber_iid() -> Iid:
-    df = iid_cache_df()  # он из 1 строки, так что катит для создания Iid
+    df = sber_df()  # он из 1 строки, так что катит для создания Iid
     return Iid.from_df(df)

@@ -8,7 +8,6 @@
 from datetime import UTC, datetime
 
 import pytest
-
 from avin.utils.dt import (
     dt_to_ts,
     next_month,

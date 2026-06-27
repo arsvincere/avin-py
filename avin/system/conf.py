@@ -54,21 +54,21 @@ class Configuration:
 
     @property
     def root_dir(self) -> Path:
-        return self._base_path / self._cfg["dir"]["root"]
+        return self._base_path / Path(self._cfg["dir"]["root"])
 
     # -------- secrets (paths) --------
 
     @property
     def tinkoff_token_path(self) -> Path:
-        return self._base_path / self._cfg["connect"]["tinkoff_token"]
+        return self._base_path / Path(self._cfg["connect"]["tinkoff_token"])
 
     @property
     def moex_account_path(self) -> Path:
-        return self._base_path / self._cfg["connect"]["moex_account"]
+        return self._base_path / Path(self._cfg["connect"]["moex_account"])
 
     @property
     def moex_token_path(self) -> Path:
-        return self._base_path / self._cfg["connect"]["moex_token"]
+        return self._base_path / Path(self._cfg["connect"]["moex_token"])
 
     # -------- log --------
 
@@ -96,13 +96,13 @@ class Configuration:
 
     @property
     def dt_fmt(self) -> str:
-        return self._cfg["usr"]["dt_fmt"]
+        return str(self._cfg["usr"]["dt_fmt"])
 
     # -------- default --------
 
     @property
     def default_asset_list_name(self) -> str:
-        return self._cfg["default"]["asset_list"]
+        return str(self._cfg["default"]["asset_list"])
 
     @property
     def default_source(self) -> Source:

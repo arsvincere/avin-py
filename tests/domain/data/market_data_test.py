@@ -9,7 +9,6 @@ from datetime import datetime as DateTime
 from datetime import timedelta as TimeDelta
 
 import pytest
-
 from avin.domain.data.market_data import MarketData
 
 

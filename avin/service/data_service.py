@@ -154,7 +154,10 @@ class DataService:
         storage.delete(iid, source, md)
 
 
-def _get_storage(md: MarketData):
+type Storage = type[TickStorage] | type[BarStorage]
+
+
+def _get_storage(md: MarketData) -> Storage:
     match md:
         case MarketData.TICK:
             return TickStorage

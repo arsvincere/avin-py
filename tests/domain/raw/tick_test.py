@@ -8,7 +8,6 @@
 from dataclasses import FrozenInstanceError
 
 import pytest
-
 from avin.domain.common.direction import Direction
 from avin.domain.raw.tick import Tick
 from avin.utils.dt import ts_to_dt

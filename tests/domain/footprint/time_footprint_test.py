@@ -6,7 +6,6 @@
 # ────────────────────────────────────────────────────────────────────────────
 
 import pytest
-
 from avin.domain.common.direction import Direction
 from avin.domain.common.timeframe import TimeFrame
 from avin.domain.footprint.time_footprint import TimeFootprint

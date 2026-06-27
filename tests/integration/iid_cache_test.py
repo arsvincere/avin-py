@@ -6,7 +6,6 @@
 # ────────────────────────────────────────────────────────────────────────────
 
 import pytest
-
 from avin.domain.data.source import Source
 from avin.domain.instrument.category import Category
 from avin.storage.iid_storage import IidStorage

@@ -5,6 +5,7 @@
 #  https://avin.info
 # ────────────────────────────────────────────────────────────────────────────
 
+import pytest
 from avin.domain.instrument.category import Category
 from avin.storage.tinkoff.mapper import (
     category_to_avin_category,
@@ -60,9 +61,6 @@ def test_category_currency():
     assert category_to_avin_category("currencies") is Category.CURRENCY
 
 
-def test_category_unknown():
-    try:
+def test_category_to_avin_category_unknown() -> None:
+    with pytest.raises(KeyError):
         category_to_avin_category("crypto")
-        assert False
-    except KeyError:
-        pass

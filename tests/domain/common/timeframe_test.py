@@ -8,7 +8,6 @@
 from datetime import UTC, datetime
 
 import pytest
-
 from avin.domain.common.timeframe import TimeFrame
 from avin.utils.dt import dt_to_ts
 

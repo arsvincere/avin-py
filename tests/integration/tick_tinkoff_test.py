@@ -6,19 +6,20 @@
 # ────────────────────────────────────────────────────────────────────────────
 
 import pytest
-
 from avin.domain.data.market_data import MarketData
 from avin.domain.data.source import Source
 from avin.errors.exceptions import DataNotFoundError
 from avin.service.data_service import DataService
 from avin.storage.iid_storage import IidStorage
 from avin.storage.tinkoff.tic_downloader import TinkoffTicDownloader
-from avin.utils.dt import (
+from avin.utils.alias import (
     UTC,
     Date,
     DateTime,
     Time,
     TimeDelta,
+)
+from avin.utils.dt import (
     now_utc,
     ts_to_dt,
 )

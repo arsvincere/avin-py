@@ -6,7 +6,6 @@
 # ────────────────────────────────────────────────────────────────────────────
 
 import pytest
-
 from avin.domain.common.direction import Direction
 from avin.domain.footprint.ladder import Ladder
 from avin.domain.raw.tick import Tick

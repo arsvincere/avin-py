@@ -5,10 +5,9 @@
 #  https://avin.info
 # ────────────────────────────────────────────────────────────────────────────
 
+import avin.service.asset_factory as asset_factory_module
 import polars as pl
 import pytest
-
-import avin.service.asset_factory as asset_factory_module
 from avin.domain.asset.share import Share
 from avin.domain.instrument.category import Category
 from avin.domain.instrument.exchange import Exchange
