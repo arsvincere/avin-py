@@ -156,7 +156,7 @@ class DataManager:
 
 def _get_storage(md: MarketData):
     match md:
-        case MarketData.TIC:
+        case MarketData.TICK:
             return TickStorage
         case MarketData.BAR_1M:
             return BarStorage

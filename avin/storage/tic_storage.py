@@ -40,8 +40,8 @@ class TickStorage:
         md: MarketData,
         df: pl.DataFrame,
     ) -> None:
-        if md is not MarketData.TIC:
-            raise ValueError(f"TickStorage supports only {MarketData.TIC}")
+        if md is not MarketData.TICK:
+            raise ValueError(f"TickStorage supports only {MarketData.TICK}")
 
         date = _validate_df(df)
 

@@ -26,7 +26,7 @@ class AssetDataService:
         df = DataManager.load(
             asset.code,
             source,
-            MarketData.TIC,
+            MarketData.TICK,
             begin,
             end,
         )

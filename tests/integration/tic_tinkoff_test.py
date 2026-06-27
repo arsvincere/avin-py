@@ -28,7 +28,7 @@ from avin.utils.dt import (
 def test_download_tic_tinkoff_year():
     code = "MOEX_SHARE_SBER"
     source = Source.TINKOFF
-    md = MarketData.TIC
+    md = MarketData.TICK
     year = 2026
 
     DataManager.download(code, source, md, year)
@@ -44,7 +44,7 @@ def test_download_tic_tinkoff_year():
 def test_download_tic_tinkoff_day():
     code = "MOEX_SHARE_ABIO"
     source = Source.TINKOFF
-    md = MarketData.TIC
+    md = MarketData.TICK
     yesterday = Date.today() - TimeDelta(days=1)
     iid = IidStorage.find_code(code, source)
 
@@ -62,7 +62,7 @@ def test_download_tic_tinkoff_day():
 def test_update_tinkoff_tic():
     code = "MOEX_SHARE_ABIO"
     source = Source.TINKOFF
-    md = MarketData.TIC
+    md = MarketData.TICK
 
     DataManager.update(code, source, md)
 
@@ -80,7 +80,7 @@ def test_update_tinkoff_tic():
 def test_delete_tinkoff_tic():
     code = "MOEX_SHARE_ABIO"
     source = Source.TINKOFF
-    md = MarketData.TIC
+    md = MarketData.TICK
 
     DataManager.delete(code, source, md)
 

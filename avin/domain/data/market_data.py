@@ -22,7 +22,7 @@ class MarketData(enum.StrEnum):
     BAR_DAY = "BAR_DAY"
     BAR_WEEK = "BAR_WEEK"
     BAR_MONTH = "BAR_MONTH"
-    TIC = "TIC"
+    TICK = "TICK"
     BOOK = "BOOK"
     TRADE_STATS = "TRADE_STATS"
     ORDER_STATS = "ORDER_STATS"

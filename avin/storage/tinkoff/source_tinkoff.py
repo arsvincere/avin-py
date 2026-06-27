@@ -30,7 +30,7 @@ class SourceTinkoff:
 
     @classmethod
     def available_market_data(cls) -> list[MarketData]:
-        return [MarketData.BAR_1M, MarketData.TIC]
+        return [MarketData.BAR_1M, MarketData.TICK]
 
     @classmethod
     def cache(cls) -> None:
@@ -48,7 +48,7 @@ class SourceTinkoff:
         match md:
             case MarketData.BAR_1M:
                 TinkoffBarDownloader(iid, md).download_year(year)
-            case MarketData.TIC:
+            case MarketData.TICK:
                 TinkoffTicDownloader(iid, md).download_year(year)
             case _:
                 raise ValueError(f"Tinkoff not provide: {md}")
@@ -58,7 +58,7 @@ class SourceTinkoff:
         match md:
             case MarketData.BAR_1M:
                 TinkoffBarDownloader(iid, md).download_day(day)
-            case MarketData.TIC:
+            case MarketData.TICK:
                 TinkoffTicDownloader(iid, md).download_day(day)
             case _:
                 raise ValueError(f"Tinkoff not provide: {md}")

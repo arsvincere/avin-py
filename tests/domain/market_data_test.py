@@ -17,7 +17,7 @@ def test_str():
     assert MarketData.BAR_1M.name == "BAR_1M"
     assert str(MarketData.BAR_1M) == "BAR_1M"
     assert str(MarketData.BAR_DAY) == "BAR_DAY"
-    assert str(MarketData.TIC) == "TIC"
+    assert str(MarketData.TICK) == "TICK"
 
 
 def test_from_str_by_name():
