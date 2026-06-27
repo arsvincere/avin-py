@@ -5,7 +5,6 @@
 #  https://avin.info
 # ────────────────────────────────────────────────────────────────────────────
 
-
 from avin.domain.asset.asset import Asset
 from avin.domain.instrument.category import Category
 from avin.domain.instrument.iid import Iid
