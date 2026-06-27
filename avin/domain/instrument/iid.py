@@ -33,11 +33,10 @@ class Iid:
             if not isinstance(raw_info[key], str) or raw_info[key] == "":
                 raise ValueError(f"{key} invalid")
 
-        self.__raw_info = raw_info
+        self.__raw_info = raw_info.copy()
 
     def __str__(self) -> str:
-        s = f"{self.exchange.name}_{self.category.name}_{self.ticker}"
-        return s
+        return self.code
 
     def __hash__(self) -> int:
         return hash(self.figi)
@@ -47,6 +46,10 @@ class Iid:
             return NotImplemented
 
         return self.figi == other.figi
+
+    @property
+    def code(self) -> str:
+        return f"{self.exchange.name}_{self.category.name}_{self.ticker}"
 
     @property
     def exchange(self) -> Exchange:

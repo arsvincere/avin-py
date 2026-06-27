@@ -141,6 +141,12 @@ class DataManager:
         source: Source,
         md: MarketData,
     ):
+        if not isinstance(code, str):
+            raise TypeError(code)
+        if not isinstance(source, Source):
+            raise TypeError(source)
+        if not isinstance(md, MarketData):
+            raise TypeError(md)
 
         iid = IidStorage.find_code(code, source)
 

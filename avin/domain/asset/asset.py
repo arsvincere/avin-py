@@ -32,20 +32,24 @@ class Asset(ABC):
         self._value_footprints: dict[float, ValueFootprint] = {}
 
     def __str__(self) -> str:
-        return str(self._iid)
+        return self.code
 
     def __hash__(self) -> int:
-        return hash(self._iid)
+        return hash(self.figi)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Asset):
             return NotImplemented
 
-        return self._iid == other._iid
+        return self.figi == other.figi
 
     @property
     def iid(self) -> Iid:
         return self._iid
+
+    @property
+    def code(self) -> str:
+        return self._iid.code
 
     @property
     def exchange(self) -> Exchange:
@@ -131,6 +135,11 @@ class Asset(ABC):
             raise ValueError("Tick data is empty")
 
         self._ticks = ticks
+
+        self._time_footprints.clear()
+        self._tick_footprints.clear()
+        self._volume_footprints.clear()
+        self._value_footprints.clear()
 
     def _set_time_footprint(
         self,
