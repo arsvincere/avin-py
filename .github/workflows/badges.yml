@@ -48,17 +48,6 @@ jobs:
             | xargs grep -E '^[[:space:]]*def test_' \
             | wc -l)
 
-          COVERAGE=$(pytest --cov=avin --cov-report=term 2>/dev/null \
-            | awk '/TOTAL/ {print $NF}' \
-            | tail -1)
-
-          if [ -z "$COVERAGE" ]; then
-            COVERAGE="unknown"
-            COVERAGE_COLOR="red"
-          else
-            COVERAGE_COLOR="e6c384"
-          fi
-
           cat > .github/badges/loc.json <<EOF
           {
             "schemaVersion": 1,
@@ -77,14 +66,6 @@ jobs:
           }
           EOF
 
-          cat > .github/badges/coverage.json <<EOF
-          {
-            "schemaVersion": 1,
-            "label": "Coverage",
-            "message": "$COVERAGE",
-            "color": "$COVERAGE_COLOR"
-          }
-          EOF
 
       - name: Commit badges
         uses: stefanzweifel/git-auto-commit-action@v5
