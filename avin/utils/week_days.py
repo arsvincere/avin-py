@@ -5,14 +5,24 @@
 #  https://avin.info
 # ────────────────────────────────────────────────────────────────────────────
 
-from .asset import Asset
-from .asset_list import AssetList
-from .future import Future
-from .share import Share
+from __future__ import annotations
 
-__all__ = (
-    "Asset",
-    "Future",
-    "Share",
-    "AssetList",
-)
+import enum
+
+
+class WeekDays(enum.Enum):
+    Mon = 0
+    Tue = 1
+    Wed = 2
+    Thu = 3
+    Fri = 4
+    Sat = 5
+    Sun = 6
+
+    @staticmethod
+    def isWorkday(day_number: int):
+        return day_number < 5
+
+    @staticmethod
+    def isHoliday(day_number: int):
+        return day_number in (5, 6)

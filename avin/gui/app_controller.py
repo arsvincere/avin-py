@@ -16,7 +16,7 @@ from avin.gui.messages import (
     SelectPrice,
     SelectTimeframe,
 )
-from avin.gui.state import AppState
+from avin.gui.app_state import AppState
 from avin.service.asset_list_service import AssetListService
 
 

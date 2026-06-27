@@ -5,13 +5,17 @@
 #  https://avin.info
 # ────────────────────────────────────────────────────────────────────────────
 
+from __future__ import annotations
+
 from enum import StrEnum
 
-from avin.utils.dt import (
+from avin.utils.const import (
     ONE_DAY,
     ONE_HOUR,
     ONE_MINUTE,
     ONE_SECOND,
+)
+from avin.utils.dt import (
     TimeDelta,
     dt_to_ts,
     next_month,

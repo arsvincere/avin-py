@@ -15,7 +15,7 @@ from avin.domain.data.source import Source
 from avin.domain.instrument.category import Category
 from avin.domain.instrument.exchange import Exchange
 from avin.domain.instrument.iid import Iid
-from avin.domain.instrument.instrument_code import parse_code
+from avin.domain.instrument.code import parse_code
 from avin.errors.exceptions import InstrumentNotFoundError
 from avin.storage.iid_storage import IidStorage
 

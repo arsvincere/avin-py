@@ -10,7 +10,7 @@ from avin.domain.common.timeframe import TimeFrame
 from avin.domain.data.market_data import MarketData
 from avin.domain.data.source import Source
 from avin.domain.raw.tick import Tick
-from avin.service.data_manager import DataManager
+from avin.service.data_service import DataService
 from avin.service.footprint_builder import FootprintBuilder
 from avin.utils.dt import DateTime
 
@@ -23,7 +23,7 @@ class AssetDataService:
         begin: DateTime,
         end: DateTime,
     ) -> None:
-        df = DataManager.load(
+        df = DataService.load(
             asset.code,
             source,
             MarketData.TICK,

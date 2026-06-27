@@ -7,7 +7,7 @@
 
 from PyQt6.QtWidgets import QDockWidget, QPlainTextEdit
 
-from avin.gui.state import AppState
+from avin.gui.app_state import AppState
 
 
 class StateDock(QDockWidget):
