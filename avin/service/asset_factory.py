@@ -16,7 +16,7 @@ from avin.domain.instrument.category import Category
 from avin.domain.instrument.exchange import Exchange
 from avin.domain.instrument.iid import Iid
 from avin.domain.instrument.instrument_code import parse_code
-from avin.errors.exceptions import InstrumentNotFound
+from avin.errors.exceptions import InstrumentNotFoundError
 from avin.storage.iid_storage import IidStorage
 
 
@@ -35,7 +35,7 @@ class AssetFactory:
         row = shares.filter(pl.col("ticker") == t)
 
         if row.is_empty():
-            raise InstrumentNotFound(f"{t} ({code})")
+            raise InstrumentNotFoundError(f"{t} ({code})")
 
         iid = Iid.from_df(row)
         share = Share(iid)

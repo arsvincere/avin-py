@@ -14,7 +14,7 @@ import polars as pl
 from avin.domain.data.market_data import MarketData
 from avin.domain.data.source import Source
 from avin.domain.instrument.iid import Iid
-from avin.errors.exceptions import DataNotFound
+from avin.errors.exceptions import DataNotFoundError
 from avin.system.logger import log
 from avin.system.path_builder import PathBuilder
 from avin.utils.cmd import Cmd
@@ -56,7 +56,7 @@ class BarStorage:
         path = PathBuilder.market_data_file(iid, source, md, date)
 
         if not path.is_file():
-            raise DataNotFound(f"{iid} {source} {md} {date}")
+            raise DataNotFoundError(f"{iid} {source} {md} {date}")
 
         return Cmd.read_pqt(path)
 
@@ -69,7 +69,7 @@ class BarStorage:
     ) -> pl.DataFrame:
         dir_path = PathBuilder.market_data_dir(iid, source, md)
         if not dir_path.exists():
-            raise DataNotFound(f"{iid} {source} {md} ({dir_path})")
+            raise DataNotFoundError(f"{iid} {source} {md} ({dir_path})")
 
         year_dirs = sorted(
             Cmd.get_dirs(
@@ -78,12 +78,12 @@ class BarStorage:
             )
         )
         if not year_dirs:
-            raise DataNotFound(f"{iid} {source} {md} ({dir_path})")
+            raise DataNotFoundError(f"{iid} {source} {md} ({dir_path})")
 
         last_year_dir = Path(year_dirs[-1])
         files = Cmd.get_files(last_year_dir, full_path=True)
         if not files:
-            raise DataNotFound(f"{iid} {source} {md} ({dir_path})")
+            raise DataNotFoundError(f"{iid} {source} {md} ({dir_path})")
 
         return Cmd.read_pqt(Path(files[-1]))
 
@@ -106,13 +106,13 @@ class BarStorage:
         for date in _extract_range_dates(begin, end):
             try:
                 df = cls.load(iid, source, md, date)
-            except DataNotFound:
+            except DataNotFoundError:
                 continue
 
             dfs.append(df)
 
         if not dfs:
-            raise DataNotFound(f"{iid} {source} {md} {begin} - {end}")
+            raise DataNotFoundError(f"{iid} {source} {md} {begin} - {end}")
 
         df = pl.concat(dfs)
         df = df.filter(
@@ -123,7 +123,7 @@ class BarStorage:
         # concat же не нарушает порядок????
 
         if df.is_empty():
-            raise DataNotFound(f"{iid} {source} {md} {begin} - {end}")
+            raise DataNotFoundError(f"{iid} {source} {md} {begin} - {end}")
 
         return df
 

@@ -24,22 +24,28 @@ class FootprintBuilder:
         return fp
 
     @classmethod
-    def build_tick(cls, ticks: list[Tick], step: int) -> TickFootprint:
-        fp = TickFootprint(step)
+    def build_tick(
+        cls, ticks: list[Tick], tick_per_cluster: int
+    ) -> TickFootprint:
+        fp = TickFootprint(tick_per_cluster)
         for tick in ticks:
             fp.add(tick)
         return fp
 
     @classmethod
-    def build_volume(cls, ticks: list[Tick], step: int) -> VolumeFootprint:
-        fp = VolumeFootprint(step)
+    def build_volume(
+        cls, ticks: list[Tick], volume_per_cluster: int
+    ) -> VolumeFootprint:
+        fp = VolumeFootprint(volume_per_cluster)
         for tick in ticks:
             fp.add(tick)
         return fp
 
     @classmethod
-    def build_value(cls, ticks: list[Tick], step: float) -> ValueFootprint:
-        fp = ValueFootprint(step)
+    def build_value(
+        cls, ticks: list[Tick], value_per_cluster: float
+    ) -> ValueFootprint:
+        fp = ValueFootprint(value_per_cluster)
         for tick in ticks:
             fp.add(tick)
         return fp

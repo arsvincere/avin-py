@@ -9,7 +9,7 @@ import pytest
 
 from avin.domain.data.market_data import MarketData
 from avin.domain.data.source import Source
-from avin.errors.exceptions import DataNotFound
+from avin.errors.exceptions import DataNotFoundError
 from avin.service.data_manager import DataManager
 from avin.storage.iid_storage import IidStorage
 from avin.storage.tinkoff.bar_downloader import TinkoffBarDownloader
@@ -87,7 +87,7 @@ def test_delete_tinkoff_bar():
 
     begin = DateTime.min.replace(tzinfo=UTC)
     end = now_utc()
-    with pytest.raises(DataNotFound):
+    with pytest.raises(DataNotFoundError):
         DataManager.load(
             code,
             source,

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import t_tech.invest as ti
 
-from avin.errors.exceptions import InvalidToken
+from avin.errors.exceptions import InvalidTokenError
 from avin.system.conf import cfg
 from avin.utils.cmd import Cmd
 
@@ -30,7 +30,7 @@ class TinkoffAuth:
         try:
             _validate_token(token)
         except ti.exceptions.UnauthenticatedError as err:
-            raise InvalidToken("Invalid Tinkoff token") from err
+            raise InvalidTokenError("Invalid Tinkoff token") from err
 
         cls.__token = token
 

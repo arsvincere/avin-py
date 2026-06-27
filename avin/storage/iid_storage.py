@@ -15,7 +15,7 @@ from avin.domain.data.source import Source
 from avin.domain.instrument.category import Category
 from avin.domain.instrument.iid import Iid
 from avin.domain.instrument.instrument_code import parse_code
-from avin.errors.exceptions import DataNotFound, InstrumentNotFound
+from avin.errors.exceptions import DataNotFoundError, InstrumentNotFoundError
 from avin.system.logger import log
 from avin.system.path_builder import PathBuilder
 from avin.utils.cmd import Cmd
@@ -36,7 +36,7 @@ class IidStorage:
         )
 
         if row.height != 1:
-            raise InstrumentNotFound(f"Code='{code}' in {source}")
+            raise InstrumentNotFoundError(f"Code='{code}' in {source}")
 
         return Iid.from_df(row)
 
@@ -46,7 +46,7 @@ class IidStorage:
         for category in Category:
             try:
                 iid_cache = cls.load(source, category)
-            except DataNotFound:
+            except DataNotFoundError:
                 continue
 
             row = iid_cache.filter(pl.col("figi") == figi)
@@ -54,7 +54,7 @@ class IidStorage:
             if row.height == 1:
                 return Iid.from_df(row)
 
-        raise InstrumentNotFound(f"FIGI='{figi}' in {source}")
+        raise InstrumentNotFoundError(f"FIGI='{figi}' in {source}")
 
     @classmethod
     def save(
@@ -83,7 +83,7 @@ class IidStorage:
         path = PathBuilder.iid_cache_file(source, category)
 
         if not path.is_file():
-            raise DataNotFound(f"{source} {category} ({path})")
+            raise DataNotFoundError(f"{source} {category} ({path})")
 
         return Cmd.read_pqt(path)
 

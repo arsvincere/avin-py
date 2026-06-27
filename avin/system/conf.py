@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from avin.errors.exceptions import ConfigNotFound
+from avin.errors.exceptions import ConfigNotFoundError
 from avin.utils.cmd import Cmd
 
 # =========================
@@ -36,7 +36,7 @@ def _search_config_file() -> Path:
         if path.exists():
             return path
 
-    raise ConfigNotFound(f"Config file not found. Tried: {candidates}")
+    raise ConfigNotFoundError(f"Config file not found. Tried: {candidates}")
 
 
 # =========================

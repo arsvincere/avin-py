@@ -5,8 +5,7 @@
 # LICENSE:      MIT
 # ============================================================================
 
-"""Custom exceptions for Avin system."""
-
+"""Custom exceptions used across the AVIN project."""
 
 # =========================
 # Base
@@ -14,7 +13,11 @@
 
 
 class AvinError(Exception):
-    """Base exception for Avin project."""
+    """Base exception for the AVIN project."""
+
+
+class DomainError(AvinError):
+    """Base exception for domain layer errors."""
 
 
 # =========================
@@ -22,7 +25,8 @@ class AvinError(Exception):
 # =========================
 
 
-class ConfigNotFound(AvinError): ...
+class ConfigNotFoundError(AvinError):
+    """Configuration file was not found."""
 
 
 # =========================
@@ -30,10 +34,16 @@ class ConfigNotFound(AvinError): ...
 # =========================
 
 
-class DataNotFound(AvinError): ...
+class DataNotFoundError(AvinError):
+    """Requested market data was not found in storage."""
 
 
-class InstrumentNotFound(AvinError): ...
+class InstrumentNotFoundError(AvinError):
+    """Requested instrument was not found in cache."""
+
+
+class DataUnavailableError(DomainError):
+    """Requested domain data is not currently available."""
 
 
 # =========================
@@ -41,4 +51,5 @@ class InstrumentNotFound(AvinError): ...
 # =========================
 
 
-class InvalidToken(AvinError): ...
+class InvalidTokenError(AvinError):
+    """Authentication token is invalid."""

@@ -12,7 +12,7 @@ from avin.domain.data.market_data import MarketData
 from avin.domain.data.source import Source
 from avin.domain.instrument.category import Category
 from avin.domain.instrument.iid import Iid
-from avin.errors.exceptions import DataNotFound
+from avin.errors.exceptions import DataNotFoundError
 from avin.storage.bar_storage import BarStorage
 from avin.storage.iid_storage import IidStorage
 from avin.storage.tic_storage import TickStorage
@@ -98,7 +98,7 @@ class DataManager:
             for category in Category:
                 try:
                     df = IidStorage.load(source, category)
-                except DataNotFound:
+                except DataNotFoundError:
                     continue
 
                 for row in df.iter_rows(named=True):
