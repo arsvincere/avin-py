@@ -5,12 +5,16 @@
 #  https://avin.info
 # ────────────────────────────────────────────────────────────────────────────
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+
+from avin.domain.asset.asset_list import AssetList
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class AppState:
-    current_iid: str | None = None
+    assets: AssetList = field(default_factory=AssetList)
+    current_asset_code: str | None = None
+
     source: str | None = None
     timeframe: str | None = None
 

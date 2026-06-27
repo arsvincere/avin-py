@@ -90,9 +90,10 @@
         { iid = "MOEX_SHARE_YDEX", source = "TINKOFF" },
     ]
 
-[core]
-    default_asset_list = "xxx"
-    default_bars_count = 5000
+[default]
+    asset_list = "favorites"
+    source = "TINKOFF"
+    bars_count = 5000
 
 [tester]
     default_commission = 0.05 # %

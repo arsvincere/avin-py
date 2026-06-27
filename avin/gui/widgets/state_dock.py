@@ -28,7 +28,8 @@ class StateDock(QDockWidget):
         return (
             "AppState\n"
             "--------\n"
-            f"current_iid: {state.current_iid}\n"
+            f"assets: {len(state.assets)}\n"
+            f"current_asset_code: {state.current_asset_code}\n"
             f"source: {state.source}\n"
             f"timeframe: {state.timeframe}\n"
             f"ticks_loaded: {state.ticks_loaded}\n"

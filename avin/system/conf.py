@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
+from avin.domain.data.source import Source
 from avin.errors.exceptions import ConfigNotFoundError
 from avin.utils.cmd import Cmd
 
@@ -97,10 +98,24 @@ class Configuration:
     def dt_fmt(self) -> str:
         return self._cfg["usr"]["dt_fmt"]
 
+    # -------- default --------
+
+    @property
+    def default_asset_list_name(self) -> str:
+        return self._cfg["default"]["asset_list"]
+
+    @property
+    def default_source(self) -> Source:
+        return Source(self._cfg["default"]["source"])
+
+    @property
+    def default_bars_count(self) -> int:
+        return int(self._cfg["default"]["bars_count"])
+
     # -------- helpers --------
 
     def get(self, *keys: str, default: Any | None = None) -> Any:
-        """Safe nested access: cfg.get('trader','work_list')"""
+        """Safe nested access"""
         cur: Any = self._cfg
         for k in keys:
             if not isinstance(cur, dict) or k not in cur:

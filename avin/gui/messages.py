@@ -14,8 +14,8 @@ class AppStarted:
 
 
 @dataclass(frozen=True, slots=True)
-class SelectIid:
-    iid: str
+class SelectAsset:
+    code: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,7 +40,7 @@ class ClearSelection:
 
 type Message = (
     AppStarted
-    | SelectIid
+    | SelectAsset
     | SelectTimeframe
     | SelectCluster
     | SelectPrice
