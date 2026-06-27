@@ -12,7 +12,11 @@
 
 </div>
 
-## Open source cross-platform trading system
+## AVIN
+Data. Research. Execution.
+
+Understand the market before trading it.
+
 AVIN (от лат. Ars Vincere  -  искусство побеждать)  —  это кросплатформенная
 аналитическая платформа для трейдинга, написана на Python, с GUI на PyQt6.
 

@@ -1,9 +1,9 @@
-# ============================================================================
-# URL:          http://avin.info
-# AUTHOR:       Alex Avin
-# E-MAIL:       mr.alexavin@gmail.com
-# LICENSE:      MIT
-# ============================================================================
+# ────────────────────────────────────────────────────────────────────────────
+#  AVIN
+#  Understand the market before trading it.
+#
+#  https://avin.info
+# ────────────────────────────────────────────────────────────────────────────
 
 import csv
 from pathlib import Path
@@ -11,7 +11,7 @@ from time import perf_counter
 
 import polars as pl
 
-from avin.storage.tic_storage import TickStorage
+from avin.storage.tick_storage import TickStorage
 from avin.domain.data.market_data import MarketData
 from avin.domain.data.source import Source
 from avin.domain.raw.tick import Tick
@@ -25,7 +25,7 @@ RESULT_PATH = Path("bench/results/footprint_builder.csv")
 def main() -> None:
     created_at = now_utc()
     source = Source.TINKOFF
-    md = MarketData.TIC
+    md = MarketData.TICK
     code = "MOEX_SHARE_SBER"
     begin = DateTime(2026, 1, 1)
     end = DateTime(2026, 2, 1)

@@ -1,9 +1,9 @@
-# ============================================================================
-# URL:          http://avin.info
-# AUTHOR:       Alex Avin
-# E-MAIL:       mr.alexavin@gmail.com
-# LICENSE:      MIT
-# ============================================================================
+# ────────────────────────────────────────────────────────────────────────────
+#  AVIN
+#  Understand the market before trading it.
+#
+#  https://avin.info
+# ────────────────────────────────────────────────────────────────────────────
 
 from avin.domain.instrument.category import Category
 from avin.domain.instrument.exchange import Exchange

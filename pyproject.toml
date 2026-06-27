@@ -1,9 +1,9 @@
-# ============================================================================
-# URL:          http://avin.info
-# AUTHOR:       Alex Avin
-# E-MAIL:       mr.alexavin@gmail.com
-# LICENSE:      MIT
-# ============================================================================
+# ────────────────────────────────────────────────────────────────────────────
+#  AVIN
+#  Understand the market before trading it.
+#
+#  https://avin.info
+# ────────────────────────────────────────────────────────────────────────────
 
 [project]
 name = "avin"
@@ -19,6 +19,10 @@ dependencies = [
     "requests",
     "tomli-w",
 ]
+
+[project.urls]
+Homepage = "http://avin.info"
+Repository = "https://github.com/arsvincere/avin-prototype"
 
 [project.scripts]
 avin-gui = "avin.gui.app:run"

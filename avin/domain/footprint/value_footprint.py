@@ -1,9 +1,9 @@
-# ============================================================================
-# URL:          http://avin.info
-# AUTHOR:       Alex Avin
-# E-MAIL:       mr.alexavin@gmail.com
-# LICENSE:      MIT
-# ============================================================================
+# ────────────────────────────────────────────────────────────────────────────
+#  AVIN
+#  Understand the market before trading it.
+#
+#  https://avin.info
+# ────────────────────────────────────────────────────────────────────────────
 
 from avin.domain.footprint.cluster import Cluster
 from avin.domain.footprint.footprint import Footprint
