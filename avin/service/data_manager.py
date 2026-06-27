@@ -106,7 +106,7 @@ class DataManager:
 
                     # TODO: source_impl.available_market_data()
                     for md in SourceTinkoff.available_market_data():
-                        cls.update(str(iid), source, md)
+                        cls.update(iid.code, source, md)
 
     @classmethod
     def load(
