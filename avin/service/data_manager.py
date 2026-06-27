@@ -15,7 +15,7 @@ from avin.domain.instrument.iid import Iid
 from avin.errors.exceptions import DataNotFoundError
 from avin.storage.bar_storage import BarStorage
 from avin.storage.iid_storage import IidStorage
-from avin.storage.tic_storage import TickStorage
+from avin.storage.tick_storage import TickStorage
 from avin.storage.tinkoff.source_tinkoff import SourceTinkoff
 from avin.utils.dt import Date, DateTime, TimeDelta, ts_to_dt
 

@@ -17,7 +17,7 @@ import requests
 from avin.domain.data.market_data import MarketData
 from avin.domain.data.source import Source
 from avin.domain.instrument.iid import Iid
-from avin.storage.tic_storage import TickStorage
+from avin.storage.tick_storage import TickStorage
 from avin.storage.tinkoff.schemas import TINKOFF_TIC_CSV_SCHEMA
 from avin.system.path_builder import PathBuilder
 from avin.utils.cmd import Cmd
