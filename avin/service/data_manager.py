@@ -140,7 +140,7 @@ class DataManager:
         code: str,
         source: Source,
         md: MarketData,
-    ):
+    ) -> None:
         if not isinstance(code, str):
             raise TypeError(code)
         if not isinstance(source, Source):
