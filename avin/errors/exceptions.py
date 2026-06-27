@@ -39,7 +39,7 @@ class DataNotFoundError(AvinError):
 
 
 class InstrumentNotFoundError(AvinError):
-    """Requested instrument was not found in cache."""
+    """Requested instrument was not found."""
 
 
 class DataUnavailableError(DomainError):
