@@ -17,14 +17,24 @@ class AssetListDock(QDockWidget):
     def __init__(self, controller: AppController) -> None:
         super().__init__("Asset list")
 
-        self.setObjectName("asset_list_dock")
         self._controller = controller
 
-        self._tree = QTreeWidget()
-        self._tree.setHeaderHidden(True)
-        self._tree.itemClicked.connect(self._on_item_clicked)
+        self._create_widget()
+        self._configure()
+        self._connect()
 
+    def _create_widget(self) -> None:
+        self.setObjectName("asset_list_dock")
+
+        self._tree = QTreeWidget()
         self.setWidget(self._tree)
+
+    def _configure(self) -> None:
+        self._tree.setHeaderHidden(True)
+        self._tree.setSortingEnabled(True)
+
+    def _connect(self) -> None:
+        self._tree.itemClicked.connect(self._on_item_clicked)
 
     def set_state(self, state: AppState) -> None:
         self._tree.clear()
@@ -39,6 +49,8 @@ class AssetListDock(QDockWidget):
 
             if asset.code == state.selected_asset_code:
                 current_item = item
+
+        self._tree.sortByColumn(0, Qt.SortOrder.AscendingOrder)
 
         if current_item is not None:
             self._tree.setCurrentItem(current_item)
