@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import QDockWidget, QTreeWidget, QTreeWidgetItem
 
 from avin.gui.app_controller import AppController
 from avin.gui.app_state import AppState
-from avin.gui.messages import SelectAsset
+from avin.gui.events import SelectAsset
 
 
 class AssetListDock(QDockWidget):
@@ -24,12 +24,12 @@ class AssetListDock(QDockWidget):
         self._connect()
 
     def _create_widget(self) -> None:
-        self.setObjectName("asset_list_dock")
-
         self._tree = QTreeWidget()
         self.setWidget(self._tree)
 
     def _configure(self) -> None:
+        self.setObjectName("asset_list_dock")
+
         self._tree.setHeaderHidden(True)
         self._tree.setSortingEnabled(True)
 

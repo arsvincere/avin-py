@@ -13,4 +13,4 @@ class SelectAsset:
     code: str
 
 
-type Message = SelectAsset
+type Event = SelectAsset

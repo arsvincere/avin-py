@@ -9,8 +9,8 @@ from PyQt6.QtCore import QObject, pyqtSignal
 
 from avin.domain.common.timeframe import TimeFrame
 from avin.gui.app_state import AppState
-from avin.gui.messages import (
-    Message,
+from avin.gui.events import (
+    Event,
     SelectAsset,
 )
 from avin.service.asset_data_service import AssetDataService
@@ -34,7 +34,7 @@ class AppController(QObject):
     def state(self) -> AppState:
         return self._state
 
-    def handle(self, message: Message) -> None:
+    def handle(self, message: Event) -> None:
         match message:
             case SelectAsset(code=code):
                 asset = self._state.asset_list.asset(code)
