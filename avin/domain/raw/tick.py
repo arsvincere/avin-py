@@ -7,8 +7,6 @@
 
 from dataclasses import dataclass
 
-import polars as pl
-
 from avin.domain.common.direction import Direction
 from avin.utils.dt import DateTime, ts_to_dt
 
@@ -38,50 +36,3 @@ class Tick:
 
     def is_sell(self) -> bool:
         return self.direction == Direction.SELL
-
-    # def to_df(self) -> pl.DataFrame:
-    #     data = {
-    #         "datetime": [str(self.dt)],
-    #         "direction": [self.direction.short_name],
-    #         "price": [self.price],
-    #         "lots": [self.lots],
-    #         "quantity": [self.quantity],
-    #         "value": [self.value],
-    #         "ts": [self.ts],
-    #     }
-    #
-    #     df = pl.DataFrame(data)
-    #
-    #     return df
-
-    @classmethod
-    def from_df(cls, df: pl.DataFrame) -> list[Tick]:
-        ticks: list[Tick] = []
-
-        for _, direction, price, lots, quantity, value, ts in df.iter_rows():
-            ticks.append(
-                Tick(
-                    ts,
-                    Direction.from_str(direction),
-                    price,
-                    lots,
-                    quantity,
-                    value,
-                )
-            )
-
-        return ticks
-
-    # @classmethod
-    # def schema(cls) -> pl.Schema:
-    #     return pl.Schema(
-    #         {
-    #             "datetime": pl.String,
-    #             "direction": pl.String,
-    #             "price": pl.Float64,
-    #             "lots": pl.Int64,
-    #             "quantity": pl.Int64,
-    #             "value": pl.Float64,
-    #             "ts": pl.Int64,
-    #         }
-    #     )

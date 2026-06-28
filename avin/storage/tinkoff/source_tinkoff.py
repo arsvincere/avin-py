@@ -15,10 +15,10 @@ from avin.domain.data.source import Source
 from avin.domain.instrument.category import Category
 from avin.domain.instrument.iid import Iid
 from avin.storage.iid_storage import IidStorage
+from avin.storage.schema import Schema
 from avin.storage.tinkoff.auth import TinkoffAuth
 from avin.storage.tinkoff.bar_downloader import TinkoffBarDownloader
 from avin.storage.tinkoff.mapper import extract_info
-from avin.storage.tinkoff.schemas import IID_SCHEMA
 from avin.storage.tinkoff.tic_downloader import TinkoffTicDownloader
 from avin.system.logger import log
 from avin.utils.dt import Date
@@ -94,7 +94,7 @@ class SourceTinkoff:
                 info = extract_info(response.instrument)
                 rows.append(info)
 
-        return pl.DataFrame(rows, schema=IID_SCHEMA)
+        return pl.DataFrame(rows, schema=Schema.IID)
 
 
 if __name__ == "__main__":

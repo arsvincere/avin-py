@@ -9,7 +9,7 @@ from avin.domain.asset.asset import Asset
 from avin.domain.common.timeframe import TimeFrame
 from avin.domain.data.market_data import MarketData
 from avin.domain.data.source import Source
-from avin.domain.raw.tick import Tick
+from avin.storage.codec import StorageCodec
 from avin.storage.data_manager import DataManager
 from avin.utils.dt import DateTime
 
@@ -29,7 +29,7 @@ class AssetLoader:
             begin,
             end,
         )
-        ticks = Tick.from_df(df)
+        ticks = StorageCodec.ticks_from_df(df)
         asset._set_ticks(ticks)
 
     @staticmethod
