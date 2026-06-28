@@ -1,4 +1,9 @@
-:version: 2026-06-28 16:37
+# ────────────────────────────────────────────────────────────────────────────
+#  AVIN
+#  Understand the market before trading it.
+#
+#  https://avin.info
+# ────────────────────────────────────────────────────────────────────────────
 
 = All instruments cache, market data & derived data storage in:
 .parquet
@@ -136,7 +141,7 @@ dbg_
 2-й уровень:
     это же текст AVIN.
 3-й уровень:
-    черт, да это же рынок.
+    черт, да это же рынок/график.
 
 ==== Philosophy
 Understand the market before trading it.
