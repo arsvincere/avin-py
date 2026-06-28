@@ -17,16 +17,15 @@ from avin.gui.messages import (
     SelectPrice,
     SelectTimeframe,
 )
-from avin.service.asset_list_service import AssetListService
 
 
 class AppController(QObject):
     state_changed = pyqtSignal(object)
 
-    def __init__(self) -> None:
+    def __init__(self, state: AppState) -> None:
         super().__init__()
 
-        self._state = AppState(assets=AssetListService.load_default())
+        self._state = state
 
     @property
     def state(self) -> AppState:
@@ -38,7 +37,7 @@ class AppController(QObject):
                 self._state.last_message = "AppStarted"
 
             case SelectAsset(code=code):
-                if code not in self._state.assets:
+                if code not in self._state.asset_list:
                     raise ValueError(f"Asset not found: {code}")
 
                 self._state.current_asset_code = code

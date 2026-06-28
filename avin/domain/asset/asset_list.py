@@ -12,7 +12,15 @@ from avin.errors.exceptions import InstrumentNotFoundError
 
 
 class AssetList:
-    def __init__(self, assets: Iterable[Asset] | None = None) -> None:
+    def __init__(
+        self, name: str, assets: Iterable[Asset] | None = None
+    ) -> None:
+        if not isinstance(name, str):
+            raise TypeError(name)
+        if not name:
+            raise ValueError("AssetList name is required")
+
+        self.name = name
         self._assets: dict[str, Asset] = {}
 
         if assets is not None:

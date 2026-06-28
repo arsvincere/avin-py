@@ -56,6 +56,7 @@ bench/results/*.csv
 /.bak
 /.tmp
 /tmp.*
+/tmp
 /avin.zip
 
 # Scratch numbered files in project root

@@ -5,14 +5,14 @@
 #  https://avin.info
 # ────────────────────────────────────────────────────────────────────────────
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from avin.domain.asset.asset_list import AssetList
 
 
 @dataclass(slots=True)
 class AppState:
-    assets: AssetList = field(default_factory=AssetList)
+    asset_list: AssetList
     current_asset_code: str | None = None
 
     source: str | None = None

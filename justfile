@@ -93,6 +93,11 @@ integration:
 slow:
     uv run pytest -m slow
 
+# Run smoke tests
+[group('Tests')]
+smoke:
+    uv run pytest -m smoke -q
+
 # Run all tests
 [group('Tests')]
 all:

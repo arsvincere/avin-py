@@ -15,7 +15,7 @@ from avin.gui.messages import SelectAsset
 
 class AssetListDock(QDockWidget):
     def __init__(self, controller: AppController) -> None:
-        super().__init__("Assets")
+        super().__init__("Asset list")
 
         self.setObjectName("asset_list_dock")
         self._controller = controller
@@ -31,7 +31,7 @@ class AssetListDock(QDockWidget):
 
         current_item: QTreeWidgetItem | None = None
 
-        for asset in state.assets:
+        for asset in state.asset_list:
             item = QTreeWidgetItem([asset.ticker])
             item.setData(0, Qt.ItemDataRole.UserRole, asset.code)
 
