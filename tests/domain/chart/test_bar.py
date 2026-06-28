@@ -6,7 +6,6 @@
 # ────────────────────────────────────────────────────────────────────────────
 
 import pytest
-
 from avin.domain.chart.bar import Bar
 from avin.domain.chart.bar_kind import BarKind
 from avin.domain.common.price_range import PriceRange
