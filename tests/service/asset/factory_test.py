@@ -5,14 +5,14 @@
 #  https://avin.info
 # ────────────────────────────────────────────────────────────────────────────
 
-import avin.service.asset_factory as asset_factory_module
+import avin.service.asset.factory as factory_module
 import polars as pl
 import pytest
 from avin.domain.asset.share import Share
 from avin.domain.instrument.category import Category
 from avin.domain.instrument.exchange import Exchange
 from avin.errors import InstrumentNotFoundError
-from avin.service.asset_factory import AssetFactory
+from avin.service.asset.factory import AssetFactory
 
 # ────────────────────────────────────────────────────────────────────────────
 # Helpers
@@ -34,19 +34,19 @@ def shares_df() -> pl.DataFrame:
 
 
 def set_cached_load_shares(df: pl.DataFrame):
-    original = asset_factory_module._cached_load_shares
+    original = factory_module._cached_load_shares
 
     def fake_cached_load_shares() -> pl.DataFrame:
         return df
 
-    asset_factory_module._cached_load_shares = fake_cached_load_shares
+    factory_module._cached_load_shares = fake_cached_load_shares
     AssetFactory.new.cache_clear()
 
     return original
 
 
 def restore_cached_load_shares(original) -> None:
-    asset_factory_module._cached_load_shares = original
+    factory_module._cached_load_shares = original
     AssetFactory.new.cache_clear()
 
 
@@ -119,14 +119,14 @@ def test_new_unsupported_category_raises():
 def test_new_is_cached():
     calls = 0
     df = shares_df()
-    original = asset_factory_module._cached_load_shares
+    original = factory_module._cached_load_shares
 
     def fake_cached_load_shares() -> pl.DataFrame:
         nonlocal calls
         calls += 1
         return df
 
-    asset_factory_module._cached_load_shares = fake_cached_load_shares
+    factory_module._cached_load_shares = fake_cached_load_shares
     AssetFactory.new.cache_clear()
 
     try:

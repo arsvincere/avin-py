@@ -15,7 +15,7 @@ from avin.storage.iid_storage import IidStorage
 from avin.system.conf import cfg
 
 
-class AssetListService:
+class AssetListManager:
     EMPTY_LIST_NAME = "empty"
 
     @classmethod

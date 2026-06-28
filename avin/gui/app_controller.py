@@ -13,7 +13,7 @@ from avin.gui.events import (
     Event,
     SelectAsset,
 )
-from avin.service.asset_data_service import AssetDataService
+from avin.service.asset.ensurer import AssetEnsurer
 from avin.utils.alias import UTC, DateTime
 
 # dev
@@ -39,7 +39,7 @@ class AppController(QObject):
             case SelectAsset(code=code):
                 asset = self._state.asset_list.asset(code)
 
-                AssetDataService.ensure_time_footprint(
+                AssetEnsurer.ensure_time_footprint(
                     asset,
                     self._state.source,
                     DEV_FOOTPRINT_BEGIN,

@@ -5,16 +5,14 @@
 #  https://avin.info
 # ────────────────────────────────────────────────────────────────────────────
 
-from .asset.ensurer import AssetEnsurer
-from .asset.factory import AssetFactory
-from .asset.list_manager import AssetListManager
-from .asset.loader import AssetLoader
-from .footprint.builder import FootprintBuilder
+from .ensurer import AssetEnsurer
+from .factory import AssetFactory
+from .list_manager import AssetListManager
+from .loader import AssetLoader
 
 __all__ = (
     "AssetEnsurer",
     "AssetFactory",
     "AssetListManager",
     "AssetLoader",
-    "FootprintBuilder",
 )

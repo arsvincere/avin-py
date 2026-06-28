@@ -12,7 +12,7 @@ from avin.domain.common.timeframe import TimeFrame
 from avin.domain.instrument.iid import Iid
 from avin.domain.raw.tick import Tick
 from avin.errors import DataUnavailableError
-from avin.service.asset_data_service import AssetDataService
+from avin.service.asset.ensurer import AssetEnsurer
 
 # ============================================================================
 # Helpers
@@ -68,7 +68,7 @@ def test_build_time_footprint():
         ]
     )
 
-    AssetDataService.build_time_footprint(asset, TimeFrame.M1)
+    AssetEnsurer._build_time_footprint(asset, TimeFrame.M1)
 
     assert asset.has_time_footprint(TimeFrame.M1)
 
@@ -83,7 +83,7 @@ def test_build_time_footprint_without_ticks_raises():
     asset = share()
 
     with pytest.raises(DataUnavailableError):
-        AssetDataService.build_time_footprint(asset, TimeFrame.M1)
+        AssetEnsurer._build_time_footprint(asset, TimeFrame.M1)
 
 
 # ============================================================================
@@ -103,7 +103,7 @@ def test_build_tick_footprint():
         ]
     )
 
-    AssetDataService.build_tick_footprint(asset, 2)
+    AssetEnsurer._build_tick_footprint(asset, 2)
 
     assert asset.has_tick_footprint(2)
 
@@ -119,7 +119,7 @@ def test_build_tick_footprint_without_ticks_raises():
     asset = share()
 
     with pytest.raises(DataUnavailableError):
-        AssetDataService.build_tick_footprint(asset, 2)
+        AssetEnsurer._build_tick_footprint(asset, 2)
 
 
 # ============================================================================
@@ -137,7 +137,7 @@ def test_build_volume_footprint():
         ]
     )
 
-    AssetDataService.build_volume_footprint(asset, 100)
+    AssetEnsurer._build_volume_footprint(asset, 100)
 
     assert asset.has_volume_footprint(100)
 
@@ -152,7 +152,7 @@ def test_build_volume_footprint_without_ticks_raises():
     asset = share()
 
     with pytest.raises(DataUnavailableError):
-        AssetDataService.build_volume_footprint(asset, 100)
+        AssetEnsurer._build_volume_footprint(asset, 100)
 
 
 # ============================================================================
@@ -170,7 +170,7 @@ def test_build_value_footprint():
         ]
     )
 
-    AssetDataService.build_value_footprint(asset, 1000)
+    AssetEnsurer._build_value_footprint(asset, 1000)
 
     assert asset.has_value_footprint(1000)
 
@@ -185,4 +185,4 @@ def test_build_value_footprint_without_ticks_raises():
     asset = share()
 
     with pytest.raises(DataUnavailableError):
-        AssetDataService.build_value_footprint(asset, 1000)
+        AssetEnsurer._build_value_footprint(asset, 1000)

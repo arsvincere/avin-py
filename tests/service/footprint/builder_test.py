@@ -14,7 +14,7 @@ from avin.domain.footprint import (
     VolumeFootprint,
 )
 from avin.domain.raw.tick import Tick
-from avin.service.footprint_builder import FootprintBuilder
+from avin.service.footprint.builder import FootprintBuilder
 
 # ============================================================================
 # Helpers

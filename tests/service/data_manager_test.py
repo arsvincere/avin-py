@@ -5,14 +5,14 @@
 #  https://avin.info
 # ────────────────────────────────────────────────────────────────────────────
 
-import avin.service.asset_factory as asset_factory_module
+import avin.service.asset.factory as factory_module
 import polars as pl
 import pytest
 from avin.domain.asset.share import Share
 from avin.domain.instrument.category import Category
 from avin.domain.instrument.exchange import Exchange
 from avin.errors import InstrumentNotFoundError
-from avin.service.asset_factory import AssetFactory
+from avin.service.asset.factory import AssetFactory
 
 # ────────────────────────────────────────────────────────────────────────────
 # Helpers
@@ -43,20 +43,20 @@ class FakeIidStorage:
 
 
 def patch_iid_storage():
-    original = asset_factory_module.IidStorage
+    original = factory_module.IidStorage
 
-    asset_factory_module.IidStorage = FakeIidStorage
+    factory_module.IidStorage = FakeIidStorage
     FakeIidStorage.calls = 0
     AssetFactory.new.cache_clear()
-    asset_factory_module._cached_load_shares.cache_clear()
+    factory_module._cached_load_shares.cache_clear()
 
     return original
 
 
 def restore_iid_storage(original) -> None:
-    asset_factory_module.IidStorage = original
+    factory_module.IidStorage = original
     AssetFactory.new.cache_clear()
-    asset_factory_module._cached_load_shares.cache_clear()
+    factory_module._cached_load_shares.cache_clear()
 
 
 # ────────────────────────────────────────────────────────────────────────────
