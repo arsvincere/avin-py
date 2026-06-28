@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import QMainWindow
 from avin.gui.app_controller import AppController
 from avin.gui.app_state import AppState
 from avin.gui.widgets.asset_list_dock import AssetListDock
+from avin.gui.widgets.central_view import CentralView
 from avin.gui.widgets.state_dock import StateDock
 
 
@@ -24,8 +25,13 @@ class MainWindow(QMainWindow):
         self.resize(1400, 900)
 
         self._init_docks()
+        self._init_central_widget()
         self._connect_controller()
         self._set_state(self._controller.state)
+
+    def _init_central_widget(self) -> None:
+        self._central_view = CentralView()
+        self.setCentralWidget(self._central_view)
 
     def _init_docks(self) -> None:
         self._asset_list_dock = AssetListDock(self._controller)
@@ -45,4 +51,5 @@ class MainWindow(QMainWindow):
 
     def _set_state(self, state: AppState) -> None:
         self._asset_list_dock.set_state(state)
+        self._central_view.set_state(state)
         self._state_dock.set_state(state)

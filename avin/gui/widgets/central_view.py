@@ -5,15 +5,18 @@
 #  https://avin.info
 # ────────────────────────────────────────────────────────────────────────────
 
-from dataclasses import dataclass
+from PyQt6.QtWidgets import QGraphicsView
 
-from avin.domain.asset.asset_list import AssetList
-from avin.domain.footprint.footprint import Footprint
+from avin.gui.app_state import AppState
+from avin.gui.widgets.central_scene import CentralScene
 
 
-@dataclass(slots=True)
-class AppState:
-    asset_list: AssetList
-    current_asset_code: str | None = None
-    last_message: str = "AppStarted"
-    footprint: Footprint | None
+class CentralView(QGraphicsView):
+    def __init__(self) -> None:
+        super().__init__()
+
+        self._scene = CentralScene()
+        self.setScene(self._scene)
+
+    def set_state(self, state: AppState) -> None:
+        self._scene.set_state(state)

@@ -9,13 +9,8 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True, slots=True)
-class AppStarted:
-    pass
-
-
-@dataclass(frozen=True, slots=True)
 class SelectAsset:
     code: str
 
 
-type Message = AppStarted | SelectAsset
+type Message = SelectAsset
