@@ -38,7 +38,6 @@ install-dev: venv cache
     uv pip install -e ".[dev]"
     just install-tbank
 
-
 # Install T-Bank SDK from custom registry
 [group('Environment')]
 install-tbank: venv
@@ -103,10 +102,34 @@ smoke:
 all:
     uv run pytest tests
 
-# Run test coverage
-[group('Tests')]
-cov:
-    pytest --cov=avin --cov-report=term-missing
+# ----------------------------------------------------------------------------
+# Coverage
+# ----------------------------------------------------------------------------
+
+# Run full test coverage
+[group('Coverage')]
+cov-all:
+    uv run pytest --cov=avin --cov-report=term-missing
+
+[group('Coverage')]
+cov-domain:
+    uv run pytest tests/domain --cov=avin.domain --cov-report=term-missing
+
+[group('Coverage')]
+cov-service:
+    uv run pytest tests/service --cov=avin.service --cov-report=term-missing
+
+[group('Coverage')]
+cov-storage:
+    uv run pytest tests/storage --cov=avin.storage --cov-report=term-missing
+
+[group('Coverage')]
+cov-system:
+    uv run pytest tests/system --cov=avin.system --cov-report=term-missing
+
+[group('Coverage')]
+cov-utils:
+    uv run pytest tests/utils --cov=avin.utils --cov-report=term-missing
 
 # ----------------------------------------------------------------------------
 # Benchmarks
@@ -168,11 +191,10 @@ clean-all:
 archive:
     git archive --format zip HEAD -o avin.zip
 
-# Checkhealth for tools?
+# Check development environment
 [group('Project')]
 doctor:
     python3 scripts/doctor.py
-
 
 # ----------------------------------------------------------------------------
 # Launchers
