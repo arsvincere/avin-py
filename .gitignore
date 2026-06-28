@@ -48,7 +48,6 @@ bench/results/*.csv
 # Project-local temporary folders
 /bak/
 /log/
-/note/
 /tmp/
 /usr/
 

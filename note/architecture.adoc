@@ -1,0 +1,143 @@
+:version: 2026-06-28 16:37
+
+= All instruments cache, market data & derived data storage in:
+.parquet
+
+= All Instruments id (Iid) - information about instrument
+Хранятся в .parquet, все колонки - строковые. ВСЕГДА.
+И уже класс Iid, получив raw dict[str, str] преобразует строки
+в нужные типы при обращении к этим свойствам.
+
+raw str позволяет хранить очень гибко разнообразную информацию, потому что
+разные источники присылают инфо об инструменте кто как... Решение -
+все приводить к строкам и в таком виде хранить на винте.
+
+Преобразование в реальные типы - в одном месте в классе Iid
+
+= All timestamps in AVIN
+nanos
+
+= All datetimes in AVIN
+UTC
+
+= Raw Data
+TICK
+BAR_1M
+
+= Derived Data
+BAR_5M
+BAR_10M
+BAR_1H
+BAR_DAY
+BAR_WEEK
+BAR_MONTH
+
+= GUI
+PyQt6 / Qt Widgets.
+
+AvinApp creates:
+- AppState
+- AppController
+- MainWindow
+
+AppController owns AppState.
+MainWindow receives AppController.
+Widgets send Event to AppController.
+
+
+= Current modules
+analyse   -> исследование рынка
+connect   -> подключение к брокерам и биржам
+domain    -> предметная область, трейдерские абстракции
+errors    -> как система падает
+gui       -> отображение рынка
+service   -> что умеет система
+storage   -> где лежат и откуда загружаются данные
+system    -> как устроено приложение
+utils     -> мелкие помощники
+
+= Service Layer
+Factory
+    Creates domain objects.
+Builder
+    Builds derived domain objects.
+Loader
+    Loads raw data into domain objects.
+Ensurer
+    Guarantees required data is available.
+Manager
+    Manages lifecycle of objects or subsystems.
+
+== Public API
+Если метод мутирует переданный объект, он по умолчанию возвращает None.
+Если метод возвращает объект, он не должен незаметно мутировать переданный объект.
+
+- Builder-классы -> возвращают новый объект, объект не мутируют.
+- strict accessors -> возвращает объект или exception, без side effects.
+- find_* -> soft-accessor, возвращает объект | None, без side effects.
+- has_* -> bool, без side effects.
+- load_* -> мутирует объект, возвращает None.
+- build_* -> мутирует объект, возвращает None.
+- ensure_* -> гарантирует наличие данных в объекте, возвращает None.
+
+== Don't use in public API:
+- get_or_build_* пока не используем, если нет сильной причины.
+- try_get_* / get_opt_* в AVIN не используем; для optional используем find_*.
+
+== Accessor contract
+1. Строгий accessor получает данные, которые обязаны существовать:
+- либо возвращает полностью готовые данные;
+- либо бросает исключение.
+Никаких: None, пустых объектов, автозагрузки, ленивого построения.
+
+2. Для мягкого optional-доступа используется find_*.
+
+== Exceptions
+Суффикс Error. Использовать его для всех пользовательских исключений проекта.
+
+Все сообщения исключений начинаются с заглавной буквы и не заканчиваются точкой.
+raise ValueError("Tick footprint 1000 is unavailable")
+✅ Заглавная буква.
+✅ Без точки в конце.
+✅ Короткое сообщение.
+✅ Сообщение отвечает на вопрос "что произошло?", а не "что делать?".
+
+Хорошо:
+Cluster is empty
+Time footprint M1 is unavailable
+Tick ts 100 < last ts 120
+Invalid timeframe
+
+Плохо:
+Please load ticks first.
+Cannot continue because no footprint exists.
+You should build footprint before using it.
+
+
+== Temporary elements
+Во время разработки или дебагания, бывает удобно создать какую-ту переменную
+или функцию. Для таких случаев использовать префиксы:
+DEV_* - для хардкодед констант нужных на 5 минут пока делаешь какую то фичу
+DBG_* - для отладочных констант
+
+Переменные и функции соответственно помечаются:
+dev_
+dbg_
+
+Так же может быть комментарий рядом с кодом:
+# dbg
+# dev
+Что означает что под ним идет блок кода который был нужен для
+отладки/разработки и теперь можно удалять.
+
+==== LOGO
+1-й уровень:
+    какой-то геометрический знак.
+2-й уровень:
+    это же текст AVIN.
+3-й уровень:
+    черт, да это же рынок.
+
+==== Philosophy
+Understand the market before trading it.
+

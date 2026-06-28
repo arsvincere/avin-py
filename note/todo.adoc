@@ -1,0 +1,71 @@
+# ────────────────────────────────────────────────────────────────────────────
+#  AVIN
+#  Understand the market before trading it.
+#
+#  https://avin.info
+# ────────────────────────────────────────────────────────────────────────────
+
+
+
+= TODO:
+[x] AssetList - имя листу добавлено
+[x] AssetListDock - сортировка тикеров
+[x] AvinApp - ввели верхнеуровневый объект для контроллер, стейт, мэйн виндоу...
+[x] QGraphicsScene
+[x] QGraphicsView
+[x] Build time footprint on asset selection
+[x] Event <-> Message
+[x] Refactor service architecture
+[ ] GitHub Actions Минимальный CI
+[ ] Cluster дополнить метриками + ! test !
+
+[ ] поговорить про архитектуру...
+    - как графические объекты будут себя делать? renderer? self renderr?
+      calculation?
+    - поговорить про паттерны, и где они просятся в AVIN
+-------------------------------------
+Паттернс	 Основная ответственность
+-------------------------------------
+Factory
+Builder
+Facade
+Adapter
+Decorator
+Strategy
+Observer
+
+
+= Complete:
+[x] IID надо допиливать
+    [x] и вообще базовые классы из rs версии py модуля
+[x] Cmd - обновлено на pathlib и все протестировано. Бесполезная но
+    приятная перфекционистская работа. Так то и так все работало на os.
+[x] потом делаем закачку данных с Т - тики в первую очередь
+[x] нужна старая полная инфа по инструменту... лот, мин прайс степ...
+    так что попробуй сначалла получить список избранного (уже) а потом
+    по фиги из него уже подробную инфу по каждому инструменту...
+    причем там наверное надо будет их сначала отсортить по акция, фьюч...
+    или на лету попалась акция - так ее... нет надо сначала, чтобы
+    IidCache сохранять блоками по категориям.
+[x] storage.load_last
+[x] storage.load_range
+[x] parse_code
+[x] IidStorage.find_code
+[x] IidStorage.find_figi
+[x] DataManager update
+[x] DataManager delete
+[x] justfile
+[x] FootprintBuilder
+[x] вечером потрындеть с гпт о QGraphicsScene и аналоге на Rust,
+    поговорить о egui_plot...
+
+[x] Avin Exceptions - улучшены
+[x] Asset
+[x] Share
+[x] CODEX - MarketData.TIC → MarketData.TICK
+[x] asset.code, asset.iid, asset.iid.code ... надо что то делать с коде!
+[x] Gui -> get favorite asset list
+[x] state.py -> app_state.py
+[x] instrument_code -> code
+[x] DataManager -> DataService?
+[x] delete coverage github workflow

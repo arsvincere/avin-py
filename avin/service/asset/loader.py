@@ -40,7 +40,7 @@ class AssetLoader:
         begin: DateTime,
         end: DateTime,
     ) -> None:
-        pass
+        raise NotImplementedError("TODO")
 
     @staticmethod
     def load_order_book(
@@ -49,4 +49,4 @@ class AssetLoader:
         begin: DateTime,
         end: DateTime,
     ) -> None:
-        pass
+        raise NotImplementedError("TODO")

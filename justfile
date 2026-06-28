@@ -7,7 +7,6 @@
 
 set shell := ["bash", "-uc"]
 venv := ".venv"
-python := venv + "/bin/python"
 
 default:
     @just --list --unsorted \
@@ -43,7 +42,8 @@ install-dev: venv cache
 # Install T-Bank SDK from custom registry
 [group('Environment')]
 install-tbank: venv
-    uv pip install t-tech-investments --extra-index-url https://opensource.tbank.ru/api/v4/projects/238/packages/pypi/simple
+    uv pip install t-tech-investments --extra-index-url \
+        https://opensource.tbank.ru/api/v4/projects/238/packages/pypi/simple
 
 # ----------------------------------------------------------------------------
 # Code quality
@@ -132,7 +132,7 @@ pre-commit:
 
 # Commit all changes
 [group('Project')]
-commit message:
+commit-all message:
     git add .
     git commit -m "{{message}}"
 
@@ -148,6 +148,8 @@ clean:
     rm -rf avin.zip
     rm -rf coverage.xml
     rm -rf htmlcov
+    rm -rf build
+    rm -rf dist
     uv run ruff clean || true
 
 # Remove caches and .venv
@@ -174,4 +176,4 @@ doctor:
 # Start avin-gui
 [group('Launchers')]
 gui:
-    avin-gui
+    uv run avin-gui
