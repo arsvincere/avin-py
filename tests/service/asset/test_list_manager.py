@@ -7,7 +7,6 @@
 
 import polars as pl
 import pytest
-
 from avin.domain.asset.asset_list import AssetList
 from avin.domain.data.source import Source
 from avin.domain.instrument.category import Category
@@ -15,6 +14,16 @@ from avin.errors.exceptions import DataNotFoundError
 from avin.service.asset import list_manager
 from avin.service.asset.list_manager import AssetListManager
 from avin.storage.iid_storage import IidStorage
+
+
+class _FakeCfg:
+    def __init__(
+        self,
+        default_asset_list_name: str,
+        default_source: Source,
+    ) -> None:
+        self.default_asset_list_name = default_asset_list_name
+        self.default_source = default_source
 
 
 def _iid_rows() -> list[dict[str, str]]:
@@ -71,17 +80,21 @@ def test_load_default_loads_favorites(
     calls: list[Source] = []
 
     monkeypatch.setattr(
-        list_manager.cfg,
-        "default_asset_list_name",
-        "favorites",
+        list_manager,
+        "cfg",
+        _FakeCfg(
+            default_asset_list_name="favorites",
+            default_source=Source.TINKOFF,
+        ),
     )
-    monkeypatch.setattr(list_manager.cfg, "default_source", Source.TINKOFF)
 
     def fake_load_favorites(source: Source) -> AssetList:
         calls.append(source)
         return expected
 
-    monkeypatch.setattr(AssetListManager, "load_favorites", fake_load_favorites)
+    monkeypatch.setattr(
+        AssetListManager, "load_favorites", fake_load_favorites
+    )
 
     assets = AssetListManager.load_default()
 
@@ -92,8 +105,14 @@ def test_load_default_loads_favorites(
 def test_load_default_rejects_unknown_default_list(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(list_manager.cfg, "default_asset_list_name", "unknown")
-    monkeypatch.setattr(list_manager.cfg, "default_source", Source.TINKOFF)
+    monkeypatch.setattr(
+        list_manager,
+        "cfg",
+        _FakeCfg(
+            default_asset_list_name="unknown",
+            default_source=Source.TINKOFF,
+        ),
+    )
 
     with pytest.raises(NotImplementedError, match="unknown"):
         AssetListManager.load_default()

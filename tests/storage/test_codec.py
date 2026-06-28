@@ -6,7 +6,6 @@
 # ────────────────────────────────────────────────────────────────────────────
 
 import polars as pl
-
 from avin.domain.chart.bar import Bar
 from avin.domain.common.direction import Direction
 from avin.domain.raw.tick import Tick

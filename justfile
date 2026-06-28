@@ -6,7 +6,9 @@
 # ────────────────────────────────────────────────────────────────────────────
 
 set shell := ["bash", "-uc"]
+python_version := "3.13"
 venv := ".venv"
+python := venv + "/bin/python"
 
 default:
     @just --list --unsorted \
@@ -25,7 +27,9 @@ cache:
 # Create python venv if missing (.venv)
 [group('Environment')]
 venv:
-    uv venv
+    @if [ ! -d "{{venv}}" ]; then \
+        uv venv --python {{python_version}} {{venv}}; \
+    fi
 
 # Install AVIN in editable mode
 [group('Environment')]
@@ -77,10 +81,10 @@ type:
 test:
     uv run pytest -m "not integration and not slow"
 
-# Run unit tests with stdout
+# Run one test file with stdout
 [group('Tests')]
-test-s:
-    uv run pytest -m "not integration and not slow" -s
+test-file file:
+    uv run pytest "{{file}}" -s
 
 # Run integration tests
 [group('Tests')]

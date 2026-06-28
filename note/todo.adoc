@@ -19,9 +19,12 @@
 [x] Schema
 [x] StoreCodec
 [x] test BarKind
-[ ] test Bar
-[ ] test StoreCodec
-[ ] test Schema
+[x] test Bar
+[x] test StoreCodec
+[x] test Schema
+[x] test ListManager
+[ ] test AssetLoader
+[ ] 3.13 питон опустить
 [ ] убрать это гавно:
     if __name__ == "__main__":
         ...

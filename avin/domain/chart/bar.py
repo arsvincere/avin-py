@@ -5,6 +5,8 @@
 #  https://avin.info
 # ────────────────────────────────────────────────────────────────────────────
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 from avin.domain.chart.bar_kind import BarKind

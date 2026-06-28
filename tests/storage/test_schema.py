@@ -6,7 +6,6 @@
 # ────────────────────────────────────────────────────────────────────────────
 
 import polars as pl
-
 from avin.storage.schema import Schema
 
 
