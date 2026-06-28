@@ -30,6 +30,6 @@ class StateDock(QDockWidget):
             "--------\n"
             f"asset_list: {state.asset_list.name}\n"
             f"assets: {len(state.asset_list)}\n"
-            f"current_asset_code: {state.current_asset_code}\n"
+            f"selected_asset_code: {state.selected_asset_code}\n"
             f"last_message: {state.last_message}\n"
         )

@@ -8,12 +8,13 @@
 from dataclasses import dataclass
 
 from avin.domain.asset.asset_list import AssetList
-from avin.domain.footprint.footprint import Footprint
+from avin.domain.data.source import Source
 
 
 @dataclass(slots=True)
 class AppState:
     asset_list: AssetList
-    current_asset_code: str | None = None
+    source: Source
+
+    selected_asset_code: str | None = None
     last_message: str = "AppStarted"
-    footprint: Footprint | None

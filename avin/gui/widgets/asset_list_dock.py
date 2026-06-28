@@ -37,7 +37,7 @@ class AssetListDock(QDockWidget):
 
             self._tree.addTopLevelItem(item)
 
-            if asset.code == state.current_asset_code:
+            if asset.code == state.selected_asset_code:
                 current_item = item
 
         if current_item is not None:
