@@ -64,7 +64,3 @@ def _validate_token(token: str) -> None:
         response = client.users.get_accounts()
         if not response:
             raise RuntimeError("Empty response from Tinkoff auth check")
-
-
-if __name__ == "__main__":
-    ...

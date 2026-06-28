@@ -95,7 +95,3 @@ class SourceTinkoff:
                 rows.append(info)
 
         return pl.DataFrame(rows, schema=Schema.IID)
-
-
-if __name__ == "__main__":
-    ...

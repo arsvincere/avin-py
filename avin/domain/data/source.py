@@ -31,7 +31,3 @@ class Source(enum.StrEnum):
             f"Unknown source '{string}'. "
             f"Available: {', '.join(cls.__members__)}"
         )
-
-
-if __name__ == "__main__":
-    ...

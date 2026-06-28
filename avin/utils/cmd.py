@@ -403,7 +403,3 @@ class Cmd:
     #     finally:
     #         if fh is not None:
     #             fh.close()
-
-
-if __name__ == "__main__":
-    ...

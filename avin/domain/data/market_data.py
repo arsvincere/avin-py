@@ -187,7 +187,3 @@ class MarketData(enum.StrEnum):
             self.BAR_WEEK,
             self.BAR_MONTH,
         ]
-
-
-if __name__ == "__main__":
-    ...
