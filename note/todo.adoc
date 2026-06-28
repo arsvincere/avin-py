@@ -14,13 +14,18 @@
 [x] Build time footprint on asset selection
 [x] Event <-> Message
 [x] Refactor service architecture
-[ ] GitHub Actions Минимальный CI
-[ ] Cluster дополнить метриками + ! test !
+[ ] убрать это гавно:
+    if __name__ == "__main__":
+        ...
 
 [ ] поговорить про архитектуру...
     - как графические объекты будут себя делать? renderer? self renderr?
       calculation?
     - поговорить про паттерны, и где они просятся в AVIN
+
+[ ] GitHub Actions Минимальный CI
+[ ] Cluster дополнить метриками + ! test !
+
 -------------------------------------
 Паттернс	 Основная ответственность
 -------------------------------------

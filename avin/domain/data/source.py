@@ -13,6 +13,7 @@ import enum
 class Source(enum.StrEnum):
     """Market data source."""
 
+    AVIN = "AVIN"
     TINKOFF = "TINKOFF"
     MOEXALGO = "MOEXALGO"
 
