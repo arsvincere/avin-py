@@ -14,6 +14,14 @@
 [x] Build time footprint on asset selection
 [x] Event <-> Message
 [x] Refactor service architecture
+[x] BarKind
+[x] Bar
+[x] Schema
+[x] StoreCodec
+[x] test BarKind
+[ ] test Bar
+[ ] test StoreCodec
+[ ] test Schema
 [ ] убрать это гавно:
     if __name__ == "__main__":
         ...

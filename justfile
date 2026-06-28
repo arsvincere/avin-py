@@ -103,6 +103,11 @@ smoke:
 all:
     uv run pytest tests
 
+# Run test coverage
+[group('Tests')]
+cov:
+    pytest --cov=avin --cov-report=term-missing
+
 # ----------------------------------------------------------------------------
 # Benchmarks
 # ----------------------------------------------------------------------------
