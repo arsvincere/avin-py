@@ -68,7 +68,7 @@ AVIN (от лат. Ars Vincere  -  искусство побеждать)  —  
 рабочие стратегии - с целью переопыления идеями и дальнейшей совместной
 разработки. Пиши.
 
-let contact = [email](mailto:mr.alexavin@gmail.com) || [telegram](https://t.me/mr_alexavin);
+contact = [email](mailto:mr.alexavin@gmail.com) or [telegram](https://t.me/mr_alexavin)
 
 
 <div align="center">
