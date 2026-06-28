@@ -33,7 +33,7 @@ class AssetListManager:
     def load_default_or_empty(cls) -> AssetList:
         try:
             return cls.load_default()
-        except KeyError, NotImplementedError, DataNotFoundError:
+        except (KeyError, NotImplementedError, DataNotFoundError):
             return AssetList(cls.EMPTY_LIST_NAME)
 
     @classmethod
