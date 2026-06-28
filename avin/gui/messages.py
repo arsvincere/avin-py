@@ -18,31 +18,4 @@ class SelectAsset:
     code: str
 
 
-@dataclass(frozen=True, slots=True)
-class SelectTimeframe:
-    timeframe: str
-
-
-@dataclass(frozen=True, slots=True)
-class SelectCluster:
-    cluster_index: int
-
-
-@dataclass(frozen=True, slots=True)
-class SelectPrice:
-    price: float
-
-
-@dataclass(frozen=True, slots=True)
-class ClearSelection:
-    pass
-
-
-type Message = (
-    AppStarted
-    | SelectAsset
-    | SelectTimeframe
-    | SelectCluster
-    | SelectPrice
-    | ClearSelection
-)
+type Message = AppStarted | SelectAsset

@@ -28,13 +28,8 @@ class StateDock(QDockWidget):
         return (
             "AppState\n"
             "--------\n"
+            f"asset_list: {state.asset_list.name}\n"
             f"assets: {len(state.asset_list)}\n"
             f"current_asset_code: {state.current_asset_code}\n"
-            f"source: {state.source}\n"
-            f"timeframe: {state.timeframe}\n"
-            f"ticks_loaded: {state.ticks_loaded}\n"
-            f"footprint_clusters: {state.footprint_clusters}\n"
-            f"selected_cluster: {state.selected_cluster}\n"
-            f"selected_price: {state.selected_price}\n"
             f"last_message: {state.last_message}\n"
         )
