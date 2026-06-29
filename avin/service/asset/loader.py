@@ -5,7 +5,7 @@
 #  https://avin.info
 # ────────────────────────────────────────────────────────────────────────────
 
-from avin.domain.asset.asset import Asset
+from avin.domain.asset.base_asset import BaseAsset
 from avin.domain.common.timeframe import TimeFrame
 from avin.domain.data.market_data import MarketData
 from avin.domain.data.source import Source
@@ -17,7 +17,7 @@ from avin.utils.dt import DateTime
 class AssetLoader:
     @staticmethod
     def load_ticks(
-        asset: Asset,
+        asset: BaseAsset,
         source: Source,
         begin: DateTime,
         end: DateTime,
@@ -34,7 +34,7 @@ class AssetLoader:
 
     @staticmethod
     def load_bars(
-        asset: Asset,
+        asset: BaseAsset,
         source: Source,
         tf: TimeFrame,
         begin: DateTime,
@@ -44,7 +44,7 @@ class AssetLoader:
 
     @staticmethod
     def load_order_book(
-        asset: Asset,
+        asset: BaseAsset,
         source: Source,
         begin: DateTime,
         end: DateTime,

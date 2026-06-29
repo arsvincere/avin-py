@@ -5,7 +5,7 @@
 #  https://avin.info
 # ────────────────────────────────────────────────────────────────────────────
 
-from avin.domain.asset.asset import Asset
+from avin.domain.asset.base_asset import BaseAsset
 
 
-class Future(Asset): ...
+class Future(BaseAsset): ...

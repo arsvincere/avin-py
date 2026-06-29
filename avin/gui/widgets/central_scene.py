@@ -8,7 +8,7 @@
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QGraphicsScene, QGraphicsTextItem
 
-from avin.domain.asset.asset import Asset
+from avin.domain.asset.base_asset import BaseAsset
 from avin.domain.common.timeframe import TimeFrame
 from avin.domain.footprint.cluster import Cluster
 from avin.domain.footprint.time_footprint import TimeFootprint
@@ -57,7 +57,7 @@ class CentralScene(QGraphicsScene):
 
     def _draw_time_footprint(
         self,
-        asset: Asset,
+        asset: BaseAsset,
         state: AppState,
         footprint: TimeFootprint,
     ) -> None:
@@ -133,10 +133,10 @@ class CentralScene(QGraphicsScene):
                 text = f"{level.vol_s} | {level.vol_b}"
                 self._add_text(text, x, self._price_y(row))
 
-    def _draw_asset_text(self, asset: Asset, state: AppState) -> None:
+    def _draw_asset_text(self, asset: BaseAsset, state: AppState) -> None:
         self._add_text(self._asset_text(asset, state), 500, 50)
 
-    def _asset_text(self, asset: Asset, state: AppState) -> str:
+    def _asset_text(self, asset: BaseAsset, state: AppState) -> str:
         return "\n".join(
             [
                 f"Selected asset: {asset.code}",
@@ -173,13 +173,13 @@ class CentralScene(QGraphicsScene):
     def _price_text(self, price: float) -> str:
         return f"{price:g}"
 
-    def _ticks_text(self, asset: Asset) -> str:
+    def _ticks_text(self, asset: BaseAsset) -> str:
         if not asset.has_ticks():
             return "No"
 
         return str(len(asset.ticks()))
 
-    def _time_footprint_text(self, asset: Asset) -> str:
+    def _time_footprint_text(self, asset: BaseAsset) -> str:
         if not asset.has_time_footprint(DEV_FOOTPRINT_TIMEFRAME):
             return "No"
 

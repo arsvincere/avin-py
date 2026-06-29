@@ -6,7 +6,7 @@
 # ────────────────────────────────────────────────────────────────────────────
 
 import pytest
-from avin.domain.asset.asset import Asset
+from avin.domain.asset.base_asset import BaseAsset
 from avin.domain.asset.share import Share
 from avin.domain.common.direction import Direction
 from avin.domain.common.timeframe import TimeFrame
@@ -73,7 +73,7 @@ def tick(
 
 def test_asset_cannot_be_created_directly():
     with pytest.raises(TypeError):
-        Asset(iid())  # type: ignore[abstract]
+        BaseAsset(iid())  # type: ignore[abstract]
 
 
 # ============================================================================

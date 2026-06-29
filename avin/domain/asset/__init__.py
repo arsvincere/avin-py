@@ -5,13 +5,13 @@
 #  https://avin.info
 # ────────────────────────────────────────────────────────────────────────────
 
-from .asset import Asset
 from .asset_list import AssetList
+from .base_asset import BaseAsset
 from .future import Future
 from .share import Share
 
 __all__ = (
-    "Asset",
+    "BaseAsset",
     "Future",
     "Share",
     "AssetList",

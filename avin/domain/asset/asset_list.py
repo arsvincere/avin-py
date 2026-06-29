@@ -7,13 +7,13 @@
 
 from collections.abc import Iterable, Iterator
 
-from avin.domain.asset.asset import Asset
+from avin.domain.asset.base_asset import BaseAsset
 from avin.errors.exceptions import InstrumentNotFoundError
 
 
 class AssetList:
     def __init__(
-        self, name: str, assets: Iterable[Asset] | None = None
+        self, name: str, assets: Iterable[BaseAsset] | None = None
     ) -> None:
         if not isinstance(name, str):
             raise TypeError(name)
@@ -21,7 +21,7 @@ class AssetList:
             raise ValueError("AssetList name is required")
 
         self.name = name
-        self._assets: dict[str, Asset] = {}
+        self._assets: dict[str, BaseAsset] = {}
 
         if assets is not None:
             for asset in assets:
@@ -39,10 +39,10 @@ class AssetList:
 
         return code in self._assets
 
-    def __iter__(self) -> Iterator[Asset]:
+    def __iter__(self) -> Iterator[BaseAsset]:
         return iter(self._assets.values())
 
-    def __getitem__(self, code: str) -> Asset:
+    def __getitem__(self, code: str) -> BaseAsset:
         if not isinstance(code, str):
             raise TypeError(code)
 
@@ -60,7 +60,7 @@ class AssetList:
     def tickers(self) -> list[str]:
         return [asset.ticker for asset in self]
 
-    def asset(self, code: str) -> Asset:
+    def asset(self, code: str) -> BaseAsset:
         if not isinstance(code, str):
             raise TypeError(code)
 
@@ -69,14 +69,14 @@ class AssetList:
 
         return self._assets[code]
 
-    def find(self, code: str) -> Asset | None:
+    def find(self, code: str) -> BaseAsset | None:
         if not isinstance(code, str):
             raise TypeError(code)
 
         return self._assets.get(code)
 
-    def add(self, asset: Asset) -> None:
-        if not isinstance(asset, Asset):
+    def add(self, asset: BaseAsset) -> None:
+        if not isinstance(asset, BaseAsset):
             raise TypeError(asset)
 
         if asset.code in self._assets:
@@ -84,7 +84,7 @@ class AssetList:
 
         self._assets[asset.code] = asset
 
-    def remove(self, code: str) -> Asset:
+    def remove(self, code: str) -> BaseAsset:
         if not isinstance(code, str):
             raise TypeError(code)
 

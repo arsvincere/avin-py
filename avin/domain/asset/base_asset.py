@@ -19,7 +19,7 @@ from avin.domain.raw.tick import Tick
 from avin.errors import DataUnavailableError
 
 
-class Asset(ABC):
+class BaseAsset(ABC):
     @abstractmethod
     def __init__(self, iid: Iid) -> None:
         self._iid = iid
@@ -38,7 +38,7 @@ class Asset(ABC):
         return hash(self.figi)
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Asset):
+        if not isinstance(other, BaseAsset):
             return NotImplemented
 
         return self.figi == other.figi

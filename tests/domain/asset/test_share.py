@@ -6,7 +6,7 @@
 # ────────────────────────────────────────────────────────────────────────────
 
 import pytest
-from avin.domain.asset.asset import Asset
+from avin.domain.asset.base_asset import BaseAsset
 from avin.domain.asset.share import Share
 from avin.domain.instrument.category import Category
 from avin.domain.instrument.exchange import Exchange
@@ -44,7 +44,7 @@ def iid(
 def test_share_is_asset():
     share = Share(iid())
 
-    assert isinstance(share, Asset)
+    assert isinstance(share, BaseAsset)
 
 
 def test_share_accepts_share_iid():
