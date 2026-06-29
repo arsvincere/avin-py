@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+from avin.domain.data.market_data import MarketData
 from avin.utils.const import (
     ONE_DAY,
     ONE_HOUR,
@@ -31,6 +32,7 @@ class TimeFrame(StrEnum):
 
     M1 = "1M"
     M5 = "5M"
+    M10 = "10M"
     M15 = "15M"
 
     H1 = "1H"
@@ -63,6 +65,8 @@ class TimeFrame(StrEnum):
                 return 60
             case TimeFrame.M5:
                 return 300
+            case TimeFrame.M10:
+                return 600
             case TimeFrame.M15:
                 return 900
             case TimeFrame.H1:
@@ -113,6 +117,10 @@ class TimeFrame(StrEnum):
                 dt = dt.replace(microsecond=0, second=0)
                 past_minutes = dt.minute % 5
                 dt -= past_minutes * ONE_MINUTE
+            case TimeFrame.M10:
+                dt = dt.replace(microsecond=0, second=0)
+                past_minutes = dt.minute % 10
+                dt -= past_minutes * ONE_MINUTE
             case TimeFrame.M15:
                 dt = dt.replace(microsecond=0, second=0)
                 past_minutes = dt.minute % 15
@@ -152,6 +160,37 @@ class TimeFrame(StrEnum):
                 return dt_to_ts(dt)
             case _:
                 return floor + self.nanos
+
+    def to_market_data(self) -> MarketData:
+        match self:
+            case TimeFrame.S1:
+                raise NotImplementedError()
+            case TimeFrame.S5:
+                raise NotImplementedError()
+            case TimeFrame.S10:
+                raise NotImplementedError()
+            case TimeFrame.S30:
+                raise NotImplementedError()
+            case TimeFrame.M1:
+                return MarketData.BAR_1M
+            case TimeFrame.M5:
+                return MarketData.BAR_5M
+            case TimeFrame.M10:
+                return MarketData.BAR_10M
+            case TimeFrame.M15:
+                return MarketData.BAR_15M
+            case TimeFrame.H1:
+                return MarketData.BAR_1H
+            case TimeFrame.H4:
+                return MarketData.BAR_4H
+            case TimeFrame.DAY:
+                return MarketData.BAR_DAY
+            case TimeFrame.WEEK:
+                return MarketData.BAR_WEEK
+            case TimeFrame.MONTH:
+                return MarketData.BAR_MONTH
+
+        raise NotImplementedError()
 
     @classmethod
     def from_str(cls, value: str) -> TimeFrame:

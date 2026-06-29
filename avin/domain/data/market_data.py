@@ -13,12 +13,14 @@ from avin.utils.dt import DateTime, TimeDelta
 
 
 class MarketData(enum.StrEnum):
-    """Enum for selet what data type to download."""
+    """Enum for selecting market data type."""
 
     BAR_1M = "BAR_1M"
     BAR_5M = "BAR_5M"
     BAR_10M = "BAR_10M"
+    BAR_15M = "BAR_15M"
     BAR_1H = "BAR_1H"
+    BAR_4H = "BAR_4H"
     BAR_DAY = "BAR_DAY"
     BAR_WEEK = "BAR_WEEK"
     BAR_MONTH = "BAR_MONTH"
@@ -42,8 +44,12 @@ class MarketData(enum.StrEnum):
                 return TimeDelta(minutes=5)
             case MarketData.BAR_10M:
                 return TimeDelta(minutes=10)
+            case MarketData.BAR_15M:
+                return TimeDelta(minutes=15)
             case MarketData.BAR_1H:
                 return TimeDelta(hours=1)
+            case MarketData.BAR_4H:
+                return TimeDelta(hours=4)
             case MarketData.BAR_DAY:
                 return TimeDelta(days=1)
             case MarketData.BAR_WEEK:
@@ -69,14 +75,21 @@ class MarketData(enum.StrEnum):
                 prev = dt.replace(second=0, microsecond=0)
                 past = dt.minute % 5
                 prev -= TimeDelta(minutes=past)
-
             case MarketData.BAR_10M:
                 prev = dt.replace(second=0, microsecond=0)
                 past = dt.minute % 10
                 prev -= TimeDelta(minutes=past)
+            case MarketData.BAR_15M:
+                prev = dt.replace(second=0, microsecond=0)
+                past = dt.minute % 15
+                prev -= TimeDelta(minutes=past)
 
             case MarketData.BAR_1H:
                 prev = dt.replace(minute=0, second=0, microsecond=0)
+            case MarketData.BAR_4H:
+                prev = dt.replace(minute=0, second=0, microsecond=0)
+                past = dt.hour % 4
+                prev -= TimeDelta(hours=past)
 
             case MarketData.BAR_DAY:
                 prev = dt.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -111,15 +124,22 @@ class MarketData(enum.StrEnum):
                 next = dt.replace(second=0, microsecond=0)
                 need_minutes = 5 - (dt.minute % 5)
                 next += TimeDelta(minutes=need_minutes)
-
             case MarketData.BAR_10M:
                 next = dt.replace(second=0, microsecond=0)
                 need_minutes = 10 - (dt.minute % 10)
+                next += TimeDelta(minutes=need_minutes)
+            case MarketData.BAR_15M:
+                next = dt.replace(second=0, microsecond=0)
+                need_minutes = 15 - (dt.minute % 15)
                 next += TimeDelta(minutes=need_minutes)
 
             case MarketData.BAR_1H:
                 next = dt.replace(minute=0, second=0, microsecond=0)
                 next += TimeDelta(hours=1)
+            case MarketData.BAR_4H:
+                next = dt.replace(minute=0, second=0, microsecond=0)
+                need_hours = 4 - (dt.hour % 4)
+                next += TimeDelta(hours=need_hours)
 
             case MarketData.BAR_DAY:
                 next = dt.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -171,19 +191,19 @@ class MarketData(enum.StrEnum):
 
         raise ValueError(
             f"Invalid market data name: '{value}'. "
-            f"Choice from {MarketData._member_names_}"
+            f"Choice from {[m.value for m in cls]}"
         )
 
     @classmethod
-    def all_bar_kind(
-        self,
-    ) -> list[MarketData]:
+    def all_bar_kind(cls) -> list[MarketData]:
         return [
-            self.BAR_1M,
-            self.BAR_5M,
-            self.BAR_10M,
-            self.BAR_1H,
-            self.BAR_DAY,
-            self.BAR_WEEK,
-            self.BAR_MONTH,
+            cls.BAR_1M,
+            cls.BAR_5M,
+            cls.BAR_10M,
+            cls.BAR_15M,
+            cls.BAR_1H,
+            cls.BAR_4H,
+            cls.BAR_DAY,
+            cls.BAR_WEEK,
+            cls.BAR_MONTH,
         ]
