@@ -73,6 +73,14 @@ Ensurer
 Manager
     Manages lifecycle of objects or subsystems.
 
+== Naming
+1. Короткое имя
+    — если контекст делает смысл очевидным.
+2. Короткое имя + Docstring в методе
+    — если смысл неочевиден.
+3. Длинное имя
+    — только если без него реально будет неоднозначность.
+
 == Public API
 Если метод мутирует переданный объект, он по умолчанию возвращает None.
 Если метод возвращает объект, он не должен незаметно мутировать переданный объект.
@@ -88,6 +96,14 @@ Manager
 == Don't use in public API:
 - get_or_build_* пока не используем, если нет сильной причины.
 - try_get_* / get_opt_* в AVIN не используем; для optional используем find_*.
+
+== Open field, accessor method, property
+Открытое поле
+-> только для тупых immutable value objects / dataclass.
+@property
+-> дешёвый read-only доступ без параметров и без побочных эффектов.
+Метод accessor
+-> если есть логика, возможная ошибка, параметр или торговый смысл.
 
 == Accessor contract
 1. Строгий accessor получает данные, которые обязаны существовать:
@@ -134,6 +150,60 @@ dbg_
 # dev
 Что означает что под ним идет блок кода который был нужен для
 отладки/разработки и теперь можно удалять.
+
+
+== Docstrings
+AVIN uses docstrings to document important public contracts, domain semantics,
+invariants and non-obvious behavior.
+
+Docstrings are required for:
+* public domain classes;
+* public functions and methods with non-trivial logic;
+* methods with important edge cases;
+* objects with invariants;
+* APIs shared between `domain`, `service`, `gui` and `analyse`.
+
+Docstrings are not required for:
+* obvious dunder methods;
+* simple read-only properties;
+* trivial private helpers;
+* code where the name and implementation are clearer than an additional text.
+
+If a docstring is written, it must be bilingual:
+* English first;
+* empty line;
+* `# ru`;
+* Russian version.
+
+Important rule: AVIN does not require 100% docstring coverage.
+Docstrings should clarify architecture and behavior, not create noise.
+
+New code should follow this rule.
+Existing code should be improved when the file is touched.
+
+Examples:
+
+----
+def upsert(self, bar: Bar) -> None:
+    """
+    Insert or replace bar by timestamp.
+
+    # ru
+    Вставляет бар в график или заменяет существующий бар
+    с таким же timestamp.
+    """
+    ...
+
+@property
+def current(self) -> Bar | None:
+    """
+    Last bar in chart, may be unfinished in realtime.
+
+    # ru
+    Последний бар в графике, в realtime может быть незавершенным.
+    """
+    ...
+----
 
 ==== LOGO
 1-й уровень:

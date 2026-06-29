@@ -25,6 +25,10 @@ class Bar:
     vol: int
 
     def __post_init__(self) -> None:
+        # TODO:
+        # если Bar creation станет bottleneck,
+        # вынести bulk validation в storage/service
+        # и пересмотреть runtime checks.
         if self.low > self.high:
             raise ValueError("Bar low > high")
 
@@ -39,7 +43,7 @@ class Bar:
 
     def __str__(self) -> str:
         return (
-            f"Bar: {self.dt} "
+            f"Bar {self.dt} "
             f"{self.open} {self.high} {self.low} {self.close} {self.vol}"
         )
 

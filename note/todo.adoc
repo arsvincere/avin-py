@@ -6,26 +6,16 @@
 # ────────────────────────────────────────────────────────────────────────────
 
 = TODO:
-[x] AssetList - имя листу добавлено
-[x] AssetListDock - сортировка тикеров
-[x] AvinApp - ввели верхнеуровневый объект для контроллер, стейт, мэйн виндоу...
-[x] QGraphicsScene
-[x] QGraphicsView
-[x] Build time footprint on asset selection
-[x] Event <-> Message
-[x] Refactor service architecture
-[x] BarKind
-[x] Bar
-[x] Schema
-[x] StoreCodec
-[x] test BarKind
-[x] test Bar
-[x] test StoreCodec
-[x] test Schema
-[x] test ListManager
-[ ] test AssetLoader
-[x] 3.13 питон опустить
-[x] убрать это гавно: if __name__ == "__main__": ...
+[x] составить план на день с помощью Нави и Эджа, или всех на планерку позвать?
+[x] обсудить архитектуру и внутренности технические Chart
+[ ] реализовать domain/chart/chart.py -> Chart
+[ ] покрыть тестами Chart
+[ ] сделать докстринг к классу, выработать общий стиль докстрингов АВИН вообще
+[ ] зафиксировать формат докстрингов в architecture.adoc
+
+
+
+
 
 [ ] поговорить про архитектуру...
     - как графические объекты будут себя делать? renderer? self renderr?
@@ -81,3 +71,24 @@ Observer
 [x] instrument_code -> code
 [x] DataManager -> DataService?
 [x] delete coverage github workflow
+
+[x] AssetList - имя листу добавлено
+[x] AssetListDock - сортировка тикеров
+[x] AvinApp - ввели верхнеуровневый объект для контроллер, стейт, мэйн виндоу...
+[x] QGraphicsScene
+[x] QGraphicsView
+[x] Build time footprint on asset selection
+[x] Event <-> Message
+[x] Refactor service architecture
+[x] BarKind
+[x] Bar
+[x] Schema
+[x] StoreCodec
+[x] test BarKind
+[x] test Bar
+[x] test StoreCodec
+[x] test Schema
+[x] test ListManager
+[x] test AssetLoader
+[x] 3.13 питон опустить
+[x] убрать это гавно: if __name__ == "__main__": ...

@@ -87,7 +87,7 @@ class TimeFrame(StrEnum):
                 return TimeDelta(seconds=self.seconds)
 
     def begin_frame_ts(self, ts: int) -> int:
-        """Previous"""
+        """Возвращает начало текущего фрейма"""
 
         dt = ts_to_dt(ts)
 
@@ -141,7 +141,7 @@ class TimeFrame(StrEnum):
         return dt_to_ts(dt)
 
     def end_frame_ts(self, ts: int) -> int:
-        """Next"""
+        """Возвращает начало следующего фрейма"""
 
         floor = self.begin_frame_ts(ts)
 
