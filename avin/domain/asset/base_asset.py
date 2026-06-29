@@ -5,8 +5,8 @@
 #  https://avin.info
 # ────────────────────────────────────────────────────────────────────────────
 
-from abc import ABC, abstractmethod
 
+from avin.domain.chart.chart import Chart
 from avin.domain.common.timeframe import TimeFrame
 from avin.domain.footprint.tick_footprint import TickFootprint
 from avin.domain.footprint.time_footprint import TimeFootprint
@@ -19,13 +19,28 @@ from avin.domain.raw.tick import Tick
 from avin.errors import DataUnavailableError
 
 
-class BaseAsset(ABC):
-    @abstractmethod
+class BaseAsset:
+    """
+    Base domain asset.
+    Share, Future, Bond, Option and other asset types inherit from it.
+
+    BaseAsset stores instrument identity and loaded market data.
+    It does not load, build, download or save data by itself. Services are
+    responsible for loading/building data and putting it into the asset.
+
+    # ru
+    Базовый доменный актив.
+    От него наследуются Share, Future, Bond, Option...
+
+    BaseAsset хранит идентификатор инструмента и загруженную market data.
+    Он сам не загружает, не строит, не скачивает и не сохраняет данные.
+    Сервисы отвечают за загрузку/построение данных и кладут их в актив.
+    """
+
     def __init__(self, iid: Iid) -> None:
         self._iid = iid
-
+        self._charts: dict[TimeFrame, Chart] = {}
         self._ticks: list[Tick] = []
-
         self._time_footprints: dict[TimeFrame, TimeFootprint] = {}
         self._tick_footprints: dict[int, TickFootprint] = {}
         self._volume_footprints: dict[int, VolumeFootprint] = {}
@@ -79,6 +94,12 @@ class BaseAsset(ABC):
     def step(self) -> float:
         return self._iid.step
 
+    def chart(self, tf: TimeFrame) -> Chart:
+        if tf not in self._charts:
+            raise DataUnavailableError(f"Chart {tf} is unavailable")
+
+        return self._charts[tf]
+
     def ticks(self) -> list[Tick]:
         if not self._ticks:
             raise DataUnavailableError("Tick data is unavailable")
@@ -115,6 +136,9 @@ class BaseAsset(ABC):
 
         return self._value_footprints[value_per_cluster]
 
+    def has_chart(self, tf: TimeFrame) -> bool:
+        return tf in self._charts
+
     def has_ticks(self) -> bool:
         return bool(self._ticks)
 
@@ -129,6 +153,9 @@ class BaseAsset(ABC):
 
     def has_value_footprint(self, value_per_cluster: float) -> bool:
         return value_per_cluster in self._value_footprints
+
+    def _set_chart(self, chart: Chart) -> None:
+        self._charts[chart.tf] = chart
 
     def _set_ticks(self, ticks: list[Tick]) -> None:
         if not ticks:

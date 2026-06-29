@@ -12,13 +12,10 @@
 [x] покрыть тестами Chart
 [x] сделать докстринг к классу, выработать общий стиль докстрингов АВИН вообще
 [x] зафиксировать формат докстрингов в architecture.adoc
-[ ] Сервисы для chart...?
-    - мне как пользователю нужно создать актив...
-      asset = AssetFactory("MOEX_SHARE_SBER")
-    - дальше я хочу загрузить график "1M" например?
-      ???
-    - дальше я хочу уже взаимодействовать с графиком...
-      chart = asset.chart(TimeFrame.M1)
+[x] Asset -> BaseAsset
+[x] update BaseAsset for Chart + new pytest
+[x] Сервисы для chart... обсудили
+[ ] Asset.new(...) - factory entry point
 
 
 
