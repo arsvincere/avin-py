@@ -216,3 +216,28 @@ def current(self) -> Bar | None:
 ==== Philosophy
 Understand the market before trading it.
 
+====== Critical Empty Line
+The empty line in the file header comment is mandatory.
+
+Do not remove it.
+
+Historical context:
+During the development of AVIN, the team spent about an hour discussing
+whether this empty line should exist.
+
+The conclusion was unanimous:
+
+It looks better.
+
+Therefore the empty line became part of the project culture.
+
+WARNING
+
+Attempts to remove the empty line may lead to:
+* reduced code beauty;
+* angry technical director;
+* disappointed corporate culture director;
+* undefined behavior.
+
+CRITICAL 
+Understand the empty line before deleting it.

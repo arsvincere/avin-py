@@ -1,0 +1,3 @@
+2. GitHub Actions CI
+4. pre-commit а force есть?
+3. direnv?

@@ -4,6 +4,7 @@
 #
 #  https://avin.info
 # ────────────────────────────────────────────────────────────────────────────
+#  CREATED: 2023.07.23 15:06
 
 from avin.domain.asset import AssetList, Share
 from avin.domain.common import Direction, PriceRange, TimeFrame
