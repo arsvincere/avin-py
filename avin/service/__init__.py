@@ -6,14 +6,14 @@
 # ────────────────────────────────────────────────────────────────────────────
 
 from .asset.ensurer import AssetEnsurer
-from .asset.factory import AssetFactory
+from .asset.factory import Asset
 from .asset.list_manager import AssetListManager
 from .asset.loader import AssetLoader
 from .footprint.builder import FootprintBuilder
 
 __all__ = (
     "AssetEnsurer",
-    "AssetFactory",
+    "Asset",
     "AssetListManager",
     "AssetLoader",
     "FootprintBuilder",

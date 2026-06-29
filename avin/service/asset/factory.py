@@ -5,44 +5,64 @@
 #  https://avin.info
 # ────────────────────────────────────────────────────────────────────────────
 
-from functools import cache
-
-import polars as pl
-
 from avin.domain.asset.future import Future
 from avin.domain.asset.share import Share
 from avin.domain.data.source import Source
 from avin.domain.instrument.category import Category
-from avin.domain.instrument.code import parse_code
-from avin.domain.instrument.exchange import Exchange
 from avin.domain.instrument.iid import Iid
-from avin.errors.exceptions import InstrumentNotFoundError
 from avin.storage.iid_storage import IidStorage
 
 
-class AssetFactory:
-    @classmethod
-    @cache
-    def new(cls, code: str) -> Share | Future:
-        e, c, t = parse_code(code)
-        if e is not Exchange.MOEX:
-            raise NotImplementedError("TODO")
-        if c is not Category.SHARE:
-            raise NotImplementedError("TODO")
+class Asset:
+    """
+    Public typed asset factory.
 
-        shares = _cached_load_shares()
+    Asset creates concrete domain assets by instrument code or Iid.
+    It does not load market data.
 
-        row = shares.filter(pl.col("ticker") == t)
+    # ru
+    Публичная типизированная фабрика активов.
 
-        if row.is_empty():
-            raise InstrumentNotFoundError(f"{t} ({code})")
+    Asset создаёт конкретные доменные активы по коду инструмента или Iid.
+    Она не загружает market data.
+    """
 
-        iid = Iid.from_df(row)
-        share = Share(iid)
+    @staticmethod
+    def share(
+        value: str | Iid,
+        source: Source = Source.TINKOFF,
+    ) -> Share:
+        iid = _iid(value, source)
+        _ensure_category(iid, Category.SHARE)
 
-        return share
+        return Share(iid)
+
+    @staticmethod
+    def future(
+        value: str | Iid,
+        source: Source = Source.TINKOFF,
+    ) -> Future:
+        iid = _iid(value, source)
+        _ensure_category(iid, Category.FUTURE)
+
+        return Future(iid)
 
 
-@cache
-def _cached_load_shares() -> pl.DataFrame:
-    return IidStorage.load(Source.TINKOFF, Category.SHARE)
+def _iid(
+    value: str | Iid,
+    source: Source,
+) -> Iid:
+    if isinstance(value, Iid):
+        return value
+
+    return IidStorage.find_code(value, source)
+
+
+def _ensure_category(
+    iid: Iid,
+    expected: Category,
+) -> None:
+    if iid.category is not expected:
+        raise ValueError(
+            f"Expected {expected} asset, got {iid.category}: {iid.code}"
+        )

@@ -5,151 +5,212 @@
 #  https://avin.info
 # ────────────────────────────────────────────────────────────────────────────
 
-import avin.service.asset.factory as factory_module
-import polars as pl
 import pytest
+from avin.domain.asset.future import Future
 from avin.domain.asset.share import Share
+from avin.domain.data.source import Source
 from avin.domain.instrument.category import Category
-from avin.domain.instrument.exchange import Exchange
-from avin.errors import InstrumentNotFoundError
-from avin.service.asset.factory import AssetFactory
+from avin.domain.instrument.iid import Iid
+from avin.service.asset.factory import Asset
+from avin.storage.iid_storage import IidStorage
 
 # ────────────────────────────────────────────────────────────────────────────
 # Helpers
 # ────────────────────────────────────────────────────────────────────────────
 
 
-def shares_df() -> pl.DataFrame:
-    return pl.DataFrame(
+def iid(
+    category: Category,
+    ticker: str,
+    figi: str,
+    name: str,
+) -> Iid:
+    return Iid(
         {
-            "exchange": ["MOEX", "MOEX"],
-            "category": ["SHARE", "SHARE"],
-            "ticker": ["SBER", "GAZP"],
-            "figi": ["figi_sber", "figi_gazp"],
-            "name": ["Sber", "Gazprom"],
-            "lot": ["10", "10"],
-            "step": ["0.01", "0.01"],
+            "exchange": "MOEX",
+            "category": category.name,
+            "ticker": ticker,
+            "figi": figi,
+            "name": name,
+            "lot": "10",
+            "step": "0.01",
         }
     )
 
 
-def set_cached_load_shares(df: pl.DataFrame):
-    original = factory_module._cached_load_shares
-
-    def fake_cached_load_shares() -> pl.DataFrame:
-        return df
-
-    factory_module._cached_load_shares = fake_cached_load_shares
-    AssetFactory.new.cache_clear()
-
-    return original
+def share_iid() -> Iid:
+    return iid(
+        category=Category.SHARE,
+        ticker="SBER",
+        figi="figi_sber",
+        name="Sber",
+    )
 
 
-def restore_cached_load_shares(original) -> None:
-    factory_module._cached_load_shares = original
-    AssetFactory.new.cache_clear()
-
-
-# ────────────────────────────────────────────────────────────────────────────
-# New
-# ────────────────────────────────────────────────────────────────────────────
-
-
-def test_new_returns_share():
-    original = set_cached_load_shares(shares_df())
-
-    try:
-        asset = AssetFactory.new("MOEX_SHARE_SBER")
-
-        assert isinstance(asset, Share)
-        assert asset.code == "MOEX_SHARE_SBER"
-        assert asset.exchange == Exchange.MOEX
-        assert asset.category == Category.SHARE
-        assert asset.ticker == "SBER"
-        assert asset.figi == "figi_sber"
-        assert asset.name == "Sber"
-        assert asset.lot == 10
-        assert asset.step == 0.01
-
-    finally:
-        restore_cached_load_shares(original)
-
-
-def test_new_returns_correct_share():
-    original = set_cached_load_shares(shares_df())
-
-    try:
-        asset = AssetFactory.new("MOEX_SHARE_GAZP")
-
-        assert isinstance(asset, Share)
-        assert asset.code == "MOEX_SHARE_GAZP"
-        assert asset.ticker == "GAZP"
-        assert asset.figi == "figi_gazp"
-        assert asset.name == "Gazprom"
-
-    finally:
-        restore_cached_load_shares(original)
-
-
-def test_new_missing_instrument_raises():
-    original = set_cached_load_shares(shares_df())
-
-    try:
-        with pytest.raises(InstrumentNotFoundError):
-            AssetFactory.new("MOEX_SHARE_LKOH")
-
-    finally:
-        restore_cached_load_shares(original)
-
-
-def test_new_unsupported_category_raises():
-    AssetFactory.new.cache_clear()
-
-    with pytest.raises(NotImplementedError):
-        AssetFactory.new("MOEX_FUTURE_SiZ5")
-
-    AssetFactory.new.cache_clear()
+def future_iid() -> Iid:
+    return iid(
+        category=Category.FUTURE,
+        ticker="SiZ5",
+        figi="figi_siz5",
+        name="Si future",
+    )
 
 
 # ────────────────────────────────────────────────────────────────────────────
-# Cache
+# Share
 # ────────────────────────────────────────────────────────────────────────────
 
 
-def test_new_is_cached():
-    calls = 0
-    df = shares_df()
-    original = factory_module._cached_load_shares
+def test_share_from_code_returns_share(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[tuple[str, Source]] = []
 
-    def fake_cached_load_shares() -> pl.DataFrame:
-        nonlocal calls
-        calls += 1
-        return df
+    def fake_find_code(code: str, source: Source) -> Iid:
+        calls.append((code, source))
+        return share_iid()
 
-    factory_module._cached_load_shares = fake_cached_load_shares
-    AssetFactory.new.cache_clear()
+    monkeypatch.setattr(IidStorage, "find_code", fake_find_code)
 
-    try:
-        first = AssetFactory.new("MOEX_SHARE_SBER")
-        second = AssetFactory.new("MOEX_SHARE_SBER")
+    asset = Asset.share("MOEX_SHARE_SBER")
 
-        assert first is second
-        assert calls == 1
-
-    finally:
-        restore_cached_load_shares(original)
+    assert isinstance(asset, Share)
+    assert asset.code == "MOEX_SHARE_SBER"
+    assert asset.ticker == "SBER"
+    assert asset.figi == "figi_sber"
+    assert asset.name == "Sber"
+    assert calls == [("MOEX_SHARE_SBER", Source.TINKOFF)]
 
 
-def test_new_cache_is_separated_by_code():
-    original = set_cached_load_shares(shares_df())
+def test_share_from_code_uses_custom_source(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[tuple[str, Source]] = []
 
-    try:
-        sber = AssetFactory.new("MOEX_SHARE_SBER")
-        gazp = AssetFactory.new("MOEX_SHARE_GAZP")
+    def fake_find_code(code: str, source: Source) -> Iid:
+        calls.append((code, source))
+        return share_iid()
 
-        assert sber is not gazp
-        assert sber.ticker == "SBER"
-        assert gazp.ticker == "GAZP"
+    monkeypatch.setattr(IidStorage, "find_code", fake_find_code)
 
-    finally:
-        restore_cached_load_shares(original)
+    Asset.share("MOEX_SHARE_SBER", Source.MOEXALGO)
+
+    assert calls == [("MOEX_SHARE_SBER", Source.MOEXALGO)]
+
+
+def test_share_from_iid_returns_share(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_find_code(code: str, source: Source) -> Iid:
+        pytest.fail("IidStorage.find_code should not be called for Iid input")
+
+    monkeypatch.setattr(IidStorage, "find_code", fake_find_code)
+
+    source_iid = share_iid()
+
+    asset = Asset.share(source_iid)
+
+    assert isinstance(asset, Share)
+    assert asset.iid is source_iid
+    assert asset.code == "MOEX_SHARE_SBER"
+
+
+def test_share_rejects_future_iid() -> None:
+    with pytest.raises(
+        ValueError,
+        match="Expected SHARE asset, got FUTURE: MOEX_FUTURE_SiZ5",
+    ):
+        Asset.share(future_iid())
+
+
+def test_share_rejects_future_code(monkeypatch: pytest.MonkeyPatch) -> None:
+    def fake_find_code(code: str, source: Source) -> Iid:
+        return future_iid()
+
+    monkeypatch.setattr(IidStorage, "find_code", fake_find_code)
+
+    with pytest.raises(
+        ValueError,
+        match="Expected SHARE asset, got FUTURE: MOEX_FUTURE_SiZ5",
+    ):
+        Asset.share("MOEX_FUTURE_SiZ5")
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# Future
+# ────────────────────────────────────────────────────────────────────────────
+
+
+def test_future_from_code_returns_future(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[tuple[str, Source]] = []
+
+    def fake_find_code(code: str, source: Source) -> Iid:
+        calls.append((code, source))
+        return future_iid()
+
+    monkeypatch.setattr(IidStorage, "find_code", fake_find_code)
+
+    asset = Asset.future("MOEX_FUTURE_SiZ5")
+
+    assert isinstance(asset, Future)
+    assert asset.code == "MOEX_FUTURE_SiZ5"
+    assert asset.ticker == "SiZ5"
+    assert asset.figi == "figi_siz5"
+    assert asset.name == "Si future"
+    assert calls == [("MOEX_FUTURE_SiZ5", Source.TINKOFF)]
+
+
+def test_future_from_code_uses_custom_source(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[tuple[str, Source]] = []
+
+    def fake_find_code(code: str, source: Source) -> Iid:
+        calls.append((code, source))
+        return future_iid()
+
+    monkeypatch.setattr(IidStorage, "find_code", fake_find_code)
+
+    Asset.future("MOEX_FUTURE_SiZ5", Source.MOEXALGO)
+
+    assert calls == [("MOEX_FUTURE_SiZ5", Source.MOEXALGO)]
+
+
+def test_future_from_iid_returns_future(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_find_code(code: str, source: Source) -> Iid:
+        pytest.fail("IidStorage.find_code should not be called for Iid input")
+
+    monkeypatch.setattr(IidStorage, "find_code", fake_find_code)
+
+    source_iid = future_iid()
+
+    asset = Asset.future(source_iid)
+
+    assert isinstance(asset, Future)
+    assert asset.iid is source_iid
+    assert asset.code == "MOEX_FUTURE_SiZ5"
+
+
+def test_future_rejects_share_iid() -> None:
+    with pytest.raises(
+        ValueError,
+        match="Expected FUTURE asset, got SHARE: MOEX_SHARE_SBER",
+    ):
+        Asset.future(share_iid())
+
+
+def test_future_rejects_share_code(monkeypatch: pytest.MonkeyPatch) -> None:
+    def fake_find_code(code: str, source: Source) -> Iid:
+        return share_iid()
+
+    monkeypatch.setattr(IidStorage, "find_code", fake_find_code)
+
+    with pytest.raises(
+        ValueError,
+        match="Expected FUTURE asset, got SHARE: MOEX_SHARE_SBER",
+    ):
+        Asset.future("MOEX_SHARE_SBER")

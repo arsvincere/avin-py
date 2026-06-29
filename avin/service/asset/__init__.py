@@ -6,13 +6,13 @@
 # ────────────────────────────────────────────────────────────────────────────
 
 from .ensurer import AssetEnsurer
-from .factory import AssetFactory
+from .factory import Asset
 from .list_manager import AssetListManager
 from .loader import AssetLoader
 
 __all__ = (
     "AssetEnsurer",
-    "AssetFactory",
+    "Asset",
     "AssetListManager",
     "AssetLoader",
 )
