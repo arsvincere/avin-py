@@ -13,10 +13,11 @@ from avin.domain.footprint.tick_footprint import TickFootprint
 from avin.domain.footprint.time_footprint import TimeFootprint
 from avin.domain.footprint.value_footprint import ValueFootprint
 from avin.domain.footprint.volume_footprint import VolumeFootprint
-from avin.domain.raw.order_book import OrderBook
 from avin.domain.raw.tick import Tick
+from avin.storage.bar_storage import BarStorage
+from avin.storage.codec import StorageCodec
 from avin.system.conf import cfg
-from avin.utils.dt import DateTime, dt_to_ts
+from avin.utils.dt import DateTime, dt_to_ts, ts_to_dt
 
 
 class Loader:
@@ -41,7 +42,15 @@ class Loader:
         # ru
         Загрузить график по умолчанию.
         """
-        raise NotImplementedError
+        source = _source(source)
+        bars_count = _bars_count(bars_count)
+
+        if not force and asset.has_chart(tf):
+            chart = asset.chart(tf)
+            if len(chart) >= bars_count:
+                return chart
+
+        return _load_chart(asset, tf, source, bars_count)
 
     @staticmethod
     def chart_period(
@@ -87,36 +96,6 @@ class Loader:
 
         # ru
         Загрузить ticks за период [begin, end).
-        """
-        raise NotImplementedError
-
-    @staticmethod
-    def order_book(
-        asset: BaseAsset,
-        source: Source | None = None,
-        force: bool = False,
-    ) -> OrderBook:
-        """
-        Load default order book.
-
-        # ru
-        Загрузить order book по умолчанию.
-        """
-        raise NotImplementedError
-
-    @staticmethod
-    def order_book_period(
-        asset: BaseAsset,
-        begin: DateTime,
-        end: DateTime,
-        source: Source | None = None,
-        force: bool = False,
-    ) -> OrderBook:
-        """
-        Load order book for [begin, end) period.
-
-        # ru
-        Загрузить order book за период [begin, end).
         """
         raise NotImplementedError
 
@@ -253,6 +232,31 @@ def _source(source: Source | None) -> Source:
     return source or cfg.default_source
 
 
+def _bars_count(bars_count: int | None) -> int:
+    count = cfg.default_bars_count if bars_count is None else bars_count
+
+    if count <= 0:
+        raise ValueError("bars_count must be positive")
+
+    return count
+
+
+def _load_chart(
+    asset: BaseAsset,
+    tf: TimeFrame,
+    source: Source,
+    bars_count: int,
+) -> Chart:
+    md = tf.to_market_data()
+    last_df = BarStorage.load_last(asset.iid, source, md)
+    last_ts = last_df.item(-1, "ts")
+
+    end = ts_to_dt(tf.end_frame_ts(last_ts))
+    begin = end - tf.timedelta * bars_count
+
+    return _load_chart_period(asset, tf, begin, end, source)
+
+
 def _chart_for_period(
     asset: BaseAsset,
     tf: TimeFrame,
@@ -276,7 +280,14 @@ def _load_chart_period(
     end: DateTime,
     source: Source,
 ) -> Chart:
-    raise NotImplementedError
+    md = tf.to_market_data()
+    df = BarStorage.load_range(asset.iid, source, md, begin, end)
+    bars = StorageCodec.bars_from_df(df)
+
+    chart = Chart(asset.iid, tf, bars)
+    asset._set_chart(chart)
+
+    return chart
 
 
 def _chart_naively_covers(
@@ -288,8 +299,8 @@ def _chart_naively_covers(
     Naive coverage check for current Loader stage.
 
     This check looks only at existing bar timestamps. It may return False
-    for valid exchange-session gaps, weekends, clearing breaks or early closes.
-    In that case Loader reloads chart "just in case".
+    for valid exchange-session gaps, weekends, clearing breaks or early
+    closes. In that case Loader reloads chart "just in case".
 
     Strict coverage should later use loaded range metadata, not first/current
     bar timestamps.

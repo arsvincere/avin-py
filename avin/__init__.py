@@ -10,6 +10,7 @@ from avin.domain.common import Direction, PriceRange, TimeFrame
 from avin.domain.data import MarketData, Source
 from avin.domain.instrument import Category, Exchange
 from avin.service.asset import Asset
+from avin.service.loader import Loader
 
 __all__ = (
     "Asset",
@@ -17,6 +18,7 @@ __all__ = (
     "Category",
     "Direction",
     "Exchange",
+    "Loader",
     "MarketData",
     "PriceRange",
     "Share",
