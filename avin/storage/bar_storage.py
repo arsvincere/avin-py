@@ -67,6 +67,12 @@ class BarStorage:
         return Cmd.read_pqt(path)
 
     @classmethod
+    def load_latest_bars(
+        cls, iid: Iid, source: Source, md: MarketData, count: int
+    ) -> pl.DataFrame:
+        raise NotImplementedError()
+
+    @classmethod
     def load_latest_file(
         cls,
         iid: Iid,

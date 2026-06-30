@@ -1,0 +1,10 @@
+[source.tinkoff]
+market_data = ["BAR_1M", "TICK"]
+[[source.tinkoff.groups]]
+exchange = "MOEX"
+category = "SHARE"
+tickers = ["SBER", "GAZP", "LKOH"]
+[[source.tinkoff.groups]]
+exchange = "MOEX"
+category = "FUTURE"
+tickers = ["USDRUBF", "GLDRUBF", "IMOEXF"]

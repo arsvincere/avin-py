@@ -47,16 +47,16 @@ bench/results/*.csv
 
 # Project-local temporary folders
 /bak/
+/gpt/
 /log/
 /tmp/
 /usr/
 
 # Project-local temporary files
-/.bak
 /*.tmp
-/tmp.*
+/*.bak
 /tmp
-/avin.zip
+/tmp.*
 
 # Scratch numbered files in project root
 /1.*
@@ -64,3 +64,7 @@ bench/results/*.csv
 /3.*
 /4.*
 /5.*
+
+# Project-local archive
+/avin.zip
+

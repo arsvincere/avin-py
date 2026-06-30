@@ -15,8 +15,9 @@ license-files = ["LICENSE"]
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
 dependencies = [
-    "polars[rtcompat]",
     "PyQt6==6.11.0",
+    "click>=8.1,<9",
+    "polars[rtcompat]",
     "requests",
     "tomli-w",
 ]
@@ -26,6 +27,7 @@ Homepage = "http://avin.info"
 Repository = "https://github.com/arsvincere/avin-prototype"
 
 [project.scripts]
+avin = "avin.cli.main:main"
 avin-gui = "avin.gui.app:run"
 
 [project.optional-dependencies]
