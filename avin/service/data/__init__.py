@@ -5,6 +5,6 @@
 #  https://avin.info
 # ────────────────────────────────────────────────────────────────────────────
 
-from .updater import DataUpdater
+from .syncer import DataSyncer
 
-__all__ = ("DataUpdater",)
+__all__ = ("DataSyncer",)

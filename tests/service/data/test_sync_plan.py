@@ -10,7 +10,7 @@ from __future__ import annotations
 from avin.domain.data.market_data import MarketData
 from avin.domain.data.source import Source
 from avin.domain.instrument.iid import Iid
-from avin.service.data.update_plan import DataUpdatePlan
+from avin.service.data.sync_plan import DataSyncPlan
 from avin.storage.iid_storage import IidStorage
 from avin.system.data_manifest import (
     DataManifest,
@@ -19,7 +19,7 @@ from avin.system.data_manifest import (
 )
 
 
-def test_data_update_plan_from_manifest(monkeypatch) -> None:
+def test_data_sync_plan_from_manifest(monkeypatch) -> None:
     calls: list[tuple[str, Source]] = []
 
     def fake_find_code(cls, code: str, source: Source) -> Iid:
@@ -67,7 +67,7 @@ def test_data_update_plan_from_manifest(monkeypatch) -> None:
         ),
     )
 
-    plan = DataUpdatePlan.from_manifest(manifest)
+    plan = DataSyncPlan.from_manifest(manifest)
 
     assert not plan.is_empty
     assert len(plan.tasks) == 6
@@ -123,10 +123,10 @@ def test_data_update_plan_from_manifest(monkeypatch) -> None:
     ]
 
 
-def test_data_update_plan_empty_manifest() -> None:
+def test_data_sync_plan_empty_manifest() -> None:
     manifest = DataManifest(sources=())
 
-    plan = DataUpdatePlan.from_manifest(manifest)
+    plan = DataSyncPlan.from_manifest(manifest)
 
     assert plan.is_empty
     assert plan.tasks == ()

@@ -17,7 +17,7 @@ from avin.system.data_manifest import DataManifest
 
 
 @dataclass(frozen=True, slots=True)
-class DataUpdateTask:
+class DataSyncTask:
     iid: Iid
     source: Source
     market_data: MarketData
@@ -25,12 +25,12 @@ class DataUpdateTask:
 
 
 @dataclass(frozen=True, slots=True)
-class DataUpdatePlan:
-    tasks: tuple[DataUpdateTask, ...]
+class DataSyncPlan:
+    tasks: tuple[DataSyncTask, ...]
 
     @classmethod
-    def from_manifest(cls, manifest: DataManifest) -> DataUpdatePlan:
-        tasks: list[DataUpdateTask] = []
+    def from_manifest(cls, manifest: DataManifest) -> DataSyncPlan:
+        tasks: list[DataSyncTask] = []
 
         for manifest_source in manifest.sources:
             tasks.extend(_build_source_tasks(manifest_source))
@@ -42,8 +42,8 @@ class DataUpdatePlan:
         return not self.tasks
 
 
-def _build_source_tasks(manifest_source) -> list[DataUpdateTask]:
-    tasks: list[DataUpdateTask] = []
+def _build_source_tasks(manifest_source) -> list[DataSyncTask]:
+    tasks: list[DataSyncTask] = []
 
     for group in manifest_source.groups:
         tasks.extend(
@@ -63,15 +63,15 @@ def _build_group_tasks(
     market_data: tuple[MarketData, ...],
     group: str,
     codes: tuple[str, ...],
-) -> list[DataUpdateTask]:
-    tasks: list[DataUpdateTask] = []
+) -> list[DataSyncTask]:
+    tasks: list[DataSyncTask] = []
 
     for code in codes:
         iid = IidStorage.find_code(code, source)
 
         for md in market_data:
             tasks.append(
-                DataUpdateTask(
+                DataSyncTask(
                     iid=iid,
                     source=source,
                     market_data=md,
