@@ -5,12 +5,12 @@
 #  https://avin.info
 # ────────────────────────────────────────────────────────────────────────────
 
+from avin.api.data import Data
 from avin.domain.asset.base_asset import BaseAsset
 from avin.domain.common.timeframe import TimeFrame
 from avin.domain.data.market_data import MarketData
 from avin.domain.data.source import Source
 from avin.storage.codec import StorageCodec
-from avin.storage.data_manager import DataManager
 from avin.utils.dt import DateTime
 
 
@@ -22,7 +22,7 @@ class AssetLoader:
         begin: DateTime,
         end: DateTime,
     ) -> None:
-        df = DataManager.load(
+        df = Data.load(
             asset.code,
             source,
             MarketData.TICK,

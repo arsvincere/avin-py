@@ -6,12 +6,12 @@
 # ────────────────────────────────────────────────────────────────────────────
 
 import pytest
+from avin.api.asset import Asset
 from avin.domain.asset.future import Future
 from avin.domain.asset.share import Share
 from avin.domain.data.source import Source
 from avin.domain.instrument.category import Category
 from avin.domain.instrument.iid import Iid
-from avin.service.asset.factory import Asset
 from avin.storage.iid_storage import IidStorage
 
 # ────────────────────────────────────────────────────────────────────────────

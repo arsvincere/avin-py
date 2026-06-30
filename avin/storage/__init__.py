@@ -6,13 +6,11 @@
 # ────────────────────────────────────────────────────────────────────────────
 
 from .bar_storage import BarStorage
-from .data_manager import DataManager
 from .iid_storage import IidStorage
 from .tick_storage import TickStorage
 
 __all__ = (
     "BarStorage",
-    "DataManager",
     "IidStorage",
     "TickStorage",
 )

@@ -6,10 +6,10 @@
 # ────────────────────────────────────────────────────────────────────────────
 
 import pytest
+from avin.api.data import Data
 from avin.domain.data.market_data import MarketData
 from avin.domain.data.source import Source
 from avin.errors.exceptions import DataNotFoundError
-from avin.storage.data_manager import DataManager
 from avin.storage.iid_storage import IidStorage
 from avin.storage.tinkoff.tic_downloader import TinkoffTicDownloader
 from avin.utils.alias import (
@@ -32,11 +32,11 @@ def test_download_tic_tinkoff_year():
     md = MarketData.TICK
     year = 2026
 
-    DataManager.download(code, source, md, year)
+    Data.download(code, source, md, year)
 
     begin = DateTime(2026, 1, 1, tzinfo=UTC)
     end = DateTime(2026, 1, 5, tzinfo=UTC)
-    df = DataManager.load(code, source, md, begin, end)
+    df = Data.load(code, source, md, begin, end)
 
     assert not df.is_empty()
 
@@ -54,7 +54,7 @@ def test_download_tic_tinkoff_day():
 
     begin = DateTime.combine(yesterday, Time(0, 0), tzinfo=UTC)
     end = now_utc()
-    df = DataManager.load(code, source, md, begin, end)
+    df = Data.load(code, source, md, begin, end)
 
     assert not df.is_empty()
 
@@ -65,13 +65,13 @@ def test_update_tinkoff_tic():
     source = Source.TINKOFF
     md = MarketData.TICK
 
-    DataManager.update(code, source, md)
+    Data.update(code, source, md)
 
     begin = DateTime.combine(
         Date.today() - TimeDelta(weeks=1), Time(0, 0), tzinfo=UTC
     )
     end = now_utc()
-    df = DataManager.load(code, source, md, begin, end)
+    df = Data.load(code, source, md, begin, end)
     last_dt = ts_to_dt(df.item(-1, "ts"))
 
     assert end - last_dt < TimeDelta(days=1)
@@ -83,12 +83,12 @@ def test_delete_tinkoff_tic():
     source = Source.TINKOFF
     md = MarketData.TICK
 
-    DataManager.delete(code, source, md)
+    Data.delete(code, source, md)
 
     begin = DateTime.min.replace(tzinfo=UTC)
     end = now_utc()
     with pytest.raises(DataNotFoundError):
-        DataManager.load(
+        Data.load(
             code,
             source,
             md,
@@ -103,5 +103,5 @@ def test_delete_tinkoff_bar_idempotent():
     source = Source.TINKOFF
     md = MarketData.BAR_1M
 
-    DataManager.delete(code, source, md)
-    DataManager.delete(code, source, md)
+    Data.delete(code, source, md)
+    Data.delete(code, source, md)

@@ -7,6 +7,7 @@
 
 import polars as pl
 import pytest
+from avin.api.data import Data
 from avin.domain.asset.share import Share
 from avin.domain.common.direction import Direction
 from avin.domain.common.timeframe import TimeFrame
@@ -16,7 +17,6 @@ from avin.domain.instrument.iid import Iid
 from avin.domain.raw.tick import Tick
 from avin.service.asset.loader import AssetLoader
 from avin.storage.codec import StorageCodec
-from avin.storage.data_manager import DataManager
 from avin.utils.dt import DateTime
 
 
@@ -79,7 +79,7 @@ def test_load_ticks_loads_tick_data_into_asset(
         codec_calls.append(df_)
         return ticks
 
-    monkeypatch.setattr(DataManager, "load", fake_load)
+    monkeypatch.setattr(Data, "load", fake_load)
     monkeypatch.setattr(StorageCodec, "ticks_from_df", fake_ticks_from_df)
 
     AssetLoader.load_ticks(asset, Source.TINKOFF, begin, end)
@@ -139,7 +139,7 @@ def test_load_ticks_replaces_existing_ticks(
     def fake_ticks_from_df(df_: pl.DataFrame) -> list[Tick]:
         return new_ticks
 
-    monkeypatch.setattr(DataManager, "load", fake_load)
+    monkeypatch.setattr(Data, "load", fake_load)
     monkeypatch.setattr(StorageCodec, "ticks_from_df", fake_ticks_from_df)
 
     AssetLoader.load_ticks(asset, Source.TINKOFF, begin, end)

@@ -20,7 +20,7 @@ from avin.storage.tinkoff.source_tinkoff import SourceTinkoff
 from avin.utils.dt import Date, DateTime, TimeDelta, ts_to_dt
 
 
-class DataManager:
+class Data:
     @classmethod
     def cache(
         cls,
