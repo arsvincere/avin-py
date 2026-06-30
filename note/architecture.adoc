@@ -113,6 +113,24 @@ Manager
 
 2. Для мягкого optional-доступа используется find_*.
 
+== Ranges
+Диапазоны:
+begin/end = [begin, end)
+from/till = [from, till]
+start/finish = [start, finish]
+
+== DateTime, Timespamp
+Alias:
+from datetime import UTC
+from datetime import date as Date
+from datetime import datetime as DateTime
+from datetime import time as Time
+from datetime import timedelta as TimeDelta
+from datetime import timezone as TimeZone
+
+В публичном api иногда используется DateTime UTC для удобства.
+Главная единица измерения времени timestamps в nanos.
+
 == Exceptions
 Суффикс Error. Использовать его для всех пользовательских исключений проекта.
 
