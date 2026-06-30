@@ -26,16 +26,16 @@ class Chart:
     - bars are ordered by increasing ts;
     - bars have unique ts;
     - every Bar.ts is the beginning timestamp of its timeframe frame;
+    - first == chart[0] when chart is not empty;
     - current == chart[-1] when chart is not empty;
-    - last == chart[-2] when chart has at least 2 bars;
-    - first == chart[0] when chart is not empty.
+    - last == chart[-2] when chart has at least 2 bars.
 
     Constructor accepts trusted bars. Historical validation belongs to
     storage/service, not to Chart.
 
     Chart does not know about Asset, Source, Storage, DataFrame, Broker, GUI.
 
-    # ru
+    -- ru
     Мутабельный свечной график одного инструмента и одного таймфрейма.
 
     Chart хранит бары, упорядоченные по timestamp. Последний бар в списке —
@@ -47,9 +47,9 @@ class Chart:
     - бары упорядочены по возрастанию ts;
     - бары имеют уникальный ts;
     - каждый Bar.ts — timestamp начала frame своего таймфрейма;
-    - current == chart[-1];
-    - last == chart[-2];
-    - first == chart[0].
+    - first == chart[0], если chart не пустой;
+    - current == chart[-1], если chart не пустой;
+    - last == chart[-2], если в chart есть минимум 2 бара.
 
     Конструктор принимает trusted bars. Проверка исторических данных —
     ответственность storage/service, а не Chart.
@@ -101,7 +101,7 @@ class Chart:
         Do not mutate the list directly; it may break Chart invariants.
         Use Chart methods to change chart state.
 
-        # ru
+        -- ru
         Возвращает внутренний список баров для быстрого доступа
         из domain/gui/analyse кода.
 
@@ -153,7 +153,7 @@ class Chart:
 
         Returns a new list slice.
 
-        # ru
+        -- ru
         Возвращает бары в закрытом интервале [from_ts, till_ts].
 
         Возвращает новый list-срез.
@@ -170,7 +170,7 @@ class Chart:
         """
         Insert or replace bar by timestamp.
 
-        # ru
+        -- ru
         Вставляет бар в график или заменяет существующий бар
         с таким же timestamp.
         """

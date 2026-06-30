@@ -28,7 +28,7 @@ class BaseAsset:
     It does not load, build, download or save data by itself. Services are
     responsible for loading/building data and putting it into the asset.
 
-    # ru
+    -- ru
     Базовый доменный актив.
     От него наследуются Share, Future, Bond, Option...
 

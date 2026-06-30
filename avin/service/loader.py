@@ -24,7 +24,7 @@ class Loader:
     """
     Public market-data loader.
 
-    # ru
+    -- ru
     Публичный загрузчик market data.
     """
 
@@ -39,7 +39,7 @@ class Loader:
         """
         Load default chart.
 
-        # ru
+        -- ru
         Загрузить график по умолчанию.
         """
         source = _source(source)
@@ -64,7 +64,7 @@ class Loader:
         """
         Load chart for [begin, end) period.
 
-        # ru
+        -- ru
         Загрузить график за период [begin, end).
         """
         raise NotImplementedError
@@ -78,7 +78,7 @@ class Loader:
         """
         Load default ticks.
 
-        # ru
+        -- ru
         Загрузить ticks по умолчанию.
         """
         raise NotImplementedError
@@ -94,7 +94,7 @@ class Loader:
         """
         Load ticks for [begin, end) period.
 
-        # ru
+        -- ru
         Загрузить ticks за период [begin, end).
         """
         raise NotImplementedError
@@ -109,7 +109,7 @@ class Loader:
         """
         Load default time footprint.
 
-        # ru
+        -- ru
         Загрузить time footprint по умолчанию.
         """
         raise NotImplementedError
@@ -126,7 +126,7 @@ class Loader:
         """
         Load time footprint for [begin, end) period.
 
-        # ru
+        -- ru
         Загрузить time footprint за период [begin, end).
         """
         raise NotImplementedError
@@ -141,7 +141,7 @@ class Loader:
         """
         Load default tick footprint.
 
-        # ru
+        -- ru
         Загрузить tick footprint по умолчанию.
         """
         raise NotImplementedError
@@ -158,7 +158,7 @@ class Loader:
         """
         Load tick footprint for [begin, end) period.
 
-        # ru
+        -- ru
         Загрузить tick footprint за период [begin, end).
         """
         raise NotImplementedError
@@ -173,7 +173,7 @@ class Loader:
         """
         Load default volume footprint.
 
-        # ru
+        -- ru
         Загрузить volume footprint по умолчанию.
         """
         raise NotImplementedError
@@ -190,7 +190,7 @@ class Loader:
         """
         Load volume footprint for [begin, end) period.
 
-        # ru
+        -- ru
         Загрузить volume footprint за период [begin, end).
         """
         raise NotImplementedError
@@ -205,7 +205,7 @@ class Loader:
         """
         Load default value footprint.
 
-        # ru
+        -- ru
         Загрузить value footprint по умолчанию.
         """
         raise NotImplementedError
@@ -222,7 +222,7 @@ class Loader:
         """
         Load value footprint for [begin, end) period.
 
-        # ru
+        -- ru
         Загрузить value footprint за период [begin, end).
         """
         raise NotImplementedError
@@ -305,7 +305,7 @@ def _chart_naively_covers(
     Strict coverage should later use loaded range metadata, not first/current
     bar timestamps.
 
-    # ru
+    -- ru
     Наивная проверка покрытия для текущей стадии Loader.
 
     Проверка смотрит только на timestamp-ы существующих баров. Она может

@@ -172,7 +172,7 @@ Docstrings are not required for:
 If a docstring is written, it must be bilingual:
 * English first;
 * empty line;
-* `# ru`;
+* `-- ru`;
 * Russian version.
 
 Important rule: AVIN does not require 100% docstring coverage.
@@ -188,7 +188,7 @@ def upsert(self, bar: Bar) -> None:
     """
     Insert or replace bar by timestamp.
 
-    # ru
+    -- ru
     Вставляет бар в график или заменяет существующий бар
     с таким же timestamp.
     """
@@ -199,7 +199,7 @@ def current(self) -> Bar | None:
     """
     Last bar in chart, may be unfinished in realtime.
 
-    # ru
+    -- ru
     Последний бар в графике, в realtime может быть незавершенным.
     """
     ...
@@ -239,5 +239,5 @@ Attempts to remove the empty line may lead to:
 * disappointed corporate culture director;
 * undefined behavior.
 
-CRITICAL 
+CRITICAL
 Understand the empty line before deleting it.

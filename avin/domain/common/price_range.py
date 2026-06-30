@@ -8,7 +8,7 @@
 
 """Closed interval [from, till].
 
-# ru
+-- ru
 Закрытый диапазон [from, till] - используется для представления
 ценового диапазона, и определяет несколько утилитарных методов:
 проверка на вхождение, выразить диапазон в процентах и тп.
@@ -57,7 +57,7 @@ class PriceRange:
     def low(self) -> float:
         """Return low of range.
 
-        # ru
+        -- ru
         Возвращает минимум диапазона.
         """
         if self.start < self.finish:
@@ -69,7 +69,7 @@ class PriceRange:
     def high(self) -> float:
         """Return high of range.
 
-        # ru
+        -- ru
         Возвращает максимум диапазона.
         """
 
@@ -83,7 +83,7 @@ class PriceRange:
         """
         Returns the middle of the range.
 
-        # ru
+        -- ru
         Возвращает середину диапазона.
         """
 
@@ -97,7 +97,7 @@ class PriceRange:
     def abs(self) -> float:
         """Abs of range.
 
-        # ru
+        -- ru
         Модуль диапазона.
         """
 
@@ -107,7 +107,7 @@ class PriceRange:
     def abs_n(self) -> float:
         """Normalized abs of range.
 
-        # ru
+        -- ru
         Нормализованный модуль диапазона.
         """
         mn = self.low
@@ -119,7 +119,7 @@ class PriceRange:
     def abs_p(self) -> float:
         """Abs of range in percent.
 
-        # ru
+        -- ru
         Модуль диапазона в процентах, округляется до 2-х знаков.
         """
 
@@ -134,7 +134,7 @@ class PriceRange:
     def delta(self) -> float:
         """Delta of range (signed).
 
-        # ru
+        -- ru
         Дельта диапазона (знаковая).
         """
 
@@ -144,7 +144,7 @@ class PriceRange:
     def delta_n(self) -> float:
         """Normalized delta of range (signed).
 
-        # ru
+        -- ru
         Нормализованная дельта диапазона (знаковая) - показывает коэффициент
         изменения конечной цены относительно начальной.
         """
@@ -155,7 +155,7 @@ class PriceRange:
     def delta_p(self) -> float:
         """Delta of range in percent.
 
-        # ru
+        -- ru
         Дельта диапазона (знаковая) в процентах - показывает процент
         изменения конечной цены относительно начальной. Округляется до
         2-х знаков.
@@ -168,7 +168,7 @@ class PriceRange:
     def contains(self, value: float) -> bool:
         """Check for value in range.
 
-        # ru
+        -- ru
         Проверка на вхождения в диапазон.
         """
         return self.low <= value and value <= self.high
@@ -176,7 +176,7 @@ class PriceRange:
     def is_increase(self) -> bool:
         """Is range increase.
 
-        # ru
+        -- ru
         Если диапазон возврастающий - true.
         """
         return self.delta > 0.0
@@ -184,7 +184,7 @@ class PriceRange:
     def is_decrease(self) -> bool:
         """Is range decrease.
 
-        # ru
+        -- ru
         Если диапазон убывающий - true.
         """
 

@@ -20,7 +20,7 @@ class Asset:
     Asset creates concrete domain assets by instrument code or Iid.
     It does not load market data.
 
-    # ru
+    -- ru
     Публичная типизированная фабрика активов.
 
     Asset создаёт конкретные доменные активы по коду инструмента или Iid.
