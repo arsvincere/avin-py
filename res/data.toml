@@ -1,9 +1,12 @@
 [source.tinkoff]
 market_data = ["BAR_1M", "TICK"]
+history_years = 5
+
 [[source.tinkoff.groups]]
 exchange = "MOEX"
 category = "SHARE"
 tickers = ["SBER", "GAZP", "LKOH"]
+
 [[source.tinkoff.groups]]
 exchange = "MOEX"
 category = "FUTURE"

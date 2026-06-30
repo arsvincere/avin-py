@@ -19,6 +19,7 @@ def test_data_manifest_from_dict() -> None:
             "source": {
                 "tinkoff": {
                     "market_data": ["BAR_1M", "TICK"],
+                    "history_years": 5,
                     "groups": [
                         {
                             "exchange": "MOEX",
@@ -41,6 +42,7 @@ def test_data_manifest_from_dict() -> None:
     source = manifest.sources[0]
     assert source.source == Source.TINKOFF
     assert source.market_data == (MarketData.BAR_1M, MarketData.TICK)
+    assert source.history_years == 5
     assert len(source.groups) == 2
 
     shares = source.groups[0]
@@ -64,6 +66,7 @@ def test_data_manifest_load(tmp_path) -> None:
         """
 [source.tinkoff]
 market_data = ["BAR_1M", "TICK"]
+history_years = 5
 
 [[source.tinkoff.groups]]
 exchange = "MOEX"
@@ -80,6 +83,7 @@ tickers = ["SBER", "GAZP"]
 
     assert source.source == Source.TINKOFF
     assert source.market_data == (MarketData.BAR_1M, MarketData.TICK)
+    assert source.history_years == 5
     assert group.codes == ("MOEX_SHARE_SBER", "MOEX_SHARE_GAZP")
 
 
@@ -92,6 +96,7 @@ def test_data_manifest_requires_market_data() -> None:
     raw = {
         "source": {
             "tinkoff": {
+                "history_years": 5,
                 "groups": [
                     {
                         "exchange": "MOEX",
@@ -107,11 +112,53 @@ def test_data_manifest_requires_market_data() -> None:
         DataManifest.from_dict(raw)
 
 
+def test_data_manifest_requires_history_years() -> None:
+    raw = {
+        "source": {
+            "tinkoff": {
+                "market_data": ["BAR_1M"],
+                "groups": [
+                    {
+                        "exchange": "MOEX",
+                        "category": "SHARE",
+                        "tickers": ["SBER"],
+                    },
+                ],
+            },
+        },
+    }
+
+    with pytest.raises(ValueError, match="history_years"):
+        DataManifest.from_dict(raw)
+
+
+def test_data_manifest_rejects_invalid_history_years() -> None:
+    raw = {
+        "source": {
+            "tinkoff": {
+                "market_data": ["BAR_1M"],
+                "history_years": 0,
+                "groups": [
+                    {
+                        "exchange": "MOEX",
+                        "category": "SHARE",
+                        "tickers": ["SBER"],
+                    },
+                ],
+            },
+        },
+    }
+
+    with pytest.raises(ValueError, match="history_years"):
+        DataManifest.from_dict(raw)
+
+
 def test_data_manifest_requires_groups() -> None:
     raw = {
         "source": {
             "tinkoff": {
                 "market_data": ["BAR_1M"],
+                "history_years": 5,
             },
         },
     }
@@ -125,6 +172,7 @@ def test_data_manifest_rejects_unknown_source() -> None:
         "source": {
             "unknown": {
                 "market_data": ["BAR_1M"],
+                "history_years": 5,
                 "groups": [
                     {
                         "exchange": "MOEX",
@@ -145,6 +193,7 @@ def test_data_manifest_rejects_unknown_market_data() -> None:
         "source": {
             "tinkoff": {
                 "market_data": ["UNKNOWN"],
+                "history_years": 5,
                 "groups": [
                     {
                         "exchange": "MOEX",
@@ -165,6 +214,7 @@ def test_data_manifest_rejects_empty_tickers() -> None:
         "source": {
             "tinkoff": {
                 "market_data": ["BAR_1M"],
+                "history_years": 5,
                 "groups": [
                     {
                         "exchange": "MOEX",

@@ -34,6 +34,7 @@ class DataManifestSourceGroup:
 class DataManifestSource:
     source: Source
     market_data: tuple[MarketData, ...]
+    history_years: int
     groups: tuple[DataManifestSourceGroup, ...]
 
 
@@ -54,23 +55,28 @@ class DataManifest:
         sources: list[DataManifestSource] = []
 
         for source_name, source_raw in source_root.items():
-            source_data = _as_dict(source_raw, f"source.{source_name}")
+            source_path = f"source.{source_name}"
+            source_data = _as_dict(source_raw, source_path)
             source = Source.from_str(source_name)
 
             market_data = _parse_market_data(
                 source_data,
-                f"source.{source_name}.market_data",
+                f"{source_path}.market_data",
             )
-
+            history_years = _parse_history_years(
+                source_data,
+                f"{source_path}.history_years",
+            )
             groups = _parse_groups(
                 source_data,
-                f"source.{source_name}.groups",
+                f"{source_path}.groups",
             )
 
             sources.append(
                 DataManifestSource(
                     source=source,
                     market_data=market_data,
+                    history_years=history_years,
                     groups=groups,
                 )
             )
@@ -98,6 +104,18 @@ def _parse_market_data(
         raise ValueError(f"{path} must not be empty")
 
     return tuple(result)
+
+
+def _parse_history_years(
+    raw: dict[str, Any],
+    path: str,
+) -> int:
+    value = _get_int(raw, "history_years", path)
+
+    if value < 1:
+        raise ValueError(f"{path} must be positive")
+
+    return value
 
 
 def _parse_groups(
@@ -212,6 +230,22 @@ def _get_str(
 
     if not value:
         raise ValueError(f"{field_path} must not be empty")
+
+    return value
+
+
+def _get_int(
+    raw: dict[str, Any],
+    key: str,
+    path: str,
+) -> int:
+    if key not in raw:
+        raise ValueError(f"{path} is required")
+
+    value = raw[key]
+
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise TypeError(f"{path} must be int")
 
     return value
 

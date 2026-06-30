@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import pytest
 from avin.domain.data.market_data import MarketData
 from avin.domain.data.source import Source
 from avin.domain.instrument.iid import Iid
@@ -49,6 +50,7 @@ def test_data_sync_plan_from_manifest(monkeypatch) -> None:
             DataManifestSource(
                 source=Source.TINKOFF,
                 market_data=(MarketData.BAR_1M, MarketData.TICK),
+                history_years=5,
                 groups=(
                     DataManifestSourceGroup(
                         exchange="MOEX",
@@ -67,7 +69,7 @@ def test_data_sync_plan_from_manifest(monkeypatch) -> None:
         ),
     )
 
-    plan = DataSyncPlan.from_manifest(manifest)
+    plan = DataSyncPlan.from_manifest(manifest, current_year=2026)
 
     assert not plan.is_empty
     assert len(plan.tasks) == 6
@@ -79,9 +81,17 @@ def test_data_sync_plan_from_manifest(monkeypatch) -> None:
     ]
 
     actual = [
-        (task.iid.code, task.source, task.market_data, task.group)
+        (
+            task.iid.code,
+            task.source,
+            task.market_data,
+            task.group,
+            task.years,
+        )
         for task in plan.tasks
     ]
+
+    expected_years = (2026, 2025, 2024, 2023, 2022)
 
     assert actual == [
         (
@@ -89,36 +99,42 @@ def test_data_sync_plan_from_manifest(monkeypatch) -> None:
             Source.TINKOFF,
             MarketData.BAR_1M,
             "MOEX_SHARE",
+            expected_years,
         ),
         (
             "MOEX_SHARE_SBER",
             Source.TINKOFF,
             MarketData.TICK,
             "MOEX_SHARE",
+            expected_years,
         ),
         (
             "MOEX_SHARE_GAZP",
             Source.TINKOFF,
             MarketData.BAR_1M,
             "MOEX_SHARE",
+            expected_years,
         ),
         (
             "MOEX_SHARE_GAZP",
             Source.TINKOFF,
             MarketData.TICK,
             "MOEX_SHARE",
+            expected_years,
         ),
         (
             "MOEX_FUTURE_SI",
             Source.TINKOFF,
             MarketData.BAR_1M,
             "MOEX_FUTURE",
+            expected_years,
         ),
         (
             "MOEX_FUTURE_SI",
             Source.TINKOFF,
             MarketData.TICK,
             "MOEX_FUTURE",
+            expected_years,
         ),
     ]
 
@@ -126,7 +142,30 @@ def test_data_sync_plan_from_manifest(monkeypatch) -> None:
 def test_data_sync_plan_empty_manifest() -> None:
     manifest = DataManifest(sources=())
 
-    plan = DataSyncPlan.from_manifest(manifest)
+    plan = DataSyncPlan.from_manifest(manifest, current_year=2026)
 
     assert plan.is_empty
     assert plan.tasks == ()
+
+
+def test_data_sync_plan_rejects_invalid_history_years() -> None:
+    manifest = DataManifest(
+        sources=(
+            DataManifestSource(
+                source=Source.TINKOFF,
+                market_data=(MarketData.BAR_1M,),
+                history_years=0,
+                groups=(
+                    DataManifestSourceGroup(
+                        exchange="MOEX",
+                        category="SHARE",
+                        tickers=("SBER",),
+                        codes=("MOEX_SHARE_SBER",),
+                    ),
+                ),
+            ),
+        ),
+    )
+
+    with pytest.raises(ValueError, match="history_years"):
+        DataSyncPlan.from_manifest(manifest, current_year=2026)
