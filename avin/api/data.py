@@ -75,7 +75,12 @@ class Data:
         storage = _get_storage(md)
         source_impl = _get_source_impl(source)
 
-        df = storage.load_last(iid, source, md)
+        if storage is BarStorage:
+            df = storage.load_latest_file(iid, source, md)
+        elif storage is TickStorage:
+            df = storage.load_latest_file(iid, source, md)
+        else:
+            raise ValueError(md)
         ts = df.item(-1, "ts")
         last_dt = ts_to_dt(ts).date()
         yesterday = Date.today() - TimeDelta(days=1)

@@ -67,7 +67,7 @@ class BarStorage:
         return Cmd.read_pqt(path)
 
     @classmethod
-    def load_last(
+    def load_latest_file(
         cls,
         iid: Iid,
         source: Source,

@@ -248,7 +248,7 @@ def _load_chart(
     bars_count: int,
 ) -> Chart:
     md = tf.to_market_data()
-    last_df = BarStorage.load_last(asset.iid, source, md)
+    last_df = BarStorage.load_latest_file(asset.iid, source, md)
     last_ts = last_df.item(-1, "ts")
 
     end = ts_to_dt(tf.end_frame_ts(last_ts))
