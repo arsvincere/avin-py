@@ -9,6 +9,31 @@ import polars as pl
 
 
 class Schema:
+    """
+    Storage dataframe schemas.
+
+    Schema defines canonical column names and Polars types used by local
+    storage. These schemas are the low-level storage contract for parquet
+    files and dataframes.
+
+    Storage, codecs and source adapters use these constants to create,
+    validate and convert dataframes. This class does not load, save, convert,
+    validate business meaning, or know anything about API/service/domain
+    behavior.
+
+    -- ru
+    Схемы storage dataframes.
+
+    Schema определяет канонические имена колонок и Polars-типы, которые
+    используются локальным storage. Эти схемы являются низкоуровневым
+    storage-контрактом для parquet-файлов и dataframes.
+
+    Storage, codecs и source adapters используют эти константы для создания,
+    проверки и конвертации dataframes. Этот класс не загружает, не сохраняет,
+    не конвертирует, не валидирует бизнес-смысл и ничего не знает про
+    API/service/domain поведение.
+    """
+
     IID = pl.Schema(
         {
             "exchange": pl.String,
