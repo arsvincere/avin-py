@@ -6,7 +6,7 @@
 # ────────────────────────────────────────────────────────────────────────────
 #  CREATED: 2023.07.23 15:06
 
-from avin.api import Asset, Loader
+from avin.api import Asset, Data, Loader
 from avin.domain.asset import AssetList, Share
 from avin.domain.common import Direction, PriceRange, TimeFrame
 from avin.domain.data import MarketData, Source
@@ -16,6 +16,7 @@ __all__ = (
     "Asset",
     "AssetList",
     "Category",
+    "Data",
     "Direction",
     "Exchange",
     "Loader",
