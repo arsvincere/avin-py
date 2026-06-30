@@ -53,7 +53,7 @@ bench/results/*.csv
 
 # Project-local temporary files
 /.bak
-/.tmp
+/*.tmp
 /tmp.*
 /tmp
 /avin.zip

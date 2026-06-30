@@ -18,7 +18,13 @@ from avin.errors.exceptions import DataNotFoundError
 from avin.system.logger import log
 from avin.system.path_builder import PathBuilder
 from avin.utils.cmd import Cmd
-from avin.utils.dt import Date, DateTime, TimeDelta, dt_to_ts, ts_to_dt
+from avin.utils.dt import (
+    Date,
+    DateTime,
+    dt_to_ts,
+    extract_range_dates,
+    ts_to_dt,
+)
 
 # TODO:
 # BarStorage and TickStorage are nearly identical.
@@ -103,7 +109,7 @@ class BarStorage:
         end_ts = dt_to_ts(end)
 
         dfs = list()
-        for date in _extract_range_dates(begin, end):
+        for date in extract_range_dates(begin, end):
             try:
                 df = cls.load(iid, source, md, date)
             except DataNotFoundError:
@@ -137,7 +143,7 @@ class BarStorage:
 
 def _validate_df(df: pl.DataFrame) -> Date:
     """
-    Validate tic dataframe and return its trading date.
+    Validate bar dataframe and return its trading date.
     """
 
     if df.is_empty():
@@ -152,15 +158,3 @@ def _validate_df(df: pl.DataFrame) -> Date:
         raise ValueError("BarStorage accepts data only for a single day")
 
     return first_date
-
-
-def _extract_range_dates(begin: DateTime, end: DateTime) -> list[Date]:
-    last_date = (end - TimeDelta(microseconds=1)).date()
-
-    dates = list()
-    current = begin.date()
-    while current <= last_date:
-        dates.append(current)
-        current += TimeDelta(days=1)
-
-    return dates

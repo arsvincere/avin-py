@@ -23,16 +23,14 @@ from avin.utils.cmd import Cmd
 
 class IidStorage:
     @classmethod
-    @cache
     def find_code(cls, code: str, source: Source) -> Iid:
         exchange, category, ticker = parse_code(code)
 
         iid_cache = cls.load(source, category)
 
+        # pl.col("category") == category уже
         row = iid_cache.filter(
-            (pl.col("exchange") == exchange)
-            # & (pl.col("category") == category) # cache и так той категории
-            & (pl.col("ticker") == ticker)
+            (pl.col("exchange") == exchange) & (pl.col("ticker") == ticker)
         )
 
         if row.height != 1:
@@ -41,7 +39,6 @@ class IidStorage:
         return Iid.from_df(row)
 
     @classmethod
-    @cache
     def find_figi(cls, figi: str, source: Source) -> Iid:
         for category in Category:
             try:
@@ -69,23 +66,17 @@ class IidStorage:
         path = PathBuilder.iid_cache_file(source, category)
 
         Cmd.write_pqt(df, path)
+        _cached_load.cache_clear()
 
         log.info(f"Save iid cache: {path}")
 
     @classmethod
-    @cache
     def load(
         cls,
         source: Source,
         category: Category,
     ) -> pl.DataFrame:
-
-        path = PathBuilder.iid_cache_file(source, category)
-
-        if not path.is_file():
-            raise DataNotFoundError(f"{source} {category} ({path})")
-
-        return Cmd.read_pqt(path)
+        return _cached_load(source, category)
 
     @classmethod
     def delete(cls, source: Source, category: Category) -> None:
@@ -93,3 +84,16 @@ class IidStorage:
 
         if Cmd.is_file(path):
             Cmd.delete(path)
+            _cached_load.cache_clear()
+
+
+# IID is cached reference data, not live order-validation data.
+# It is used for asset discovery and offline workflows.
+@cache
+def _cached_load(source: Source, category: Category) -> pl.DataFrame:
+    path = PathBuilder.iid_cache_file(source, category)
+
+    if not path.is_file():
+        raise DataNotFoundError(f"{source} {category} ({path})")
+
+    return Cmd.read_pqt(path)

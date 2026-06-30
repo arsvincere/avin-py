@@ -49,7 +49,7 @@ class TickStorage:
 
         Cmd.write_pqt(df, path)
 
-        log.info(f"Save tics: {path}")
+        log.info(f"Save ticks: {path}")
 
     @classmethod
     def load(
@@ -141,7 +141,7 @@ class TickStorage:
 
 def _validate_df(df: pl.DataFrame) -> Date:
     """
-    Validate tic dataframe and return its trading date.
+    Validate tick dataframe and return its trading date.
     """
 
     if df.is_empty():

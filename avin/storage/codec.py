@@ -14,6 +14,21 @@ from avin.storage.schema import Schema
 
 
 class StorageCodec:
+    """
+    Storage codecs.
+
+    StorageCodec converts normalized storage dataframes to domain objects and
+    domain objects back to storage dataframes. It uses Schema as the dataframe
+    contract and does not load or save data itself.
+
+    -- ru
+    Кодеки storage.
+
+    StorageCodec конвертирует нормализованные storage dataframes в domain
+    objects и domain objects обратно в storage dataframes. Он использует
+    Schema как контракт dataframe и сам не загружает и не сохраняет данные.
+    """
+
     @staticmethod
     def bars_from_df(df: pl.DataFrame) -> list[Bar]:
         bars: list[Bar] = []
