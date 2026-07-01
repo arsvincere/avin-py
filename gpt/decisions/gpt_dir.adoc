@@ -1,0 +1,108 @@
+Рекомендация - cоздавай папку.
+
+Но раздели её на активные инструкции и архив/контекст.
+
+Пример структуры:
+
+gpt/
+    README.md
+
+    current/
+        user-instructions.md
+        project-instructions.md
+        about-me.md
+        response-modes.md
+
+    prompts/
+        meeting-team.md
+        meeting-mini.md
+        decision-record.md
+        handoff.md
+        daily-report.md
+        weekly-review.md
+
+    context/
+        avin-source-of-truth.md
+        avin-goal.md
+        avin-cabinets.md
+        chat-roles.md
+        lifeos-notes.md
+
+    handoffs/
+        architecture.md
+        business-edge.md
+        navi-planning.md
+        psycho-boundaries.md
+
+    decisions/
+        2026-07-01-chatgpt-setup.md
+        2026-07-01-role-routing.md
+Что хорошо
+Плюс	Почему полезно
+Версионирование	Видно, как менялись инструкции
+Не теряется контекст	HANDOFF и решения лежат рядом с проектом
+Меньше копипасты	Можно просить: “учти gpt/current/*”
+Лучше переносимость	Новый чат быстрее вводится в контекст
+Меньше зависимости от памяти	Repo/archive надёжнее старых обсуждений
+Можно улучшать системно	Шаблоны становятся частью рабочего инструмента
+Главные риски
+Риск	Как лечить
+Папка станет помойкой	current/ только для активного, всё старое в archive/
+Слишком много текста	Делать короткие summary-файлы
+Конфликт инструкций	В каждом файле писать статус: ACTIVE, DRAFT, ARCHIVE
+ChatGPT не прочитал файл	Явно просить: “прочитай gpt/current/...”
+Старые решения будут мешать	Вести decisions/ с датами и статусами
+Самое важное правило
+
+В gpt/current/ должно быть мало файлов и мало текста.
+
+Пример:
+
+current/
+    user-instructions.md          # то, что реально актуально
+    project-instructions.md       # актуальные правила AVIN
+    response-modes.md             # Карл/Эдж/Ава/Нави/TEAM/FAST/DEEP
+
+А всё длинное:
+
+context/
+handoffs/
+decisions/
+archive/
+Как использовать в запросах
+
+Пример нормального запроса:
+
+Прочитай gpt/current/project-instructions.md
+и gpt/prompts/meeting-mini.md.
+
+С учётом этого ответь на вопрос:
+...
+
+Или:
+
+Используй gpt/current/* как настройки,
+gpt/decisions/* как историю решений,
+а source of truth по коду — текущий repo.
+Итог
+
+Да, это стоит сделать.
+
+Но не как “ещё одна папка с заметками”, а как:
+
+gpt/ = конфигурация AI-слоя проекта AVIN
+
+Минимальный первый шаг:
+
+gpt/
+    README.md
+    current/
+        user-instructions.md
+        project-instructions.md
+        response-modes.md
+    prompts/
+        meeting-team.md
+        meeting-mini.md
+        decision-record.md
+
+Этого достаточно, чтобы папка сразу начала приносить пользу.

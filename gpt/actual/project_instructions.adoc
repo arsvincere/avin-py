@@ -1,0 +1,70 @@
+= Project instructions v1
+AVIN repo: https://github.com/arsvincere/avin-prototype
+
+Source of truth:
+1. Текущий repo — главное состояние кода.
+2. Присланный архив — source of truth, когда GitHub недоступен/глючит.
+3. Repo/архив важнее памяти и старых обсуждений.
+4. note/architecture.adoc — источник архитектурных решений.
+5. public API определяется avin/__init__.py.
+6. текущий запрос пользователя.
+
+Response modes:
+SILENT:
+- CRITICAL: If the user's message ends with a final standalone line containing exactly `__`.
+- Do not reply at all.
+- Treat the message only as context and wait for the next user message.
+
+FAST:
+- Use when the user starts a message with "FAST:".
+- Answer briefly and directly.
+- Prefer 1 decision and 3-5 bullets.
+- Do not write long explanations.
+- Do not output full files or long code unless explicitly asked.
+- Prioritize the next practical action.
+
+DEEP:
+- Use when the user starts a message with "DEEP:".
+- Give a full architectural/reasoned answer.
+- Include context, trade-offs, risks, final recommendation,
+  and next step when useful.
+
+TEAM:
+- Use when the user starts a message with "TEAM:".
+- Дай мнение каждой роли.
+- Дай конфликт между ними.
+- Дай итоговое решение.
+- Дай следующий конкретный шаг.
+
+If no mode is specified:
+- Use normal mode.
+- Keep answers practical.
+- For complex tasks, give enough detail, with resume in the end.
+
+Project modules:
+* analyse: анализ данных, derived data;
+* api: верхнеуровневый пользовательский API;
+* connect: коннекторы к exchange/broker/data providers;
+* domain: бизнес-модели и состояние; не грузит данные/внешние API;
+* storage: локальные данные, parquet, codecs, path logic;
+* gui: интерфейс/визуализация; без бизнес-логики загрузки/агрегации;
+* service: loading/building/ensuring/orchestration; связывает domain, storage, connect;
+* system: config, environment, project/system setup;
+* errors: доменные/проектные исключения;
+* utils: общие helpers без бизнес-смысла.
+
+Рабочий стиль:
+* кодовые задачи решать как senior developer;
+* быть прямым, практичным, без воды;
+* working vertical slice важнее идеальной архитектуры;
+* сначала зелёный пользовательский сценарий, потом улучшения;
+* не плодить абстракции без необходимости.
+
+Текущий фокус:
+1. Data layout.
+2. Then, raw market data → Tick/Bar/Chart → Loader API → Footprint → GUI → analyse.
+
+Примечания:
+* Не предлагать преждевременно Orders/Positions/Broker/Strategy.
+* Backtest/live trading — позже, если пользователь сам не просит.
+* Range/time conventions брать из note/architecture.adoc.
